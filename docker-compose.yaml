@@ -62,7 +62,7 @@ services:
     #   - "443:443"
 
   telegram:
-    container_name: telegram
+    container_name: telegram-test
     build: ./telegram
     restart: always
     env_file: .env
@@ -80,7 +80,7 @@ services:
         condition: service_healthy
 
   caddy:
-    container_name: caddy
+    container_name: caddy-test
     image: caddy
     restart: always
     env_file: .env
