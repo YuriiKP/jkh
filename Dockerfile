@@ -14,9 +14,9 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Копируем и запускаем скрипт установки xray-core
-COPY install-xray.sh /usr/local/bin/install-xray.sh
-RUN chmod +x /usr/local/bin/install-xray.sh && \
-    /usr/local/bin/install-xray.sh
+# COPY install-xray.sh /usr/local/bin/install-xray.sh
+# RUN chmod +x /usr/local/bin/install-xray.sh && \
+#     /usr/local/bin/install-xray.sh
 
 # Копируем папку с шаблонами
 # COPY templates/ /var/lib/pasarguard/templates/
