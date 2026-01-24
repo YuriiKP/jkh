@@ -1,7 +1,7 @@
 FROM pasarguard/panel:latest
 
 # Устанавливаем драйвер прямо в виртуальное окружение
-RUN .venv/bin/pip install --no-cache-dir pymysql==1.1.2
+RUN uv pip install --no-cache pymysql==1.1.2
 
 # Добавляем бинарники окружения в системный путь
 ENV PATH="/code/.venv/bin:$PATH"
