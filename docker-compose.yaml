@@ -1,0 +1,106 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    env_file: .env
+    environment:
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+      - MYSQL_DATABASE
+      - MYSQL_ROOT_PASSWORD
+    command:
+      - --mysqlx=OFF
+      # - --bind-address=127.0.0.1
+      - --character_set_server=utf8mb4
+      - --collation_server=utf8mb4_unicode_ci
+      - --disable-log-bin
+      - --host-cache-size=0
+      - --innodb-open-files=1024
+      - --innodb-buffer-pool-size=268435456
+    volumes:
+      - mysql-db-volume:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    # network_mode: host
+    ports:
+      - "127.0.0.1:3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pasarguard:
+    build:
+      context: .
+      # args:
+      #   XRAY_VERSION: v25.12.8
+    container_name: pasarguard
+    restart: always
+    env_file: .env
+    environment:
+      # - UVICORN_HOST
+      - UVICORN_PORT
+      # - UVICORN_SSL_CERTFILE
+      # - UVICORN_SSL_KEYFILE
+      - UVICORN_UDS
+      - XRAY_SUBSCRIPTION_URL_PREFIX
+      - SUDO_USERNAME
+      - SUDO_PASSWORD
+      - SQLALCHEMY_DATABASE_URL
+      - DOCS
+      - TG_TOKEN
+      - TG_ADMIN
+      # - XRAY_EXECUTABLE_PATH
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - /var/lib/pasarguard:/var/lib/pasarguard
+    network_mode: host
+    # ports:
+    #   - "443:443"
+
+  telegram:
+    container_name: telegram
+    build: ./telegram
+    restart: always
+    env_file: .env
+    environment:
+      - TG_TOKEN
+      - TG_ADMIN
+      - SQLALCHEMY_DATABASE_URL_TG
+      - PASARGUARD_BASE_URL
+      - PASARGUARD_ADMIN_USERNAME
+      - PASARGUARD_ADMIN_PASSWORD
+    depends_on:
+      pasarguard:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+
+  caddy:
+    container_name: caddy
+    image: caddy
+    restart: always
+    env_file: .env
+    environment:
+      - PASARGUARD_BASE_URL
+    # network_mode: host
+    ports:
+      - 80:80
+      - 8001:8001
+    volumes:
+      - /var/lib/pasarguard:/var/lib/pasarguard
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      pasarguard:
+        condition: service_started
+
+
+volumes:
+  mysql-db-volume:
+  caddy_data:
+  caddy_config:

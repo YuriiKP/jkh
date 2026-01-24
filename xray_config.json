@@ -1,0 +1,87 @@
+{
+  "log": {
+    "loglevel": "warning"
+  },
+  "routing": {
+    "rules": [
+      {
+        "ip": [
+          "geoip:private"
+        ],
+        "outboundTag": "BLOCK",
+        "type": "field"
+      },
+      {
+        "type": "field",
+        "outboundTag": "BLOCK",
+        "protocol": [
+          "bittorrent"
+        ]
+      }
+    ]
+  },
+  "inbounds": [
+    {
+      "tag": "VLESS-TCP-0",
+      "listen": "0.0.0.0",
+      "port": 443,
+      "protocol": "vless",
+      "settings": {
+        "clients": [],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "tcpSettings": {},
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "fingerprint": "chrome",
+          "dest": "dl.google.com:443",
+          "xver": 0,
+          "serverNames": [
+            "dl.google.com",
+            "www.dl.google.com"
+          ],
+          "privateKey": "cMO0WwnUAAuNFEGlxsw4y8rdBsS4aa33kAU1bGW0uB4",
+          "publicKey": "5jAtH26rvjUVq3wulkb_90Y2tOv2IgkRla48Wm6dPAQ",
+          "SpiderX": "",
+          "shortIds": [
+            "95afe7b7"
+          ]
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ],
+        "metadataOnly": false
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "freedom",
+      "settings": {
+        "domainStrategy": "UseIPv4"
+      },
+      "tag": "DIRECT"
+    },
+    {
+      "protocol": "blackhole",
+      "tag": "BLOCK"
+    }
+  ],
+  "dns": {
+    "tag": "dns_inbound",
+    "servers": [
+      {
+        "address": "1.1.1.1",
+        "strategy": "UseIPv4"
+      }
+    ]
+  }
+}
