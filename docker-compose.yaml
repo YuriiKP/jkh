@@ -50,7 +50,7 @@ services:
       - DOCS
       - TG_TOKEN
       - TG_ADMIN
-      # - XRAY_EXECUTABLE_PATH
+      - XRAY_EXECUTABLE_PATH
     depends_on:
       mysql:
         condition: service_healthy
