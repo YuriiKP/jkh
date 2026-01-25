@@ -1,7 +1,7 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: mysql-test
+    container_name: mysql
     restart: always
     env_file: .env
     environment:
@@ -33,18 +33,17 @@ services:
   pasarguard:
     build:
       context: .
-      # args:
-      #   XRAY_VERSION: v25.12.8
+      args:
+        XRAY_VERSION: v25.12.8
     container_name: pasarguard
     restart: always
     env_file: .env
     environment:
       # - UVICORN_HOST
-      - UVICORN_PORT
+      # - UVICORN_PORT
       # - UVICORN_SSL_CERTFILE
       # - UVICORN_SSL_KEYFILE
       - UVICORN_UDS
-      - XRAY_SUBSCRIPTION_URL_PREFIX
       - SUDO_USERNAME
       - SUDO_PASSWORD
       - SQLALCHEMY_DATABASE_URL
@@ -62,7 +61,7 @@ services:
     #   - "443:443"
 
   telegram:
-    container_name: telegram-test
+    container_name: telegram
     build: ./telegram
     restart: always
     env_file: .env
@@ -80,7 +79,7 @@ services:
         condition: service_healthy
 
   caddy:
-    container_name: caddy-test
+    container_name: caddy
     image: caddy
     restart: always
     env_file: .env

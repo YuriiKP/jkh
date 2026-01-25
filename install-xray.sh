@@ -28,7 +28,7 @@ esac
 #     exit 1
 # fi
 
-INSTALL_DIR="/var/lib/marzban_xray"
+INSTALL_DIR="/var/lib/pasarguard"
 
 echo "Latest version: $XRAY_VERSION"
 echo "Installing to: $INSTALL_DIR"
