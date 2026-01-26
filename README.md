@@ -18,7 +18,7 @@
 
 
 # Генерация пары ключей (Private + Public)
-`docker exec -it marzban xray x25519`
+`docker exec -it pasarguard xray x25519`
 
 # Генерация ShortId
-`docker exec -it marzban openssl rand -hex 4`
+`docker exec -it pasarguard openssl rand -hex 4`
