@@ -1,71 +1,110 @@
-from typing import Optional
-
 from pydantic import BaseModel, ConfigDict, field_validator
+
+from .notification_enable import UserNotificationEnable
+from .validators import DiscordValidator, NumericValidatorMixin, PasswordValidator
+
 
 
 class Token(BaseModel):
-    """Response model for /api/admin/token."""
-
     access_token: str
     token_type: str = "bearer"
 
 
-class Admin(BaseModel):
-    """
-    Admin representation as used by Marzban HTTP API.
-
-    This is a **pure data model** (no FastAPI / DB / JWT dependencies) so it
-    can be safely used on the Telegram bot side.
-    """
+class AdminBase(BaseModel):
+    """Minimal admin model containing only the username."""
 
     username: str
-    is_sudo: bool
-    telegram_id: Optional[int] = None
-    discord_webhook: Optional[str] = None
-    users_usage: Optional[int] = None
+
     model_config = ConfigDict(from_attributes=True)
 
-    @field_validator("users_usage", mode="before")
+
+class AdminContactInfo(AdminBase):
+    """Base model containing the core admin identification fields."""
+
+    telegram_id: int | None = None
+    discord_webhook: str | None = None
+    sub_domain: str | None = None
+    profile_title: str | None = None
+    support_url: str | None = None
+    notification_enable: UserNotificationEnable | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("notification_enable", mode="before")
     @classmethod
-    def cast_to_int(cls, v):
-        if v is None:
-            return v
-        if isinstance(v, float):
-            return int(v)
-        if isinstance(v, int):
-            return v
-        raise ValueError("users_usage must be an int or float")
-
-
-class AdminCreate(Admin):
-    """
-    Request body for creating an admin via Marzban API.
-
-    The password is sent as plain text to the Marzban backend – hashing is
-    handled server‑side.
-    """
-
-    password: str
-
-    @field_validator("discord_webhook")
-    @classmethod
-    def validate_discord_webhook(cls, value: Optional[str]) -> Optional[str]:
-        if value and not value.startswith("https://discord.com"):
-            raise ValueError("Discord webhook must start with 'https://discord.com'")
+    def convert_notification_enable(cls, value):
+        """Convert dict to UserNotificationEnable object when loading from database."""
+        if value is None:
+            return None
+        if isinstance(value, UserNotificationEnable):
+            return value
+        if isinstance(value, dict):
+            return UserNotificationEnable(**value)
         return value
+
+
+class AdminDetails(AdminContactInfo):
+    """Complete admin model with all fields for database representation and API responses."""
+
+    id: int | None = None
+    is_sudo: bool
+    total_users: int = 0
+    used_traffic: int = 0
+    is_disabled: bool = False
+    discord_id: int | None = None
+    sub_template: str | None = None
+    lifetime_used_traffic: int | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("used_traffic", mode="before")
+    def cast_to_int(cls, v):
+        return NumericValidatorMixin.cast_to_int(v)
 
 
 class AdminModify(BaseModel):
-    """Request body for modifying an admin via Marzban API."""
+    password: str | None = None
+    is_sudo: bool
+    telegram_id: int | None = None
+    discord_webhook: str | None = None
+    discord_id: int | None = None
+    is_disabled: bool | None = None
+    sub_template: str | None = None
+    sub_domain: str | None = None
+    profile_title: str | None = None
+    support_url: str | None = None
+    notification_enable: UserNotificationEnable | None = None
 
-    password: Optional[str] = None
-    is_sudo: Optional[bool] = None
-    telegram_id: Optional[int] = None
-    discord_webhook: Optional[str] = None
 
     @field_validator("discord_webhook")
     @classmethod
-    def validate_discord_webhook(cls, value: Optional[str]) -> Optional[str]:
-        if value and not value.startswith("https://discord.com"):
-            raise ValueError("Discord webhook must start with 'https://discord.com'")
-        return value
+    def validate_discord_webhook(cls, value):
+        return DiscordValidator.validate_webhook(value)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str | None):
+        return PasswordValidator.validate_password(value)
+
+
+class AdminCreate(AdminModify):
+    """Model for creating new admin accounts requiring username and password."""
+
+    username: str
+    password: str
+
+
+
+class AdminValidationResult(BaseModel):
+    username: str
+    is_sudo: bool
+    is_disabled: bool
+
+
+class AdminsResponse(BaseModel):
+    """Response model for admins list with pagination and statistics."""
+
+    admins: list[AdminDetails]
+    total: int
+    active: int
+    disabled: int

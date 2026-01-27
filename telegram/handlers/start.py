@@ -6,6 +6,7 @@ from aiogram.exceptions import TelegramBadRequest
 
 from loader import dp, bot, deep_links_admin_manage, db_manage, marzban_client
 from models.user import UserCreate, UserStatusCreate, UserModify, UserStatusModify
+from models.proxy import ProxyTable, VlessSettings, XTLSFlows
 from utils.marzban_api import MarzbanAPIError
 from keyboards import *
 from filters import IsAdmin, IsMainAdmin, IsUser
@@ -64,9 +65,7 @@ async def process_start_bot_deep_link(message: Message, state: FSMContext, comma
             
             modify_user = UserModify(
                 on_hold_expire_duration=current_expire + duration_seconds,
-                proxies={
-                    'vless': {'flow': 'xtls-rprx-vision'}
-                },
+                proxy_settings=ProxyTable(vless=VlessSettings(flow=XTLSFlows.VISION)),
                 status=UserStatusModify.on_hold
             )
             user_marz: UserResponse = await marzban_client.modify_user(str(user_id), modify_user)
@@ -78,10 +77,8 @@ async def process_start_bot_deep_link(message: Message, state: FSMContext, comma
                     note=f'{message.from_user.first_name} @{message.from_user.username}',
                     status=UserStatusCreate.on_hold,
                     on_hold_expire_duration=duration_seconds,
-                    inbounds={},
-                    proxies={
-                        'vless': {'flow': 'xtls-rprx-vision'}
-                    }
+                    group_ids=[1],
+                    proxy_settings=ProxyTable(vless=VlessSettings(flow=XTLSFlows.VISION))
                 )
                 user_marz = await marzban_client.create_user(new_user)
             else:
@@ -156,26 +153,24 @@ async def process_start_bot(message: Message, user_id, first_name):
         mem_percent = (stats.mem_used / stats.mem_total) * 100 if stats.mem_total > 0 else 0 
         incoming_gb = stats.incoming_bandwidth / (1024 ** 3)
         outgoing_gb = stats.outgoing_bandwidth / (1024 ** 3)
-        incoming_speed_mb = stats.incoming_bandwidth_speed / (1024 ** 2)
-        outgoing_speed_mb = stats.outgoing_bandwidth_speed / (1024 ** 2)
 
         return (
             f'📊 <b>Статистика сервера</b>:\n\n'
             f'👥 <b>Пользователи</b>:\n'
             f'  • Всего: {stats.total_user}\n'
             f'  • Онлайн: {stats.online_users}\n'
-            f'  • Активные: {stats.users_active}\n'
-            f'  • На паузе: {stats.users_on_hold}\n'
-            f'  • Отключены: {stats.users_disabled}\n'
-            f'  • Истекли: {stats.users_expired}\n'
-            f'  • Ограничены: {stats.users_limited}\n\n'
+            f'  • Активные: {stats.active_users}\n'
+            f'  • На паузе: {stats.on_hold_users}\n'
+            f'  • Отключены: {stats.disabled_users}\n'
+            f'  • Истекли: {stats.expired_users}\n'
+            f'  • Ограничены: {stats.limited_users}\n\n'
             f'💻 <b>Система</b>:\n'
             f'  • Версия: {stats.version}\n'
             f'  • CPU: {stats.cpu_usage:.1f}% ({stats.cpu_cores} ядер)\n'
             f'  • RAM: {mem_used_gb:.2f} GB / {mem_total_gb:.2f} GB ({mem_percent:.1f}%)\n\n'
             f'📡 <b>Трафик</b>:\n'
-            f'  • Входящий: {incoming_gb:.2f} GB (скорость: {incoming_speed_mb:.2f} MB/s)\n'
-            f'  • Исходящий: {outgoing_gb:.2f} GB (скорость: {outgoing_speed_mb:.2f} MB/s)'
+            f'  • Входящий: {incoming_gb:.2f} GB\n'
+            f'  • Исходящий: {outgoing_gb:.2f} GB'
         )
 
 

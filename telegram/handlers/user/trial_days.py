@@ -3,6 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram import F
 
 from models.user import UserResponse, UserCreate, UserStatusCreate
+from models.proxy import ProxyTable, VlessSettings, XTLSFlows
 from utils.marzban_api import MarzbanAPIError
 
 from loader import dp, db_manage, marzban_client
@@ -35,10 +36,8 @@ async def trial_buy_handler(query: CallbackQuery, state: FSMContext):
                 note=f'{query.from_user.first_name} @{query.from_user.username}',
                 status=UserStatusCreate.on_hold,
                 on_hold_expire_duration=86400 * 3,  # 3 дня в секундах
-                inbounds={},
-                proxies={
-                    'vless': {'flow': 'xtls-rprx-vision'}
-                }
+                group_ids=[1],
+                proxy_settings=ProxyTable(vless=VlessSettings(flow=XTLSFlows.VISION))
             )
             user_marz: UserResponse = await marzban_client.create_user(new_user)
         

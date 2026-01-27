@@ -1,9 +1,10 @@
-from aiogram.types import CallbackQuery, Message, LabeledPrice
+from aiogram.types import CallbackQuery, Message, LabeledPrice, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
 from aiogram.exceptions import TelegramBadRequest
 from aiogram import F
 
 from models.user import UserResponse, UserCreate, UserStatusCreate, UserModify, UserStatusModify
+from models.proxy import ProxyTable, VlessSettings, XTLSFlows
 from utils.marzban_api import MarzbanAPIError
 
 from loader import dp, db_manage, marzban_client, YOO_KASSA_PROVIDER_TOKEN
@@ -132,9 +133,7 @@ async def success_payment_handler(message: Message):
 
             modify_user = UserModify(
                 on_hold_expire_duration=current_expire + expire_duration,
-                proxies={
-                    'vless': {'flow': 'xtls-rprx-vision'}
-                },
+                proxy_settings=ProxyTable(vless=VlessSettings(flow=XTLSFlows.VISION)),
                 status=UserStatusModify.on_hold
             )
             user_marz: UserResponse = await marzban_client.modify_user(user_id, modify_user)
@@ -145,10 +144,8 @@ async def success_payment_handler(message: Message):
                     note=f'{message.from_user.first_name} @{message.from_user.username}',
                     status=UserStatusCreate.on_hold,
                     on_hold_expire_duration=expire_duration,
-                    inbounds={},
-                    proxies={
-                        'vless': {'flow': 'xtls-rprx-vision'}
-                    }
+                    group_ids=[1],
+                    proxy_settings=ProxyTable(vless=VlessSettings(flow=XTLSFlows.VISION))
                 )
                 user_marz: UserResponse = await marzban_client.create_user(new_user)
             

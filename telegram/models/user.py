@@ -1,26 +1,14 @@
-import re
-from datetime import datetime
+from datetime import datetime as dt
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from .admin import Admin
+from models.utils.models import DataLimitResetStrategy, UserStatus, UserStatusCreate
+from models.admin import AdminBase, AdminContactInfo
+from models.proxy import ProxyTable, ShadowsocksMethods, XTLSFlows
+from models.utils.helpers import fix_datetime_timezone
 
-USERNAME_REGEXP = re.compile(r"^(?=\w{3,32}\b)[a-zA-Z0-9-_@.]+(?:_[a-zA-Z0-9-_@.]+)*$")
-
-
-class ReminderType(str, Enum):
-    expiration_date = "expiration_date"
-    data_usage = "data_usage"
-
-
-class UserStatus(str, Enum):
-    active = "active"
-    disabled = "disabled"
-    limited = "limited"
-    expired = "expired"
-    on_hold = "on_hold"
+from .validators import ListValidator, NumericValidatorMixin, UserValidator
 
 
 class UserStatusModify(str, Enum):
@@ -29,250 +17,219 @@ class UserStatusModify(str, Enum):
     on_hold = "on_hold"
 
 
-class UserStatusCreate(str, Enum):
-    active = "active"
-    on_hold = "on_hold"
-
-
-class UserDataLimitResetStrategy(str, Enum):
-    no_reset = "no_reset"
-    day = "day"
-    week = "week"
-    month = "month"
-    year = "year"
-
-
 class NextPlanModel(BaseModel):
-    data_limit: Optional[int] = None
-    expire: Optional[int] = None
+    user_template_id: int | None = Field(default=None)
+    data_limit: int | None = Field(default=None)
+    expire: int | None = Field(default=None)
     add_remaining_traffic: bool = False
-    fire_on_either: bool = True
     model_config = ConfigDict(from_attributes=True)
 
 
 class User(BaseModel):
-    """
-    Base user fields shared between create/modify/response models.
+    proxy_settings: ProxyTable = Field(default_factory=ProxyTable)
+    expire: dt | int | None = Field(default=None)
+    data_limit: int | None = Field(ge=0, default=None, description="data_limit can be 0 or greater")
+    data_limit_reset_strategy: DataLimitResetStrategy | None = Field(default=None)
+    note: str | None = Field(max_length=500, default=None)
+    on_hold_expire_duration: int | None = Field(default=None)
+    on_hold_timeout: dt | int | None = Field(default=None)
+    group_ids: list[int] | None = Field(default_factory=list)
+    auto_delete_in_days: int | None = Field(default=None)
 
-    This version is adapted for the **remote Marzban HTTP API** and does not
-    depend on local Xray config or server internals.
-    """
+    next_plan: NextPlanModel | None = Field(default=None)
 
-    proxies: Dict[str, Dict[str, Any]] = {}
-    expire: Optional[int] = Field(None, nullable=True)
-    data_limit: Optional[int] = Field(
-        ge=0, default=None, description="data_limit can be 0 or greater"
-    )
-    data_limit_reset_strategy: UserDataLimitResetStrategy = (
-        UserDataLimitResetStrategy.no_reset
-    )
-    inbounds: Dict[str, List[str]] = {}
-    note: Optional[str] = Field(None, nullable=True)
-    sub_updated_at: Optional[datetime] = Field(None, nullable=True)
-    sub_last_user_agent: Optional[str] = Field(None, nullable=True)
-    online_at: Optional[datetime] = Field(None, nullable=True)
-    on_hold_expire_duration: Optional[int] = Field(None, nullable=True)
-    on_hold_timeout: Optional[Union[datetime, None]] = Field(None, nullable=True)
 
-    auto_delete_in_days: Optional[int] = Field(None, nullable=True)
-
-    next_plan: Optional[NextPlanModel] = Field(None, nullable=True)
-
-    @field_validator("data_limit", mode="before")
+class UserWithValidator(User):
+    @field_validator("on_hold_expire_duration")
     @classmethod
-    def cast_data_limit(cls, v):
-        if v is None:
-            return v
-        if isinstance(v, float):
-            return int(v)
-        if isinstance(v, int):
-            return v
-        raise ValueError("data_limit must be an integer or a float")
-
-    @field_validator("username", check_fields=False)
-    @classmethod
-    def validate_username(cls, v: str):
-        if not USERNAME_REGEXP.match(v):
-            raise ValueError(
-                "Username must be 3–32 chars and contain a-z, 0-9 and underscores."
-            )
-        return v
-
-    @field_validator("note", check_fields=False)
-    @classmethod
-    def validate_note(cls, v: Optional[str]):
-        if v and len(v) > 500:
-            raise ValueError("User note can be at most 500 characters")
-        return v
-
-    @field_validator("on_hold_expire_duration", "on_hold_timeout", mode="before")
-    @classmethod
-    def validate_timeout(cls, v, values):
+    def validate_timeout(cls, v):
+        # Check if expire is 0 or None and timeout is not 0 or None
         if v in (0, None):
             return None
         return v
 
+    @field_validator("on_hold_timeout", check_fields=False)
+    @classmethod
+    def validator_on_hold_timeout(cls, value):
+        return UserValidator.validator_on_hold_timeout(value)
 
-class UserCreate(User):
-    """Request body for creating user via Marzban API."""
+    @field_validator("expire", check_fields=False)
+    @classmethod
+    def validator_expire(cls, value):
+        if not value:
+            return value
+        return fix_datetime_timezone(value)
 
+    @field_validator("status", mode="before", check_fields=False)
+    def validate_status(cls, status, values):
+        return UserValidator.validate_status(status, values)
+
+
+class UserCreate(UserWithValidator):
     username: str
-    status: Optional[UserStatusCreate] = None
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "username": "user1234",
-            "proxies": {
-                "vmess": {"id": "35e4e39c-7d5c-4f4b-8b71-558e4f37ff53"},
-                "vless": {},
-            },
-            "inbounds": {
-                "vmess": ["VMess TCP", "VMess Websocket"],
-                "vless": ["VLESS TCP REALITY", "VLESS GRPC REALITY"],
-            },
-            "next_plan": {
-                "data_limit": 0,
-                "expire": 0,
-                "add_remaining_traffic": False,
-                "fire_on_either": True,
-            },
-            "expire": 0,
-            "data_limit": 0,
-            "data_limit_reset_strategy": "no_reset",
-            "status": "active",
-            "note": "",
-            "on_hold_timeout": "2023-11-03T20:30:00",
-            "on_hold_expire_duration": 0,
-        }
-    })
+    status: UserStatusCreate | None = Field(default=None)
 
-    @field_validator("status", mode="before")
+    @field_validator("username", check_fields=False)
     @classmethod
-    def validate_status(cls, status, values):
-        on_hold_expire = values.data.get("on_hold_expire_duration")
-        expire = values.data.get("expire")
-        if status == UserStatusCreate.on_hold:
-            if on_hold_expire in (0, None):
-                raise ValueError(
-                    "User cannot be on hold without a valid on_hold_expire_duration."
-                )
-            if expire:
-                raise ValueError("User cannot be on hold with specified expire.")
-        return status
+    def validate_username(cls, v):
+        return UserValidator.validate_username(v)
 
-
-class UserModify(User):
-    """Request body for modifying user via Marzban API."""
-
-    status: Optional[UserStatusModify] = None
-    data_limit_reset_strategy: Optional[UserDataLimitResetStrategy] = None
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "proxies": {
-                "vmess": {"id": "35e4e39c-7d5c-4f4b-8b71-558e4f37ff53"},
-                "vless": {},
-            },
-            "inbounds": {
-                "vmess": ["VMess TCP", "VMess Websocket"],
-                "vless": ["VLESS TCP REALITY", "VLESS GRPC REALITY"],
-            },
-            "next_plan": {
-                "data_limit": 0,
-                "expire": 0,
-                "add_remaining_traffic": False,
-                "fire_on_either": True,
-            },
-            "expire": 0,
-            "data_limit": 0,
-            "data_limit_reset_strategy": "no_reset",
-            "status": "active",
-            "note": "",
-            "on_hold_timeout": "2023-11-03T20:30:00",
-            "on_hold_expire_duration": 0,
-        }
-    })
-
-    @field_validator("status", mode="before")
+    @field_validator("group_ids", mode="after")
     @classmethod
-    def validate_status(cls, status, values):
-        on_hold_expire = values.data.get("on_hold_expire_duration")
-        expire = values.data.get("expire")
-        if status == UserStatusCreate.on_hold:
-            if on_hold_expire in (0, None):
-                raise ValueError(
-                    "User cannot be on hold without a valid on_hold_expire_duration."
-                )
-            if expire:
-                raise ValueError("User cannot be on hold with specified expire.")
-        return status
+    def group_ids_validator(cls, v):
+        return ListValidator.not_null_list(v, "group")
 
 
-class UserResponse(User):
-    """Full user representation returned by Marzban API."""
+class UserModify(UserWithValidator):
+    status: UserStatusModify | None = Field(default=None)
+    proxy_settings: ProxyTable | None = Field(default=None)
 
+    @field_validator("group_ids", mode="after")
+    @classmethod
+    def group_ids_validator(cls, v):
+        return ListValidator.nullable_list(v, "group")
+
+
+class UserNotificationResponse(User):
+    id: int
     username: str
     status: UserStatus
     used_traffic: int
-    lifetime_used_traffic: int = 0
-    created_at: datetime
-    links: List[str] = []
-    subscription_url: str = ""
-    excluded_inbounds: Dict[str, List[str]] = {}
-
-    admin: Optional[Admin] = None
+    lifetime_used_traffic: int = Field(default=0)
+    created_at: dt
+    edit_at: dt | None = Field(default=None)
+    online_at: dt | None = Field(default=None)
+    subscription_url: str = Field(default="")
+    admin: AdminContactInfo | None = Field(default=None)
+    group_names: list[str] | None = Field(default_factory=list)
     model_config = ConfigDict(from_attributes=True)
 
-    @field_validator("used_traffic", "lifetime_used_traffic", mode="before")
+    @field_validator("used_traffic", "lifetime_used_traffic", "data_limit", mode="before")
     @classmethod
     def cast_to_int(cls, v):
-        if v is None:
-            return v
-        if isinstance(v, float):
-            return int(v)
-        if isinstance(v, int):
-            return v
-        raise ValueError("must be an integer or a float")
+        return NumericValidatorMixin.cast_to_int(v)
+
+
+class UserResponse(UserNotificationResponse):
+    admin: AdminBase | None = Field(default=None)
+    group_names: list[str] | None = Field(default=None, exclude=True)
 
 
 class SubscriptionUserResponse(UserResponse):
-    """
-    Lightweight user representation used in subscription endpoints.
-    Fields excluded here correspond to how Marzban exposes subscription data.
-    """
-
-    admin: Admin | None = Field(default=None, exclude=True)
-    excluded_inbounds: Dict[str, List[str]] | None = Field(None, exclude=True)
+    admin: AdminContactInfo | None = Field(default=None, exclude=True)
     note: str | None = Field(None, exclude=True)
-    inbounds: Dict[str, List[str]] | None = Field(None, exclude=True)
     auto_delete_in_days: int | None = Field(None, exclude=True)
+    subscription_url: str | None = Field(None, exclude=True)
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UsersResponseWithInbounds(SubscriptionUserResponse):
+    inbounds: list[str] | None = Field(default_factory=list)
+
     model_config = ConfigDict(from_attributes=True)
 
 
 class UsersResponse(BaseModel):
-    users: List[UserResponse]
+    users: list[UserResponse]
     total: int
 
 
-class UserUsageResponse(BaseModel):
-    node_id: Union[int, None] = None
-    node_name: str
-    used_traffic: int
+class UserSubscriptionUpdateSchema(BaseModel):
+    created_at: dt
+    user_agent: str
 
-    @field_validator("used_traffic", mode="before")
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserSubscriptionUpdateList(BaseModel):
+    updates: list[UserSubscriptionUpdateSchema] = Field(default_factory=list)
+    count: int
+
+
+class UserSubscriptionUpdateChartSegment(BaseModel):
+    name: str
+    count: int
+    percentage: float
+
+
+class UserSubscriptionUpdateChart(BaseModel):
+    total: int
+    segments: list[UserSubscriptionUpdateChartSegment] = Field(default_factory=list)
+
+
+class RemoveUsersResponse(BaseModel):
+    users: list[str]
+    count: int
+
+
+class ModifyUserByTemplate(BaseModel):
+    user_template_id: int
+    note: str | None = Field(max_length=500, default=None)
+
+
+class CreateUserFromTemplate(ModifyUserByTemplate):
+    username: str
+
+    @field_validator("username", check_fields=False)
     @classmethod
-    def cast_to_int(cls, v):
+    def validate_username(cls, v):
+        return UserValidator.validate_username(v)
+
+
+class BulkUser(BaseModel):
+    amount: int
+    group_ids: set[int] = Field(default_factory=set)
+    admins: set[int] = Field(default_factory=set)
+    users: set[int] = Field(default_factory=set)
+    status: set[UserStatus] = Field(default_factory=set)
+
+
+class BulkUsersProxy(BaseModel):
+    flow: XTLSFlows | None = Field(default=None)
+    method: ShadowsocksMethods | None = Field(default=None)
+    group_ids: set[int] = Field(default_factory=set)
+    admins: set[int] = Field(default_factory=set)
+    users: set[int] = Field(default_factory=set)
+
+
+class UsernameGenerationStrategy(str, Enum):
+    random = "random"
+    sequence = "sequence"
+
+
+class BulkCreationBase(BaseModel):
+    count: int = Field(gt=0, le=500)
+    strategy: UsernameGenerationStrategy = Field(default=UsernameGenerationStrategy.random)
+
+
+class BulkUsersFromTemplate(BulkCreationBase, CreateUserFromTemplate):
+    username: str | None = Field(default=None)
+    start_number: int | None = Field(
+        default=None,
+        ge=0,
+        description="Starting suffix for sequence strategy (defaults to 1; base username digits are ignored)",
+    )
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, v):
+        # Skip validation if username is None (for random strategy)
         if v is None:
             return v
-        if isinstance(v, float):
-            return int(v)
-        if isinstance(v, int):
-            return v
-        raise ValueError("must be an integer or a float")
+        return UserValidator.validate_username(v)
+
+    @model_validator(mode="after")
+    def validate_username_strategy(self):
+        if self.strategy == UsernameGenerationStrategy.random:
+            if self.username not in (None, ""):
+                raise ValueError("username must be null when strategy is 'random'")
+            if self.start_number is not None:
+                raise ValueError("start_number is only valid when strategy is 'sequence'")
+        if self.strategy == UsernameGenerationStrategy.sequence and not self.username:
+            raise ValueError("username is required when strategy is 'sequence'")
+        return self
 
 
-class UserUsagesResponse(BaseModel):
-    username: str
-    usages: List[UserUsageResponse]
-
-
-class UsersUsagesResponse(BaseModel):
-    usages: List[UserUsageResponse]
+class BulkUsersCreateResponse(BaseModel):
+    subscription_urls: list[str] = Field(default_factory=list)
+    created: int = Field(default=0)

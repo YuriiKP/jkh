@@ -7,14 +7,12 @@ import ssl
 
 # Важно: здесь используются абсолютные импорты относительно пакета `telegram`,
 # чтобы модуль корректно работал при запуске скрипта `telegram/main.py`.
-from models.admin import Admin, AdminCreate, AdminModify, Token
+from models.admin import AdminDetails, AdminCreate, AdminModify, Token
 from models.user import (
     UserCreate,
     UserModify,
     UserResponse,
     UsersResponse,
-    UserUsagesResponse,
-    UsersUsagesResponse,
 )
 from models.user_template import (
     UserTemplateCreate,
@@ -25,7 +23,7 @@ from models.node import (
     NodeCreate,
     NodeModify,
     NodeResponse,
-    NodesUsageResponse,
+    NodesResponse,
 )
 from models.system import SystemStats
 
@@ -210,22 +208,22 @@ class MarzbanAPIClient:
     # Admin API
     # ------------------------------------------------------------------
 
-    async def get_current_admin(self) -> Admin:
+    async def get_current_admin(self) -> AdminDetails:
         """GET /api/admin — получить текущего аутентифицированного админа."""
         data = await self._request("GET", "/api/admin")
-        return Admin.model_validate(data)
+        return AdminDetails.model_validate(data)
 
-    async def create_admin(self, admin: AdminCreate) -> Admin:
+    async def create_admin(self, admin: AdminCreate) -> AdminDetails:
         """POST /api/admin — создать нового администратора (нужны sudo‑права)."""
         payload = admin.model_dump(exclude_none=True)
         data = await self._request("POST", "/api/admin", json=payload)
-        return Admin.model_validate(data)
+        return AdminDetails.model_validate(data)
 
-    async def modify_admin(self, username: str, update: AdminModify) -> Admin:
+    async def modify_admin(self, username: str, update: AdminModify) -> AdminDetails:
         """PUT /api/admin/{username} — изменить данные администратора."""
         payload = update.model_dump(exclude_none=True)
         data = await self._request("PUT", f"/api/admin/{username}", json=payload)
-        return Admin.model_validate(data)
+        return AdminDetails.model_validate(data)
 
     async def delete_admin(self, username: str) -> str:
         """
@@ -320,20 +318,6 @@ class MarzbanAPIClient:
         data = await self._request("GET", "/api/users", params=params)
         return UsersResponse.model_validate(data)
 
-    async def get_user_usages(self, username: str) -> UserUsagesResponse:
-        """
-        GET /api/user/{username}/usages — трафик пользователя по нодам.
-        """
-        data = await self._request("GET", f"/api/user/{username}/usages")
-        return UserUsagesResponse.model_validate(data)
-
-    async def list_users_usages(self) -> UsersUsagesResponse:
-        """
-        GET /api/users/usages — сводная статистика трафика для всех пользователей.
-        """
-        data = await self._request("GET", "/api/users/usages")
-        return UsersUsagesResponse.model_validate(data)
-
     # ------------------------------------------------------------------
     # User Templates API
     # ------------------------------------------------------------------
@@ -392,11 +376,6 @@ class MarzbanAPIClient:
         """GET /api/nodes — список нод."""
         data = await self._request("GET", "/api/nodes")
         return [NodeResponse.model_validate(item) for item in data]
-
-    async def nodes_usage(self) -> NodesUsageResponse:
-        """GET /api/nodes/usages — статистика трафика по нодам."""
-        data = await self._request("GET", "/api/nodes/usages")
-        return NodesUsageResponse.model_validate(data)
 
     # ------------------------------------------------------------------
     # System API
