@@ -6,7 +6,7 @@ from aiogram import F
 
 from utils.marzban_api import MarzbanAPIError
 
-from loader import dp, db_manage, marzban_client
+from loader import dp, db_manage, marzban_client, get_full_subscription_url
 from keyboards import *
 from models.user import UserResponse
 
@@ -81,13 +81,14 @@ async def get_qr_code_handler(query: CallbackQuery, state: FSMContext):
         return
     
     # Генерация QR-кода из subscription_url
+    full_subscription_url = get_full_subscription_url(user_marz.subscription_url)
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L,
         box_size=8,
         border=2,
     )
-    qr.add_data(user_marz.subscription_url)
+    qr.add_data(full_subscription_url)
     qr.make(fit=True)
     
     img = qr.make_image(fill_color='black', back_color='white')

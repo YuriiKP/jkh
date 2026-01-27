@@ -50,3 +50,25 @@ symbols = (
     'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', 
     '2', '3', '4', '5', '6', '7', '8', '9'
 )
+
+
+def get_full_subscription_url(subscription_url: str) -> str:
+    """
+    Преобразует относительную ссылку на подписку в полную ссылку с PASARGUARD_BASE_URL.
+    
+    :param subscription_url: Относительная ссылка вида /sub/... или полная ссылка
+    :return: Полная ссылка с базовым URL
+    """
+    if not subscription_url:
+        return subscription_url
+    
+    # Если ссылка уже полная (начинается с http:// или https://), возвращаем как есть
+    if subscription_url.startswith(('http://', 'https://')):
+        return subscription_url
+    
+    # Если ссылка относительная (начинается с /), добавляем базовый URL
+    if subscription_url.startswith('/'):
+        return f"{PASARGUARD_BASE_URL}{subscription_url}"
+    
+    # Если ссылка не начинается с /, добавляем базовый URL и /
+    return f"{PASARGUARD_BASE_URL}/{subscription_url}"

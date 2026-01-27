@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from aiogram.types import CallbackQuery, Message, LabeledPrice, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
 from aiogram.exceptions import TelegramBadRequest
@@ -113,7 +114,6 @@ async def success_payment_handler(message: Message):
     
     if payment_info.invoice_payload == "one_month":
         user_id = message.from_user.id
-        expire_duration = 30 * 24 * 60 * 60  # 1 месяц в секундах 
         
         # Если есть не активированай пробный период, отменям его
         user_tg = await db_manage.get_user_by_id(user_id)
@@ -124,17 +124,27 @@ async def success_payment_handler(message: Message):
         try:
             user_marz: UserResponse = await marzban_client.get_user(user_id)
             
+            # Определяем текущую дату истечения
             if user_marz.expire:
-                current_expire = user_marz.expire
-            elif user_marz.on_hold_expire_duration:
-                current_expire = user_marz.on_hold_expire_duration
+                # Если expire это timestamp (int), конвертируем в datetime
+                if isinstance(user_marz.expire, int):
+                    current_expire = datetime.fromtimestamp(user_marz.expire)
+                else:
+                    current_expire = user_marz.expire
+                    # Если datetime имеет timezone, конвертируем в naive datetime
+                    if current_expire.tzinfo is not None:
+                        current_expire = current_expire.replace(tzinfo=None)
             else:
-                current_expire = 0
+                # Если подписки нет, начинаем с текущей даты
+                current_expire = datetime.now()
+
+            # Добавляем 30 дней к текущей дате истечения
+            new_expire = current_expire + timedelta(days=30)
 
             modify_user = UserModify(
-                on_hold_expire_duration=current_expire + expire_duration,
+                expire=new_expire,
                 proxy_settings=ProxyTable(vless=VlessSettings(flow=XTLSFlows.VISION)),
-                status=UserStatusModify.on_hold
+                status=UserStatusModify.active
             )
             user_marz: UserResponse = await marzban_client.modify_user(user_id, modify_user)
         except MarzbanAPIError as e:
@@ -142,8 +152,8 @@ async def success_payment_handler(message: Message):
                 new_user = UserCreate(
                     username=str(user_id),
                     note=f'{message.from_user.first_name} @{message.from_user.username}',
-                    status=UserStatusCreate.on_hold,
-                    on_hold_expire_duration=expire_duration,
+                    status=UserStatusCreate.active,
+                    expire=datetime.now() + timedelta(days=30),
                     group_ids=[1],
                     proxy_settings=ProxyTable(vless=VlessSettings(flow=XTLSFlows.VISION))
                 )

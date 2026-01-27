@@ -2,6 +2,7 @@ from aiogram.utils.formatting import TextMention
 
 from models.user import UserResponse
 from datetime import datetime
+from loader import get_full_subscription_url
 
 ### Кнопки меню
 
@@ -42,13 +43,14 @@ start_help_message = '''
 '''
 
 def trial_days_text(subscription_url):
+    full_url = get_full_subscription_url(subscription_url)
     return f'''
 🔎 <b>Пробный период</b>
 
 Вы получили доступ к пробному периоду!
 
 🔗 <b>Ссылка на подписку:</b>
-<code>{subscription_url}</code>
+<code>{full_url}</code>
 
 📱 <b>Как использовать:</b>
 1. Скопируйте ссылку выше
@@ -138,17 +140,32 @@ def my_keys_stat_info(user_marz: UserResponse):
     if user_marz.expire == 0:
         expire_text = '∞'
     elif user_marz.expire is not None:
-        expire_date = datetime.fromtimestamp(user_marz.expire)
-        expire_text = expire_date.strftime('%d.%m.%y | ') + f' ({(expire_date - datetime.now()).days} д.)'
+        # Обрабатываем expire как datetime или timestamp (int)
+        if isinstance(user_marz.expire, int):
+            expire_date = datetime.fromtimestamp(user_marz.expire)
+        else:
+            expire_date = user_marz.expire
+            # Если datetime имеет timezone, конвертируем в naive datetime для сравнения
+            if expire_date.tzinfo is not None:
+                expire_date = expire_date.replace(tzinfo=None)
+        
+        # Вычисляем оставшиеся дни (используем naive datetime для сравнения)
+        now = datetime.now()
+        remaining_delta = expire_date - now
+        remaining_days = remaining_delta.days
+        
+        # Форматируем дату и оставшиеся дни
+        expire_text = expire_date.strftime('%d.%m.%y | ') + f' ({remaining_days} д.)'
     else: 
         expire_text = 'На паузе'
     
+    full_subscription_url = get_full_subscription_url(user_marz.subscription_url)
     text = (
         '<b>🧾 КВИТАНЦИЯ ПО ЛИЦЕВОМУ СЧЕТУ</b>\n\n'
         f'{emoji} <b>Статус:</b> {status}\n'
         f'📊 <b>Расход трафика: {lifetime_used_gb:.2f} GB</b>\n'
         f'📅 <b>Срок действия:</b> {expire_text}\n\n'
-        f'🔗 <b>Ссылка на подписку:</b> {user_marz.subscription_url}'
+        f'🔗 <b>Ссылка на подписку:</b> {full_subscription_url}'
     )
 
     return text

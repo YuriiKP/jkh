@@ -215,13 +215,13 @@ class MarzbanAPIClient:
 
     async def create_admin(self, admin: AdminCreate) -> AdminDetails:
         """POST /api/admin — создать нового администратора (нужны sudo‑права)."""
-        payload = admin.model_dump(exclude_none=True)
+        payload = admin.model_dump(exclude_none=True, mode="json")
         data = await self._request("POST", "/api/admin", json=payload)
         return AdminDetails.model_validate(data)
 
     async def modify_admin(self, username: str, update: AdminModify) -> AdminDetails:
         """PUT /api/admin/{username} — изменить данные администратора."""
-        payload = update.model_dump(exclude_none=True)
+        payload = update.model_dump(exclude_none=True, mode="json")
         data = await self._request("PUT", f"/api/admin/{username}", json=payload)
         return AdminDetails.model_validate(data)
 
@@ -271,7 +271,7 @@ class MarzbanAPIClient:
             return existing_user
         except MarzbanAPIError as e:
             if e.status == 404:
-                payload = user.model_dump(exclude_none=True)
+                payload = user.model_dump(exclude_none=True, mode="json")
                 data = await self._request("POST", "/api/user", json=payload)
                 return UserResponse.model_validate(data)
             raise
@@ -283,7 +283,7 @@ class MarzbanAPIClient:
 
     async def modify_user(self, username: str, update: UserModify) -> UserResponse:
         """PUT /api/user/{username} — изменить пользователя."""
-        payload = update.model_dump(exclude_none=True)
+        payload = update.model_dump(exclude_none=True, mode="json")
         data = await self._request("PUT", f"/api/user/{username}", json=payload)
         return UserResponse.model_validate(data)
 
@@ -326,7 +326,7 @@ class MarzbanAPIClient:
         self, template: UserTemplateCreate
     ) -> UserTemplateResponse:
         """POST /api/user_template — создать пользовательский шаблон."""
-        payload = template.model_dump(exclude_none=True)
+        payload = template.model_dump(exclude_none=True, mode="json")
         data = await self._request("POST", "/api/user_template", json=payload)
         return UserTemplateResponse.model_validate(data)
 
@@ -334,7 +334,7 @@ class MarzbanAPIClient:
         self, template_id: int, update: UserTemplateModify
     ) -> UserTemplateResponse:
         """PUT /api/user_template/{id} — изменить пользовательский шаблон."""
-        payload = update.model_dump(exclude_none=True)
+        payload = update.model_dump(exclude_none=True, mode="json")
         data = await self._request(
             "PUT", f"/api/user_template/{template_id}", json=payload
         )
@@ -357,13 +357,13 @@ class MarzbanAPIClient:
 
     async def create_node(self, node: NodeCreate) -> NodeResponse:
         """POST /api/node — создать ноду."""
-        payload = node.model_dump(exclude_none=True)
+        payload = node.model_dump(exclude_none=True, mode="json")
         data = await self._request("POST", "/api/node", json=payload)
         return NodeResponse.model_validate(data)
 
     async def modify_node(self, node_id: int, update: NodeModify) -> NodeResponse:
         """PUT /api/node/{id} — изменить ноду."""
-        payload = update.model_dump(exclude_none=True)
+        payload = update.model_dump(exclude_none=True, mode="json")
         data = await self._request("PUT", f"/api/node/{node_id}", json=payload)
         return NodeResponse.model_validate(data)
 

@@ -622,8 +622,8 @@
                             </div>
                             <div class="instruction-buttons">
                 <div class="subscription-buttons">
-                                    <a href="happ://add/{{ user.subscription_url }}" class="subscription-btn">+ Добавить подписку</a>
-                    <button class="action-btn qr-btn" onclick="showQR('happ://add/{{ user.subscription_url }}')" style="flex: 0 0 auto;">QR</button>
+                                    <a href="happ://add/{{ user.subscription_url }}" class="subscription-btn" data-subscription-url="{{ user.subscription_url }}">+ Добавить подписку</a>
+                    <button class="action-btn qr-btn" onclick="showQR(getFullSubscriptionUrl('{{ user.subscription_url }}'))" style="flex: 0 0 auto;">QR</button>
                     <button class="action-btn copy-btn" onclick="copySubscriptionLink('{{ user.subscription_url }}', this)" style="flex: 0 0 auto;" title="Копировать ссылку">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -700,8 +700,8 @@
                             </div>
                             <div class="instruction-buttons">
                                 <div class="subscription-buttons">
-                                    <a href="v2raytun://import/{{ user.subscription_url }}" class="subscription-btn">+ Добавить подписку</a>
-                                    <button class="action-btn qr-btn" onclick="showQR('{{ user.subscription_url }}')" style="flex: 0 0 auto;">QR</button>
+                                    <a href="v2raytun://import/{{ user.subscription_url }}" class="subscription-btn" data-subscription-url="{{ user.subscription_url }}">+ Добавить подписку</a>
+                                    <button class="action-btn qr-btn" onclick="showQR(getFullSubscriptionUrl('{{ user.subscription_url }}'))" style="flex: 0 0 auto;">QR</button>
                                     <button class="action-btn copy-btn" onclick="copySubscriptionLink('{{ user.subscription_url }}', this)" style="flex: 0 0 auto;" title="Копировать ссылку">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -744,10 +744,35 @@
         const qrPopup = document.getElementById('qrPopup');
         const overlay = document.getElementById('overlay');
 
+        // Функция для преобразования относительной ссылки в полную
+        function getFullSubscriptionUrl(subscriptionUrl) {
+            if (!subscriptionUrl) {
+                return subscriptionUrl;
+            }
+            
+            // Если ссылка уже полная (начинается с http:// или https://), возвращаем как есть
+            if (subscriptionUrl.startsWith('http://') || subscriptionUrl.startsWith('https://')) {
+                return subscriptionUrl;
+            }
+            
+            // Получаем базовый URL из текущего местоположения
+            const baseUrl = window.location.origin;
+            
+            // Если ссылка относительная (начинается с /), добавляем базовый URL
+            if (subscriptionUrl.startsWith('/')) {
+                return baseUrl + subscriptionUrl;
+            }
+            
+            // Если ссылка не начинается с /, добавляем базовый URL и /
+            return baseUrl + '/' + subscriptionUrl;
+        }
+
         function showQR(link) {
+            // Преобразуем ссылку в полную, если она относительная
+            const fullLink = getFullSubscriptionUrl(link);
             qrContainer.innerHTML = '';
             new QRCode(qrContainer, {
-                text: link,
+                text: fullLink,
                 width: 200,
                 height: 200,
                 colorDark : "#000000",
@@ -860,7 +885,9 @@
         });
 
         function copySubscriptionLink(link, button) {
-            navigator.clipboard.writeText(link).then(function() {
+            // Преобразуем ссылку в полную перед копированием
+            const fullLink = getFullSubscriptionUrl(link);
+            navigator.clipboard.writeText(fullLink).then(function() {
                 button.classList.add('copied');
                 
                 setTimeout(function() {
@@ -870,7 +897,7 @@
                 console.error('Ошибка копирования: ', err);
                 // Fallback для старых браузеров
                 const textArea = document.createElement('textarea');
-                textArea.value = link;
+                textArea.value = fullLink;
                 textArea.style.position = 'fixed';
                 textArea.style.opacity = '0';
                 document.body.appendChild(textArea);
@@ -892,6 +919,20 @@
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             updatePlatformButtons();
+            
+            // Обновляем ссылки в href для happ://add/ и v2raytun://import/ с полными URL
+            document.querySelectorAll('a[data-subscription-url]').forEach(function(link) {
+                const subscriptionUrl = link.getAttribute('data-subscription-url');
+                const fullUrl = getFullSubscriptionUrl(subscriptionUrl);
+                const currentHref = link.getAttribute('href');
+                
+                // Обновляем href, заменяя относительную ссылку на полную
+                if (currentHref.includes('happ://add/')) {
+                    link.setAttribute('href', 'happ://add/' + fullUrl);
+                } else if (currentHref.includes('v2raytun://import/')) {
+                    link.setAttribute('href', 'v2raytun://import/' + fullUrl);
+                }
+            });
         });
     </script>
 </body>

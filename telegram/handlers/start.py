@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from aiogram.types import Message, CallbackQuery, BotCommandScopeDefault
 from aiogram.filters import CommandStart, CommandObject
 from aiogram.fsm.context import FSMContext
@@ -43,7 +44,6 @@ async def process_start_bot_deep_link(message: Message, state: FSMContext, comma
     if deep_link_info is not None:
         # Диплинк активен, активируем подписку
         user_id = message.from_user.id
-        duration_seconds = deep_link_info.duration_days * 86400
         
         # Активируем диплинк (помечаем использованным)
         success = await db_manage.activate_deep_link(args, user_id)
@@ -55,18 +55,27 @@ async def process_start_bot_deep_link(message: Message, state: FSMContext, comma
         # Продлеваем подписку пользователя через Marzban
         try:
             user_marz = await marzban_client.get_user(str(user_id))
-            # Определяем текущий срок
+            # Определяем текущую дату истечения
             if user_marz.expire:
-                current_expire = user_marz.expire
-            elif user_marz.on_hold_expire_duration:
-                current_expire = user_marz.on_hold_expire_duration
+                # Если expire это timestamp (int), конвертируем в datetime
+                if isinstance(user_marz.expire, int):
+                    current_expire = datetime.fromtimestamp(user_marz.expire)
+                else:
+                    current_expire = user_marz.expire
+                    # Если datetime имеет timezone, конвертируем в naive datetime
+                    if current_expire.tzinfo is not None:
+                        current_expire = current_expire.replace(tzinfo=None)
             else:
-                current_expire = 0
+                # Если подписки нет, начинаем с текущей даты
+                current_expire = datetime.now()
+            
+            # Добавляем дни из диплинка
+            new_expire = current_expire + timedelta(days=deep_link_info.duration_days)
             
             modify_user = UserModify(
-                on_hold_expire_duration=current_expire + duration_seconds,
+                expire=new_expire,
                 proxy_settings=ProxyTable(vless=VlessSettings(flow=XTLSFlows.VISION)),
-                status=UserStatusModify.on_hold
+                status=UserStatusModify.active
             )
             user_marz: UserResponse = await marzban_client.modify_user(str(user_id), modify_user)
         except MarzbanAPIError as e:
@@ -75,8 +84,8 @@ async def process_start_bot_deep_link(message: Message, state: FSMContext, comma
                 new_user = UserCreate(
                     username=str(user_id),
                     note=f'{message.from_user.first_name} @{message.from_user.username}',
-                    status=UserStatusCreate.on_hold,
-                    on_hold_expire_duration=duration_seconds,
+                    status=UserStatusCreate.active,
+                    expire=datetime.now() + timedelta(days=deep_link_info.duration_days),
                     group_ids=[1],
                     proxy_settings=ProxyTable(vless=VlessSettings(flow=XTLSFlows.VISION))
                 )

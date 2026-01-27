@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 from aiogram import F
@@ -31,11 +33,21 @@ async def trial_buy_handler(query: CallbackQuery, state: FSMContext):
         user_marz: UserResponse = await marzban_client.get_user(user_id)
     except MarzbanAPIError as e:
         if e.status == 404:
+            # Ошибка в панели, on_hold корректно вообще не работает
+            # new_user = UserCreate(
+            #     username=str(user_id),
+            #     note=f'{query.from_user.first_name} @{query.from_user.username}',
+            #     status=UserStatusCreate.on_hold,
+            #     on_hold_expire_duration=86400 * 3,  # 3 дня в секундах
+            #     group_ids=[1],
+            #     proxy_settings=ProxyTable(vless=VlessSettings(flow=XTLSFlows.VISION))
+            # )
+
             new_user = UserCreate(
                 username=str(user_id),
                 note=f'{query.from_user.first_name} @{query.from_user.username}',
-                status=UserStatusCreate.on_hold,
-                on_hold_expire_duration=86400 * 3,  # 3 дня в секундах
+                status=UserStatusCreate.active,
+                expire=datetime.now() + timedelta(3.0),
                 group_ids=[1],
                 proxy_settings=ProxyTable(vless=VlessSettings(flow=XTLSFlows.VISION))
             )
