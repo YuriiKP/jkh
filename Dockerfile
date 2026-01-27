@@ -10,7 +10,7 @@ ENV PATH="/code/.venv/bin:$PATH"
 
 
 # Копируем папку с шаблонами
-# COPY templates/ /var/lib/pasarguard/templates/
+COPY templates/ /var/lib/pasarguard/templates/
 
 
 CMD ["bash", "-c", "alembic upgrade head && python main.py"]
