@@ -7,7 +7,7 @@
 `CREATE USER 'telegram_user'@'%' IDENTIFIED BY 'ваш_пароль';`
 
 # Выдаем права на базу telegram
-`GRANT ALL PRIVILEGES ON telegram_user.* TO 'telegram_db'@'%';`
+`GRANT ALL PRIVILEGES ON telegram_db.* TO 'telegram_user'@'%';`
 
 # Применяем изменения
 `FLUSH PRIVILEGES;`
@@ -35,3 +35,10 @@ cp /etc/letsencrypt/live/example.com/privkey.pem /var/lib/pg-node/certs/privkey.
 chmod 644 /var/lib/pg-node/certs/fullchain.pem && \
 chmod 600 /var/lib/pg-node/certs/privkey.pem" && \
 docker restart node`
+
+# Перенос бэкапа базы данных 
+`docker exec mysql mysqldump -u root -p'ПАРОЛЬ' ИМЯ_БАЗЫ > backup.sql`
+`docker exec mysql mysqldump -u root -p'ПАРОЛЬ' --all-databases > dump.sql`
+
+
+`docker exec -i mysql mysql -u root -p'ПАРОЛЬ' ИМЯ_БАЗЫ < backup.sql`

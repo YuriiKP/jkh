@@ -1,18 +1,10 @@
-from datetime import datetime, timedelta
-from aiogram.types import Message, CallbackQuery, BotCommandScopeDefault, InlineKeyboardButton, InlineKeyboardMarkup
-from aiogram.filters import CommandStart, CommandObject
+from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram import F
 from aiogram.exceptions import TelegramBadRequest
 
-from loader import dp, bot, deep_links_admin_manage, db_manage, marzban_client
-from models.user import UserCreate, UserStatusCreate, UserModify, UserStatusModify
-from models.proxy import ProxyTable, VlessSettings, XTLSFlows
-from utils.marzban_api import MarzbanAPIError
+from loader import dp
 from keyboards import *
-from filters import IsAdmin, IsMainAdmin, IsUser
-from commands import user_commands
-
 from handlers.start import process_start_bot
 
 
