@@ -21,6 +21,17 @@ def user_menu(trial: str):
     return builder.as_markup()
 
 
+def rules_menu():
+    builder = InlineKeyboardBuilder()
+    
+    builder.button(text=btn_rules_accept, callback_data='btn_rules_accept')
+    builder.button(text=btn_rules_decline, callback_data='btn_rules_decline')
+    
+    builder.adjust(1)
+    
+    return builder.as_markup()
+
+
 def help_menu():
     builder = InlineKeyboardBuilder()
     builder.button(text=btn_how_to_connect, callback_data='how_to_connect')

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from aiogram.types import Message, CallbackQuery, BotCommandScopeDefault
+from aiogram.types import Message, CallbackQuery, BotCommandScopeDefault, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.filters import CommandStart, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram import F
@@ -36,7 +36,7 @@ async def process_start_bot_deep_link(message: Message, state: FSMContext, comma
             text=f'Поздравляю! Теперь ты {status_user}'
         )
 
-        await process_start_bot(message, message.from_user.id, message.from_user.first_name)
+        await process_start_bot(message, message.from_user.id)
         return
     
     # 2. Проверяем диплинки подписки в БД
@@ -49,7 +49,7 @@ async def process_start_bot_deep_link(message: Message, state: FSMContext, comma
         success = await db_manage.activate_deep_link(args, user_id)
         if not success:
             # Что-то пошло не так (возможно, уже использован)
-            await process_start_bot(message, user_id, message.from_user.first_name)
+            await process_start_bot(message, user_id)
             return
         
         # Продлеваем подписку пользователя через Marzban
@@ -93,7 +93,7 @@ async def process_start_bot_deep_link(message: Message, state: FSMContext, comma
             else:
                 # Ошибка API, логируем и продолжаем обычный старт
                 print(f"Marzban API error: {e.message}")
-                await process_start_bot(message, user_id, message.from_user.first_name)
+                await process_start_bot(message, user_id)
                 return
         
         # Обновляем поле trial в таблице users (если нужно)
@@ -104,11 +104,11 @@ async def process_start_bot_deep_link(message: Message, state: FSMContext, comma
         await message.answer(
             text=f'✅ Подписка активирована! Добавлено {deep_link_info.duration_days} дней.'
         )
-        await process_start_bot(message, user_id, message.from_user.first_name)
+        await process_start_bot(message, user_id)
         return
     
     # 3. Если диплинк не найден, обычный старт
-    await process_start_bot(message, message.from_user.id, message.from_user.first_name)
+    await process_start_bot(message, message.from_user.id)
 
 
 
@@ -116,16 +116,8 @@ async def process_start_bot_deep_link(message: Message, state: FSMContext, comma
 @dp.message(CommandStart())
 async def start_command(message: Message, state: FSMContext):
     await state.clear()
-    
-    await db_manage.add_new_user(
-        message.from_user.id, 
-        message.from_user.username, 
-        message.from_user.first_name, 
-        message.from_user.last_name,
-        language=message.from_user.language_code
-        )
-    
-    await process_start_bot(message, message.from_user.id, message.from_user.first_name)
+
+    await process_start_bot(message, message.from_user.id)
 
 
 # Старт с колбэка
@@ -135,13 +127,33 @@ async def inline_process_start_bot(query: CallbackQuery, state: FSMContext):
     
     # await query.message.delete()
     await state.clear()
-    await process_start_bot(query.message, query.from_user.id, query.from_user.first_name)
+    await process_start_bot(query.message, query.from_user.id)
 
 
 
 # Функция запуска
-async def process_start_bot(message: Message, user_id, first_name):
+async def process_start_bot(message: Message | CallbackQuery, user_id):
     user = await db_manage.get_user_by_id(user_id)
+
+    if user is None:
+        await db_manage.add_new_user(
+            message.from_user.id,
+            message.from_user.username,
+            message.from_user.first_name,
+            message.from_user.last_name,
+            language=message.from_user.language_code
+        )
+
+        await message.answer(
+            text=rules_text,
+            reply_markup=rules_menu()
+        )
+
+        return
+    
+    # Нужен объект Message
+    if isinstance(message, CallbackQuery):
+        message = message.message
     
     await bot.set_my_commands(
         commands=user_commands,
