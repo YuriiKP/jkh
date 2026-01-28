@@ -103,7 +103,7 @@ services:
     # network_mode: host
     ports:
       - 80:80
-      - 8001:8001
+      - 8080:8080
       - 8443:8443
     volumes:
       - /var/lib/pasarguard:/var/lib/pasarguard
