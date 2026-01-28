@@ -123,8 +123,7 @@ def my_keys_stat_info(user_marz: UserResponse):
         'disabled': 'Отключен',
         'limited': 'Ограничен',
         'expired': 'Истек',
-        'on_hold': 'На паузе'
-    }
+        'on_hold': 'На паузе',}
     
     emoji = status_emoji.get(user_marz.status.value, '❓')
     status = status_text.get(user_marz.status.value, user_marz.status.value)
