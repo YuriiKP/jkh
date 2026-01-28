@@ -21,7 +21,7 @@
 `docker exec -it pasarguard xray x25519`
 
 # Генерация ShortId
-`docker exec -it pasarguard openssl rand -hex 4`
+`openssl rand -hex 4`
 
 
 # Установка certbot
@@ -42,3 +42,17 @@ docker restart node`
 
 
 `docker exec -i mysql mysql -u root -p'ПАРОЛЬ' ИМЯ_БАЗЫ < backup.sql`
+
+## Telegram bot: webhook / long-polling
+
+Бот умеет работать в двух режимах:
+
+- **Webhook (aiohttp)**: если в `.env` задан `WEBHOOK_PATH`, бот поднимает `aiohttp`-сервер на `WEB_SERVER_HOST:WEB_SERVER_PORT` и вызывает `setWebhook` на URL `PASARGUARD_BASE_URL + WEBHOOK_PATH` с `WEBHOOK_SECRET`.
+- **Long-polling**: если `WEBHOOK_PATH` не задан, бот стартует через `start_polling` (как раньше).
+
+Переменные окружения:
+
+- **WEB_SERVER_HOST**: хост для `aiohttp` (по умолчанию `0.0.0.0`)
+- **WEB_SERVER_PORT**: порт для `aiohttp` (по умолчанию `8080`)
+- **WEBHOOK_PATH**: путь вебхука (например, `/tg/webhook`)
+- **WEBHOOK_SECRET**: `secret_token` для Telegram webhook

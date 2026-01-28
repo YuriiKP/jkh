@@ -17,17 +17,27 @@ logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
 
-# Тг бот
-TG_TOKEN = os.getenv('TG_TOKEN')
-TG_ADMIN = os.getenv('TG_ADMIN')
-SQLALCHEMY_DATABASE_URL_TG = os.getenv('SQLALCHEMY_DATABASE_URL_TG')
 
 # Настройки подключения к Marzban
 PASARGUARD_BASE_URL = os.getenv('PASARGUARD_BASE_URL', '').rstrip('/')
 PASARGUARD_ADMIN_USERNAME = os.getenv('PASARGUARD_ADMIN_USERNAME')
 PASARGUARD_ADMIN_PASSWORD = os.getenv('PASARGUARD_ADMIN_PASSWORD')
 
+
+# Тг бот
+TG_TOKEN = os.getenv('TG_TOKEN')
+TG_ADMIN = os.getenv('TG_ADMIN')
+SQLALCHEMY_DATABASE_URL_TG = os.getenv('SQLALCHEMY_DATABASE_URL_TG')
+
 YOO_KASSA_PROVIDER_TOKEN = os.getenv('YOO_KASSA_PROVIDER_TOKEN')
+
+# Webhook (опционально)
+WEBHOOK_PATH = (os.getenv("WEBHOOK_PATH") or "")
+WEB_SERVER_HOST = os.getenv("WEB_SERVER_HOST", "127.0.0.1")
+WEB_SERVER_PORT = int(os.getenv("WEB_SERVER_PORT", "8080"))
+WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
+BASE_WEBHOOK_URL = PASARGUARD_BASE_URL
+
 
 bot = Bot(TG_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
