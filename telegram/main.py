@@ -55,18 +55,26 @@ def _build_webhook_app() -> web.Application:
     return app
 
 
-async def main():
-    # Если WEBHOOK_PATH передан — запускаемся на вебхуке, иначе на лонг-поллинге
-    if WEBHOOK_PATH:
-        app = _build_webhook_app()
-        web.run_app(app, host=WEB_SERVER_HOST, port=WEB_SERVER_PORT)
-        return
-
+async def _run_polling():
+    """
+    Запуск бота в режиме лонг-поллинга.
+    Выполняется внутри единственного события asyncio.run.
+    """
     await bot.delete_webhook(drop_pending_updates=True)
     await db_manage.create_tables()
     await dp.start_polling(bot)
     await bot.session.close()
 
 
+def main():
+    # Если WEBHOOK_PATH передан — запускаемся на вебхуке (aiohttp сам управляет циклом событий),
+    # иначе — на лонг-поллинге через asyncio.run.
+    if WEBHOOK_PATH:
+        app = _build_webhook_app()
+        web.run_app(app, host=WEB_SERVER_HOST, port=WEB_SERVER_PORT)
+    else:
+        asyncio.run(_run_polling())
+
+
 if __name__ == '__main__':
-    asyncio.run(main()) 
+    main()
