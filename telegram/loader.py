@@ -32,11 +32,11 @@ SQLALCHEMY_DATABASE_URL_TG = os.getenv('SQLALCHEMY_DATABASE_URL_TG')
 YOO_KASSA_PROVIDER_TOKEN = os.getenv('YOO_KASSA_PROVIDER_TOKEN')
 
 # Webhook (опционально)
+BASE_WEBHOOK_URL = os.getenv("BASE_WEBHOOK_URL")
 WEBHOOK_PATH = (os.getenv("WEBHOOK_PATH") or "")
 WEB_SERVER_HOST = os.getenv("WEB_SERVER_HOST", "127.0.0.1")
 WEB_SERVER_PORT = int(os.getenv("WEB_SERVER_PORT", "8080"))
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
-BASE_WEBHOOK_URL = PASARGUARD_BASE_URL
 
 
 bot = Bot(TG_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))

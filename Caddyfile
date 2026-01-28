@@ -3,3 +3,7 @@
 
     reverse_proxy localhost:8080
 }
+
+{$BASE_WEBHOOK_URL} {
+    reverse_proxy localhost:8080
+}
