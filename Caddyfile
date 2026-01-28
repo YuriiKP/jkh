@@ -1,7 +1,5 @@
 {$PASARGUARD_BASE_URL} {
     reverse_proxy unix//var/lib/pasarguard/pasarguard.socket
-
-    reverse_proxy localhost:8080
 }
 
 {$BASE_WEBHOOK_URL} {
