@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from aiogram.types import CallbackQuery, Message, LabeledPrice, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.fsm.context import FSMContext
 from aiogram.exceptions import TelegramBadRequest
 from aiogram import F
@@ -105,6 +106,31 @@ async def buy_one_month_handler(query: CallbackQuery, state: FSMContext):
     )
 
     await query.message.delete()
+
+
+@dp.callback_query(F.data == 'btn_pay_with_support')
+async def pay_with_support_handler(query: CallbackQuery, state: FSMContext):
+    await state.clear()
+
+    builder = InlineKeyboardBuilder()
+    builder.button(text="Написать в поддержку", url="https://t.me/foteleg_b")
+    builder.button(text=btn_back, callback_data='buy')
+    builder.adjust(1)
+
+    try:
+        await query.message.edit_text(
+            text=support_payment_text,
+            reply_markup=builder.as_markup()
+        )
+    except TelegramBadRequest:
+        await query.message.answer(
+            text=support_payment_text,
+            reply_markup=builder.as_markup()
+        )
+        try:
+            await query.message.delete()
+        except TelegramBadRequest:
+            pass
 
 
 # Обработака успешной оплаты

@@ -40,11 +40,12 @@ def buy_menu():
 
 
 def user_payment_method_menu():
-    """Меню выбора способа оплаты (карта или звезды)."""
+    """Меню выбора способа оплаты (карта, звезды или поддержка)."""
     builder = InlineKeyboardBuilder()
     
     builder.button(text=btn_pay_with_card, callback_data='btn_pay_with_card')
     builder.button(text=btn_pay_with_stars, callback_data='btn_pay_with_stars')
+    builder.button(text=btn_pay_with_support, callback_data='btn_pay_with_support')
     builder.button(text=btn_back, callback_data='buy')
 
     builder.adjust(1)
