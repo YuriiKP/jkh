@@ -43,6 +43,7 @@ docker restart node`
 
 `docker exec -i mysql mysql -u root -p'ПАРОЛЬ' ИМЯ_БАЗЫ < backup.sql`
 
+
 ## Telegram bot: webhook / long-polling
 
 Бот умеет работать в двух режимах:
