@@ -1,22 +1,20 @@
 import asyncio
 
-from aiohttp import web
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
-
+from aiohttp import web
+from handlers import bot, dp
 from loader import (
-    dp,
-    bot,
-    db_manage,
     BASE_WEBHOOK_URL,
+    PASARGUARD_NOTIFY_PATH,
+    PASARGUARD_NOTIFY_SECRET,
     WEB_SERVER_HOST,
     WEB_SERVER_PORT,
     WEBHOOK_PATH,
     WEBHOOK_SECRET,
-    PASARGUARD_NOTIFY_PATH,
-    PASARGUARD_NOTIFY_SECRET,
+    bot,
+    db_manage,
+    dp,
 )
-from handlers import dp, bot
-
 from notification_webhook import register_pasarguard_notification_route
 
 
@@ -92,6 +90,7 @@ def main():
         # Если задан PASARGUARD_NOTIFY_PATH — поднимаем aiohttp для приема уведомлений,
         # иначе — обычный запуск (только long-polling).
         if PASARGUARD_NOTIFY_PATH:
+
             async def _run_polling_with_http():
                 app = _build_webhook_app()
                 runner = web.AppRunner(app)
@@ -108,5 +107,5 @@ def main():
             asyncio.run(_run_polling())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
