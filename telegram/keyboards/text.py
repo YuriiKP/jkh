@@ -125,6 +125,8 @@ def my_keys_stat_info(user_marz: UserResponse):
         'expired': 'Истек',
         'on_hold': 'На паузе',
     }
+
+
     emoji = status_emoji.get(user_marz.status.value, '❓')
     status = status_text.get(user_marz.status.value, user_marz.status.value)
     
@@ -168,6 +170,17 @@ def my_keys_stat_info(user_marz: UserResponse):
         f'📊 <b>Расход трафика: {lifetime_used_gb:.2f} GB</b>\n'
         f'📅 <b>Срок действия:</b> {expire_text}\n\n'
         f'🔗 <b>Ссылка на подписку:</b> {full_subscription_url}'
+    )
+
+    return text
+
+
+def notification_days_left_text(days_left) -> str:
+    text = (
+    "⏰ <b>Напоминание</b>\n\n"
+    f"Ваша подписка истекает через <b>{days_left}</b> "
+    f"{'день' if days_left in 1 else 'дня'}.\n"
+    "Чтобы продлить — перейдите в боте в оплату/продление."
     )
 
     return text

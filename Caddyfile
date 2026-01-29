@@ -1,4 +1,5 @@
 {$PASARGUARD_BASE_URL} {
     reverse_proxy {$WEBHOOK_PATH}* telegram:8080
+    reverse_proxy {$PASARGUARD_NOTIFY_PATH}* telegram:8080
     reverse_proxy unix//var/lib/pasarguard/pasarguard.socket
 }

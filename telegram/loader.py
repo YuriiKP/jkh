@@ -38,6 +38,11 @@ WEB_SERVER_HOST = os.getenv("WEB_SERVER_HOST", "127.0.0.1")
 WEB_SERVER_PORT = int(os.getenv("WEB_SERVER_PORT", "8080"))
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
 
+# Pasarguard notifications (опционально)
+# Если переменная не задана/пустая — ручка уведомлений не поднимается, запуск без http-сервера.
+PASARGUARD_NOTIFY_PATH = (os.getenv("PASARGUARD_NOTIFY_PATH") or "").strip()
+PASARGUARD_NOTIFY_SECRET = os.getenv("PASARGUARD_NOTIFY_SECRET")
+
 
 bot = Bot(TG_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()

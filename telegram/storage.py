@@ -3,7 +3,7 @@ import string
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, BigInteger, String, DateTime, select, update, func, text, Integer, Boolean
+from sqlalchemy import Column, BigInteger, String, DateTime, select, update, func, text, Integer, Boolean, UniqueConstraint
 
 Base = declarative_base()
 
@@ -45,6 +45,24 @@ class DeepLink(Base):
     created_at = Column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     activated_at = Column(DateTime, nullable=True)
     activated_by_user_id = Column(BigInteger, nullable=True)
+
+
+class PasarguardNotificationEvent(Base):
+    """
+    События, полученные по webhook'у от панели (для дедупликации).
+    """
+
+    __tablename__ = "pasarguard_notification_events"
+    __table_args__ = (
+        UniqueConstraint("source", "event_id", name="uq_pasarguard_event_source_event_id"),
+    )
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    source = Column(String(64), nullable=False, default="pasarguard")
+    event_id = Column(String(128), nullable=False)
+    user_id = Column(BigInteger, nullable=False)
+    days_left = Column(Integer, nullable=False)
+    received_at = Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
 
 
 class DB_M:
@@ -327,3 +345,37 @@ class DB_M:
                 }
                 for p in payments
             ]
+
+    async def register_pasarguard_notification_event(
+        self,
+        *,
+        event_id: str,
+        user_id: int,
+        days_left: int,
+        source: str = "pasarguard",
+    ) -> bool:
+        """
+        Регистрирует событие уведомления.
+        Возвращает True если событие новое (будем слать сообщение),
+        False если уже было (дубль — игнорируем).
+        """
+        async with self.async_session() as session:
+            exists = await session.execute(
+                select(PasarguardNotificationEvent.id).where(
+                    (PasarguardNotificationEvent.source == source)
+                    & (PasarguardNotificationEvent.event_id == event_id)
+                )
+            )
+            if exists.scalar_one_or_none() is not None:
+                return False
+
+            session.add(
+                PasarguardNotificationEvent(
+                    source=source,
+                    event_id=event_id,
+                    user_id=user_id,
+                    days_left=int(days_left),
+                )
+            )
+            await session.commit()
+            return True
