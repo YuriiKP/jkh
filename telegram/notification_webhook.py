@@ -58,7 +58,7 @@ def register_pasarguard_notification_route(
         try:
             payload_list = await request.json()
             payload = payload_list[0]  
-            logger.info(payload)
+            logger.info(f"Пришло уведомление от панели. Тип: {payload.get("action")}")
         except Exception:
             return web.json_response(
                 {"ok": False, "error": "invalid_json"}, status=400
@@ -102,8 +102,10 @@ def register_pasarguard_notification_route(
 
         try:
             await bot.send_message(chat_id=user_id, text=notification_days_left_text(days_left))
+            logger.info(f"Уведомление отправлено пользователю в Телеграм | user_id: {user_id}")
         except (TelegramForbiddenError, TelegramBadRequest):
             # Пользователь мог заблокировать бота/не начинал диалог — webhook считаем обработанным.
+            logger.info(f"Ошибка при отправке уведомления в Телеграм | user_id: {user_id}")
             return web.json_response(
                 {"ok": True, "sent": False, "reason": "cannot_send"}
             )

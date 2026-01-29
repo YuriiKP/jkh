@@ -179,7 +179,7 @@ def notification_days_left_text(days_left) -> str:
     text = (
     "⏰ <b>Напоминание</b>\n\n"
     f"Ваша подписка истекает через <b>{days_left}</b> "
-    f"{'день' if days_left in 1 else 'дня'}.\n"
+    f"{'день' if days_left == 1 else 'дня'}.\n"
     "Чтобы продлить — перейдите в боте в оплату/продление."
     )
 
