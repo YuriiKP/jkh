@@ -52,8 +52,8 @@ def register_pasarguard_notification_route(
                 )
 
         try:
-            payload = await request.json()
-            print(payload)
+            payload_list = await request.json()
+            payload = payload_list[0]  
         except Exception:
             return web.json_response(
                 {"ok": False, "error": "invalid_json"}, status=400
