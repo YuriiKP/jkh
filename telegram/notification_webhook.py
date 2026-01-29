@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from typing import Optional
 
 from aiohttp import web
@@ -12,6 +13,9 @@ from pydantic import ValidationError
 from models.notification import ReachedDaysLeft, Notification
 from storage import DB_M
 from keyboards import *
+
+
+logger = logging.getLogger(__name__)
 
 
 def _stable_event_id(payload: dict) -> str:
@@ -54,6 +58,7 @@ def register_pasarguard_notification_route(
         try:
             payload_list = await request.json()
             payload = payload_list[0]  
+            logger.info(payload)
         except Exception:
             return web.json_response(
                 {"ok": False, "error": "invalid_json"}, status=400
