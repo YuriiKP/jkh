@@ -506,11 +506,22 @@
                     <span class="stat-label">Дата окончания</span>
                     <span class="stat-value">
                         {% if not user.expire %}
-                        Бессрочно
+                            Бессрочно
                         {% else %}
-                        {% set current_timestamp = now().timestamp() %}
-                        {% set remaining_days = ((user.expire - current_timestamp) // (24 * 3600)) %}
-                        {{ user.expire | datetime }} ({{ remaining_days | int }} дней осталось)
+                            {# Принудительно приводим всё к числу (int) для математики #}
+                            {% set current_ts = now().timestamp() | int %}
+                            {% set expire_ts = user.expire | int %}
+                            
+                            {# Считаем разницу в днях #}
+                            {% set remaining_seconds = expire_ts - current_ts %}
+                            {% set remaining_days = (remaining_seconds // 86400) %}
+                    
+                            {{ user.expire | datetime }} 
+                            {% if remaining_days > 0 %}
+                                ({{ remaining_days }} дн. осталось)
+                            {% else %}
+                                (Истекает сегодня)
+                            {% endif %}
                         {% endif %}
                     </span>
                 </div>
@@ -622,7 +633,7 @@
                             </div>
                             <div class="instruction-buttons">
                 <div class="subscription-buttons">
-                                    <a href="happ://add/{{ user.url }}" class="subscription-btn" data-subscription-url="{{ user.url }}">+ Добавить подписку</a>
+                                    <a href="happ://add/{{ user.subscription_url }}" class="subscription-btn" data-subscription-url="{{ user.subscription_url }}">+ Добавить подписку</a>
                     <button class="action-btn qr-btn" onclick="showQR(getFullSubscriptionUrl('{{ user.subscription_url }}'))" style="flex: 0 0 auto;">QR</button>
                     <button class="action-btn copy-btn" onclick="copySubscriptionLink('{{ user.subscription_url }}', this)" style="flex: 0 0 auto;" title="Копировать ссылку">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
