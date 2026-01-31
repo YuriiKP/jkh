@@ -14,6 +14,7 @@ from loader import (
     bot,
     db_manage,
     dp,
+    load_menu_image,
 )
 from notification_webhook import register_pasarguard_notification_route
 
@@ -33,6 +34,12 @@ def _build_webhook_app() -> web.Application:
 
     async def on_startup(_: web.Application) -> None:
         await db_manage.create_tables()
+        # Загружаем изображение меню при запуске
+        try:
+            await load_menu_image()
+        except Exception as e:
+            print(f"Ошибка загрузки изображения меню: {e}")
+
         if WEBHOOK_PATH:
             await bot.set_webhook(
                 url=webhook_url,
@@ -76,6 +83,12 @@ async def _run_polling():
     """
     await bot.delete_webhook(drop_pending_updates=True)
     await db_manage.create_tables()
+    # Загружаем изображение меню при запуске
+    try:
+        await load_menu_image()
+    except Exception as e:
+        print(f"Ошибка загрузки изображения меню: {e}")
+
     await dp.start_polling(bot)
     await bot.session.close()
 

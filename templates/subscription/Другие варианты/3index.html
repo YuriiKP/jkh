@@ -1,0 +1,2690 @@
+<!doctype html>
+<html lang="ru" dir="ltr">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
+        <title data-translate="page_title">
+            Панель пользователя | {{ user.username }}
+        </title>
+        <meta name="theme-color" content="#000000" />
+        <meta
+            name="apple-mobile-web-app-status-bar-style"
+            content="black-translucent"
+        />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <link
+            href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/misc/Farsi-Digits/font-face.css"
+            rel="stylesheet"
+            type="text/css"
+        />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap"
+            rel="stylesheet"
+        />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+        <style>
+                /* * ==============================================
+             * GLOBAL THEME VARIABLES (Dark Fantasy Skyrim Style)
+             * ==============================================
+             */
+                :root {
+                    --bg-body: #121212;
+                    --bg-card: #2B1E16;
+                    --bg-card-hover: #3A2A20;
+                    /* Основные цвета (пергамент и чернила) */
+                    --primary: #C3A37A;
+                    --primary-dark: #A88C66;
+                    --primary-glow: rgba(195, 163, 122, 0.3);
+                    --primary-dim: rgba(195, 163, 122, 0.1);
+                    /* Типографика */
+                    --text-main: #D9C5A3;
+                    --text-muted: #B8A88C;
+                    --text-dark: #8B7355;
+                    /* Статусы */
+                    --status-active: #8BC34A;
+                    --status-warning: #FF9800;
+                    --status-danger: #F44336;
+                    --status-disabled: #795548;
+                    /* Размеры и границы */
+                    --radius-sm: 4px;
+                    --radius-md: 8px;
+                    --radius-lg: 12px;
+                    --radius-full: 9999px;
+                    --border-light: 1px solid rgba(217, 197, 163, 0.15);
+                    --border-primary: 1px solid rgba(195, 163, 122, 0.4);
+                    --font-stack: "Arad", "Vazirmatn", sans-serif;
+                    /* Текстуры и эффекты */
+                    --parchment-texture: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.1'/%3E%3C/svg%3E");
+                    --wood-texture: linear-gradient(45deg, #2B1E16 25%, transparent 25%), linear-gradient(-45deg, #2B1E16 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #2B1E16 75%), linear-gradient(-45deg, transparent 75%, #2B1E16 75%);
+                    --wood-bg-size: 20px 20px;
+                    --wood-bg-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+                }
+
+                /* Светлая тема (Light Theme) - адаптирована под фэнтези стиль */
+                body.light-theme {
+                    --bg-body: #F5F1E8;
+                    --bg-card: #F8F4E9;
+                    --bg-card-hover: #F0E9D8;
+                    /* Основные цвета (пергамент и чернила) */
+                    --primary: #8B7355;
+                    --primary-dark: #6B553D;
+                    --primary-glow: rgba(139, 115, 85, 0.2);
+                    --primary-dim: rgba(139, 115, 85, 0.08);
+                    --text-main: #3D2C1E;
+                    --text-muted: #6B553D;
+                    --text-dark: #A88C66;
+                    --border-light: 1px solid rgba(139, 115, 85, 0.15);
+                    --border-primary: 1px solid rgba(139, 115, 85, 0.3);
+                    /* Цвета статусов в светлой теме */
+                    --status-active: #4CAF50;
+                    --status-warning: #FF9800;
+                    --status-danger: #D32F2F;
+                    --status-disabled: #795548;
+                    /* Текстуры и эффекты */
+                    --parchment-texture: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+                    --wood-texture: linear-gradient(45deg, #D7C9B5 25%, transparent 25%), linear-gradient(-45deg, #D7C9B5 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #D7C9B5 75%), linear-gradient(-45deg, transparent 75%, #D7C9B5 75%);
+                }
+
+                /* تنظیم فونت بر اساس زبان */
+                body.lang-en,
+                body.lang-ru {
+                    --font-stack: "Cinzel", "Crimson Text", "Roboto", serif;
+                    font-family: var(--font-stack) !important;
+                }
+                body.lang-ar,
+                body.lang-fa {
+                    --font-stack: "Vazirmatn", sans-serif;
+                    font-family: var(--font-stack) !important;
+                    direction: rtl;
+                }
+
+                /* * ==============================================
+             * RESET & BASIC LAYOUT
+             * ==============================================
+             */
+                * {
+                    box-sizing: border-box;
+                    outline: none;
+                }
+
+                /* Фон с виньеткой и текстурой */
+                body {
+                    background:
+                        radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.9) 100%),
+                        var(--wood-texture),
+                        var(--bg-body);
+                    background-size: 100% 100%, var(--wood-bg-size), auto;
+                    background-position: center, var(--wood-bg-position), center;
+                    background-attachment: fixed;
+                    min-height: 100vh;
+                    margin: 0;
+                    padding: 20px;
+                    font-family: var(--font-stack);
+                    color: var(--text-main);
+                    position: relative;
+                    overflow-x: hidden;
+                }
+
+                /* Эффект старинной бумаги поверх основного фона */
+                body::before {
+                    content: '';
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background:
+                        var(--parchment-texture),
+                        linear-gradient(to bottom, transparent 0%, rgba(43, 30, 22, 0.1) 100%);
+                    opacity: 0.4;
+                    pointer-events: none;
+                    z-index: -1;
+                }
+
+                /* Эффект чернильных пятен и винтажных пятен */
+                body::after {
+                    content: '';
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background:
+                        radial-gradient(circle at 10% 20%, rgba(61, 10, 10, 0.15) 0%, transparent 60%),
+                        radial-gradient(circle at 90% 80%, rgba(61, 10, 10, 0.12) 0%, transparent 60%),
+                        radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.08) 0%, transparent 60%),
+                        radial-gradient(circle at 30% 70%, rgba(195, 163, 122, 0.05) 0%, transparent 50%);
+                    pointer-events: none;
+                    z-index: -1;
+                }
+                    -webkit-tap-highlight-color: transparent;
+                }
+                body {
+                    margin: 0;
+                    padding: 0;
+                    min-height: 100vh;
+                    font-family: var(--font-stack);
+                    background-color: var(--bg-body);
+                    color: var(--text-main);
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    padding: 20px;
+                    overflow-x: hidden;
+                    transition:
+                        background-color 0.3s ease,
+                        color 0.3s ease;
+                }
+
+                /* پس‌زمینه ثابت */
+                .bg-fixed {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    z-index: -2;
+                    background: radial-gradient(
+                        circle at top center,
+                        #1a0508 0%,
+                        #000000 70%
+                    );
+                    pointer-events: none;
+                    transition: background 0.3s ease;
+                }
+                body.light-theme .bg-fixed {
+                    /* پس زمینه تمیزتر برای تم روشن */
+                    background: radial-gradient(
+                        circle at top center,
+                        #ffebee 0%,
+                        #f0f2f5 80%
+                    );
+                }
+
+                /* نقاط نورانی متحرک */
+                .bg-spot {
+                    position: fixed;
+                    border-radius: 50%;
+                    filter: blur(90px);
+                    opacity: 0.25;
+                    z-index: -1;
+                    animation: pulseGlow 10s infinite alternate;
+                }
+                .spot-1 {
+                    top: -10%;
+                    left: -10%;
+                    width: 50vw;
+                    height: 50vw;
+                    background: var(--primary);
+                }
+                .spot-2 {
+                    bottom: -10%;
+                    right: -10%;
+                    width: 60vw;
+                    height: 60vw;
+                    background: #600010;
+                    animation-delay: 2s;
+                }
+                body.light-theme .spot-2 {
+                    background: #ffcdd2;
+                    opacity: 0.4;
+                }
+
+                @keyframes pulseGlow {
+                    0% {
+                        transform: scale(1);
+                        opacity: 0.2;
+                    }
+                    100% {
+                        transform: scale(1.1);
+                        opacity: 0.3;
+                    }
+                }
+
+                @keyframes pulse {
+                    0% {
+                        transform: scale(1);
+                        opacity: 1;
+                    }
+                    50% {
+                        transform: scale(1.2);
+                        opacity: 0.8;
+                    }
+                    100% {
+                        transform: scale(1);
+                        opacity: 1;
+                    }
+                }
+
+                @keyframes parchmentGlow {
+                    0% {
+                        box-shadow: 0 0 20px rgba(195, 163, 122, 0.1);
+                    }
+                    50% {
+                        box-shadow: 0 0 30px rgba(195, 163, 122, 0.2);
+                    }
+                    100% {
+                        box-shadow: 0 0 20px rgba(195, 163, 122, 0.1);
+                    }
+                }
+
+                /* کانتینر اصلی - эффект старинного пергамента */
+                .main-wrapper {
+                    width: 100%;
+                    max-width: 500px;
+                    position: relative;
+                    z-index: 1;
+                    padding-bottom: 60px;
+                    background: linear-gradient(145deg, rgba(43, 30, 22, 0.9), rgba(33, 23, 17, 0.95));
+                    border: 1px solid rgba(195, 163, 122, 0.3);
+                    border-radius: 12px;
+                    box-shadow:
+                        0 10px 40px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                        0 0 20px rgba(195, 163, 122, 0.1);
+                    padding: 25px;
+                    margin: 20px auto 0;
+                    margin-inline: auto;
+                    animation: parchmentGlow 4s infinite ease-in-out;
+                }
+
+                /* تنظیمات (زبان و تم) */
+                .settings-bar {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 25px;
+                    width: 100%;
+                    padding: 10px 15px;
+                    background: rgba(33, 23, 17, 0.8);
+                    border: 1px solid rgba(195, 163, 122, 0.2);
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                }
+                .icon-btn {
+                    background: rgba(33, 23, 17, 0.8);
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                    border: 1px solid rgba(195, 163, 122, 0.3);
+                    color: var(--primary);
+                    width: 42px;
+                    height: 42px;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    box-shadow:
+                        0 4px 8px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                }
+                .icon-btn:hover {
+                    border-color: var(--primary);
+                    color: var(--text-main);
+                    background: rgba(195, 163, 122, 0.2);
+                    transform: translateY(-2px);
+                    box-shadow:
+                        0 6px 12px rgba(0, 0, 0, 0.4),
+                        0 0 15px rgba(195, 163, 122, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+                }
+                body.light-theme .icon-btn {
+                    background: rgba(248, 244, 233, 0.8);
+                    border-color: rgba(139, 115, 85, 0.3);
+                    color: var(--primary);
+                }
+
+                .lang-select-wrapper {
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                }
+                /* Стиль выбора языка в стиле фэнтези */
+                .lang-select {
+                    appearance: none;
+                    -webkit-appearance: none;
+                    background: linear-gradient(
+                        135deg,
+                        rgba(33, 23, 17, 0.9),
+                        rgba(43, 30, 22, 0.8)
+                    );
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                    border: 1px solid rgba(195, 163, 122, 0.4);
+                    box-shadow:
+                        0 4px 15px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                    color: var(--text-main);
+                    padding: 0 15px;
+                    padding-right: 35px;
+                    height: 42px;
+                    border-radius: 8px;
+                    font-family: "Crimson Text", serif;
+                    cursor: pointer;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                    text-align: center;
+                    direction: ltr;
+                    width: auto;
+                    min-width: 140px;
+                    letter-spacing: 0.5px;
+                }
+                /* آیکون فلش برای سلکت */
+                .lang-select-wrapper::after {
+                    content: "▼";
+                    font-size: 0.7rem;
+                    color: var(--text-muted);
+                    position: absolute;
+                    right: 12px;
+                    pointer-events: none;
+                    transition: 0.3s;
+                }
+                /* اصلاح فلش در حالت RTL */
+                [dir="rtl"] .lang-select {
+                    padding-right: 15px;
+                    padding-left: 35px;
+                }
+                [dir="rtl"] .lang-select-wrapper::after {
+                    right: auto;
+                    left: 12px;
+                }
+
+                .lang-select:hover,
+                .lang-select:focus {
+                    border-color: var(--primary);
+                    background: linear-gradient(
+                        135deg,
+                        rgba(195, 163, 122, 0.2),
+                        rgba(168, 140, 102, 0.15)
+                    );
+                    transform: translateY(-1px);
+                    box-shadow:
+                        0 6px 20px rgba(0, 0, 0, 0.5),
+                        0 0 15px rgba(195, 163, 122, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+                    color: var(--primary);
+                }
+                body.light-theme .lang-select {
+                    background: linear-gradient(
+                        135deg,
+                        rgba(248, 244, 233, 0.9),
+                        rgba(240, 233, 216, 0.8)
+                    );
+                    border-color: rgba(139, 115, 85, 0.4);
+                    box-shadow:
+                        0 4px 15px rgba(0, 0, 0, 0.1),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+                    color: var(--text-main);
+                }
+                body.light-theme .lang-select:hover {
+                    background: linear-gradient(
+                        135deg,
+                        rgba(248, 244, 233, 1),
+                        rgba(240, 233, 216, 0.9)
+                    );
+                    border-color: var(--primary);
+                    color: var(--primary);
+                }
+                .lang-select option {
+                    background: #2B1E16;
+                    color: var(--text-main);
+                    padding: 10px;
+                    font-family: "Crimson Text", serif;
+                    font-weight: 600;
+                }
+                body.light-theme .lang-select option {
+                    background: #F8F4E9;
+                    color: var(--text-main);
+                }
+
+                /* * ==============================================
+             * PROFILE HEADER
+             * ==============================================
+             */
+                .profile-card {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    margin-bottom: 35px;
+                    animation: slideDown 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+                    padding: 25px;
+                    background: linear-gradient(145deg, rgba(33, 23, 17, 0.7), rgba(43, 30, 22, 0.8));
+                    border: 2px solid rgba(195, 163, 122, 0.4);
+                    border-radius: 12px;
+                    box-shadow:
+                        0 8px 32px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                }
+                .avatar-container {
+                    width: 100px;
+                    height: 100px;
+                    border-radius: 50%;
+                    background: linear-gradient(145deg, #1A120B, #2B1E16);
+                    border: 3px solid var(--primary);
+                    box-shadow:
+                        0 0 40px var(--primary-glow),
+                        inset 0 0 20px rgba(195, 163, 122, 0.2);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-bottom: 20px;
+                    position: relative;
+                    overflow: hidden;
+                }
+                .avatar-container svg {
+                    width: 50px;
+                    height: 50px;
+                    fill: var(--primary);
+                    filter: drop-shadow(0 0 5px rgba(195, 163, 122, 0.5));
+                }
+                body.light-theme .avatar-container svg {
+                    fill: var(--primary);
+                }
+                body.light-theme .avatar-container {
+                    background: linear-gradient(145deg, #F0E9D8, #F8F4E9);
+                    border-color: var(--primary);
+                }
+
+                .username-title {
+                    font-size: 1.8rem;
+                    font-weight: 900;
+                    margin: 0;
+                    text-shadow:
+                        2px 2px 4px rgba(0, 0, 0, 0.5),
+                        0 0 20px rgba(195, 163, 122, 0.3),
+                        0 0 40px rgba(195, 163, 122, 0.1);
+                    color: var(--primary);
+                    font-family: "Cinzel", serif;
+                    letter-spacing: 1px;
+                    text-transform: uppercase;
+                    margin-bottom: 10px;
+                    position: relative;
+                    text-align: center;
+                    width: 100%;
+                }
+                .username-title::after {
+                    content: '';
+                    position: absolute;
+                    bottom: -5px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 60%;
+                    height: 2px;
+                    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+                    opacity: 0.6;
+                }
+                body.light-theme .username-title {
+                    text-shadow:
+                        1px 1px 2px rgba(0, 0, 0, 0.2),
+                        0 0 10px rgba(139, 115, 85, 0.2);
+                    color: var(--primary);
+                }
+
+                /* بج‌های وضعیت - стиль фэнтези */
+                .status-chip {
+                    margin-top: 10px;
+                    padding: 8px 24px;
+                    border-radius: 50px;
+                    font-size: 0.85rem;
+                    font-weight: 700;
+                    background: linear-gradient(145deg, rgba(33, 23, 17, 0.9), rgba(43, 30, 22, 0.8));
+                    border: 2px solid;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                    font-family: "Crimson Text", serif;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    box-shadow:
+                        0 4px 12px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                    margin-inline: auto;
+                }
+                /* تنظیمات پایه چیپ в светлой теме */
+                body.light-theme .status-chip {
+                    background: linear-gradient(145deg, rgba(248, 244, 233, 0.9), rgba(240, 233, 216, 0.8));
+                    border-color: rgba(139, 115, 85, 0.3);
+                    box-shadow:
+                        0 4px 12px rgba(0, 0, 0, 0.1),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+                }
+                .dot {
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 50%;
+                    background-color: currentColor;
+                    box-shadow: 0 0 8px currentColor;
+                    animation: pulse 2s infinite;
+                }
+
+                /* Применение цветов с высоким приоритетом */
+                .st-active {
+                    color: var(--status-active) !important;
+                    border-color: rgba(139, 195, 74, 0.5);
+                }
+                .st-expired {
+                    color: var(--status-danger) !important;
+                    border-color: rgba(244, 67, 54, 0.5);
+                }
+                .st-limited {
+                    color: var(--status-warning) !important;
+                    border-color: rgba(255, 152, 0, 0.5);
+                }
+                .st-disabled {
+                    color: var(--status-disabled) !important;
+                    border-color: rgba(121, 85, 72, 0.5);
+                }
+
+                /* Специальные тени для статусов */
+                .st-active {
+                    box-shadow:
+                        0 4px 12px rgba(0, 0, 0, 0.3),
+                        0 0 20px rgba(139, 195, 74, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                }
+                .st-expired {
+                    box-shadow:
+                        0 4px 12px rgba(0, 0, 0, 0.3),
+                        0 0 20px rgba(244, 67, 54, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                }
+                .st-limited {
+                    box-shadow:
+                        0 4px 12px rgba(0, 0, 0, 0.3),
+                        0 0 20px rgba(255, 152, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                }
+                .st-disabled {
+                    box-shadow:
+                        0 4px 12px rgba(0, 0, 0, 0.3),
+                        0 0 20px rgba(121, 85, 72, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                }
+
+                /* * ==============================================
+             * SUBSCRIPTION ACTIONS (COPY/QR)
+             * ==============================================
+             */
+                .sub-actions {
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                    justify-content: center;
+                    flex-wrap: wrap;
+                    margin-bottom: 30px;
+                    animation: fadeIn 0.8s ease 0.2s backwards;
+                    padding: 20px;
+                    background: linear-gradient(145deg, rgba(33, 23, 17, 0.7), rgba(43, 30, 22, 0.8));
+                    border: 1px solid rgba(195, 163, 122, 0.3);
+                    border-radius: 12px;
+                    box-shadow:
+                        0 8px 24px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                }
+                .btn-main {
+                    background: linear-gradient(145deg, rgba(33, 23, 17, 0.9), rgba(43, 30, 22, 0.8));
+                    border: 2px solid var(--primary);
+                    color: var(--primary);
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    font-family: "Crimson Text", serif;
+                    font-weight: 700;
+                    font-size: 1rem;
+                    cursor: pointer;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                    transition: all 0.3s ease;
+                    box-shadow:
+                        0 4px 15px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                    height: 56px;
+                    letter-spacing: 0.5px;
+                    text-transform: uppercase;
+                }
+                /* Icon-only button (square, minimal) */
+                .icon-btn {
+                    padding: 8px;
+                    width: 56px;
+                    height: 56px;
+                    min-width: 56px;
+                    border-radius: 8px;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .btn-main:hover {
+                    background: linear-gradient(145deg, rgba(195, 163, 122, 0.9), rgba(168, 140, 102, 0.8));
+                    color: #2B1E16;
+                    box-shadow:
+                        0 6px 20px rgba(0, 0, 0, 0.5),
+                        0 0 25px var(--primary-glow),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+                    transform: translateY(-3px) scale(1.05);
+                }
+                body.light-theme .btn-main:hover {
+                    background: linear-gradient(145deg, rgba(139, 115, 85, 0.9), rgba(107, 85, 61, 0.8));
+                    color: #F8F4E9;
+                }
+                .btn-main:active {
+                    transform: translateY(-1px) scale(0.98);
+                }
+
+                .btn-icon {
+                    width: 24px;
+                    height: 24px;
+                    fill: currentColor;
+                    filter: drop-shadow(0 0 3px currentColor);
+                }
+
+                /* Platform Selector Header */
+                .platform-selector-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    width: 100%;
+                    gap: 15px;
+                    margin-bottom: 0px;
+                    padding: 15px;
+                    background: linear-gradient(145deg, rgba(33, 23, 17, 0.7), rgba(43, 30, 22, 0.8));
+                    border: 1px solid rgba(195, 163, 122, 0.3);
+                    border-radius
+                .platform-selector-box {
+                    margin-bottom: 50px;
+                    padding: 20px;
+                    background: linear-gradient(145deg, rgba(33, 23, 17, 0.7), rgba(43, 30, 22, 0.8));
+                    border: 1px solid rgba(195, 163, 122, 0.3);
+                    border-radius: 12px;
+                    box-shadow:
+                        0 8px 24px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                }
+
+                .platform-selector-header .section-header {
+                    flex: 1;
+                    margin-bottom: 0;
+                    font-family: "Cinzel", serif;
+                    color: var(--primary);
+                    text-shadow: 0 0 10px rgba(195, 163, 122, 0.3);
+                }
+
+                /* Platform Selector */
+                .platform-selector-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 0;
+                    width: 100%;
+                    margin-top: 15px;
+                }
+                .platform-dropdown-wrapper {
+                    position: relative;
+                }
+                .platform-dropdown-btn {
+                    background: linear-gradient(
+                        145deg,
+                        rgba(33, 23, 17, 0.9),
+                        rgba(43, 30, 22, 0.8)
+                    );
+                    backdrop-filter: blur(10px);
+                    border: 2px solid var(--primary);
+                    color: var(--primary);
+                    padding: 10px 16px;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    font-size: 0.9rem;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    transition: all 0.3s ease;
+                    box-shadow:
+                        0 4px 15px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                    margin-top: 14px;
+                    font-family: "Crimson Text", serif;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                .platform-dropdown-btn:hover {
+                    background: linear-gradient(
+                        145deg,
+                        rgba(195, 163, 122, 0.9),
+                        rgba(168, 140, 102, 0.8)
+                    );
+                    color: #2B1E16;
+                    box-shadow:
+                        0 6px 20px rgba(0, 0, 0, 0.5),
+                        0 0 25px var(--primary-glow),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+                    transform: translateY(-2px);
+                }
+                .platform-dropdown-menu {
+                    position: absolute;
+                    top: 100%;
+                    right: 0;
+                    background: linear-gradient(145deg, #2B1E16, #1A120B);
+                    backdrop-filter: blur(16px);
+                    border: 2px solid var(--primary);
+                    border-radius: 8px;
+                    margin-top: 8px;
+                    min-width: 160px;
+                    box-shadow:
+                        0 10px 40px rgba(0, 0, 0, 0.6),
+                        0 0 20px rgba(195, 163, 122, 0.2);
+                    display: none;
+                    flex-direction: column;
+                    z-index: 100;
+                    overflow: hidden;
+                }
+                .platform-dropdown-menu.show {
+                    display: flex;
+                }
+                .platform-option {
+                    background: none;
+                    border: none;
+                    color: var(--text-main);
+                    padding: 14px 18px;
+                    text-align: left;
+                    cursor: pointer;
+                    font-size: 0.95rem;
+                    transition: all 0.3s ease;
+                    font-weight: 600;
+                    border-bottom: 1px solid rgba(195, 163, 122, 0.2);
+                    font-family: "Crimson Text", serif;
+                }
+                .platform-option:last-child {
+                    border-bottom: none;
+                }
+                .platform-option:hover {
+                    background: rgba(195, 163, 122, 0.2);
+                    color: var(--primary);
+                    padding-left: 22px;
+                }
+                .platform-option.active {
+                    background: rgba(195, 163, 122, 0.3);
+                    color: var(--primary);
+                    font-weight: 700;
+                }
+
+                /* Download Application Buttons */
+                .instruction-buttons {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 20px;
+                    margin-bottom: 0;
+                    width: 100%;
+                    align-items: center;
+                    margin-top: 20px;
+                }
+                .platform-buttons {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 15px;
+                    justify-items: center;
+                    width: 100%;
+                    margin-inline: auto;
+                }
+                .app-download-btn {
+                    background: linear-gradient(
+                        145deg,
+                        rgba(33, 23, 17, 0.9),
+                        rgba(43, 30, 22, 0.8)
+                    );
+                    border: 2px solid var(--primary);
+                    color: var(--primary);
+                    padding: 14px 20px;
+                    border-radius: 8px;
+                    text-decoration: none;
+                    text-align: center;
+                    font-weight: 600;
+                    font-size: 0.95rem;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.3s ease;
+                    box-shadow:
+                        0 4px 15px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                    width: 100%;
+                    max-width: 220px;
+                    font-family: "Crimson Text", serif;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                .app-download-btn:hover {
+                    background: linear-gradient(
+                        145deg,
+                        rgba(195, 163, 122, 0.9),
+                        rgba(168, 140, 102, 0.8)
+                    );
+                    color: #2B1E16;
+                    box-shadow:
+                        0 6px 20px rgba(0, 0, 0, 0.5),
+                        0 0 25px var(--primary-glow),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+                    transform: translateY(-3px) scale(1.05);
+                }
+                body.light-theme .app-download-btn {
+                    background: linear-gradient(
+                        145deg,
+                        rgba(248, 244, 233, 0.9),
+                        rgba(240, 233, 216, 0.8)
+                    );
+                    border-color: var(--primary);
+                }
+                body.light-theme .app-download-btn:hover {
+                    background: linear-gradient(
+                        145deg,
+                        rgba(139, 115, 85, 0.9),
+                        rgba(107, 85, 61, 0.8)
+                    );
+                    color: #F8F4E9;
+                }
+
+                /* Slightly wider primary add button inside .sub-actions to stand out */
+                .sub-actions > .btn-main:first-child {
+                    min-width: 240px;
+                    padding: 16px 28px;
+                    margin-inline: auto;
+                    font-size: 1.1rem;
+                    justify-content: center;
+                    background: linear-gradient(
+                        145deg,
+                        rgba(195, 163, 122, 0.2),
+                        rgba(168, 140, 102, 0.15)
+                    );
+                }
+
+                @media (max-width: 420px) {
+                    .sub-actions > .btn-main:first-child {
+                        min-width: 160px;
+                        padding: 14px 20px;
+                        margin-inline: auto;
+                    }
+
+                    .platform-selector-header {
+                        flex-wrap: wrap;
+                    }
+
+                    .platform-selector-header .section-header {
+                        width: 100%;
+                    }
+
+                    .platform-dropdown-btn {
+                        padding: 6px 10px;
+                        font-size: 0.8rem;
+                    }
+
+                    .platform-buttons {
+                        grid-template-columns: 1fr;
+                        justify-items: center;
+                    }
+
+                    .app-download-btn {
+                        max-width: 100%;
+                    }
+
+                    .platform-dropdown-menu {
+                        position: fixed;
+                        top: auto;
+                        right: auto;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        width: 90%;
+                        min-width: auto;
+                        max-width: 280px;
+                    }
+                }
+
+                /* * ==============================================
+            * STATS DASHBOARD
+            * ==============================================
+            */
+                .dashboard-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 20px;
+                    margin-bottom: 40px;
+                }
+                .stat-box {
+                    background: linear-gradient(145deg, rgba(33, 23, 17, 0.8), rgba(43, 30, 22, 0.7));
+                    backdrop-filter: blur(10px);
+                    border: 2px solid rgba(195, 163, 122, 0.3);
+                    border-radius: 12px;
+                    padding: 25px;
+                    position: relative;
+                    overflow: hidden;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    text-align: center;
+                    transition: all 0.3s ease;
+                    box-shadow:
+                        0 8px 24px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                }
+                body.light-theme .stat-box {
+                    background: linear-gradient(145deg, rgba(248, 244, 233, 0.9), rgba(240, 233, 216, 0.8));
+                    border-color: rgba(139, 115, 85, 0.3);
+                    box-shadow:
+                        0 8px 24px rgba(0, 0, 0, 0.1),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+                }
+                .stat-box::after {
+                    content: "";
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 4px;
+                    background: linear-gradient(
+                        90deg,
+                        transparent,
+                        var(--primary),
+                        transparent
+                    );
+                    opacity: 0.8;
+                }
+                .stat-number {
+                    font-size: 1.8rem;
+                    font-weight: 900;
+                    margin: 10px 0 5px;
+                    color: var(--primary);
+                    text-shadow: 0 0 10px rgba(195, 163, 122, 0.3);
+                    font-family: "Cinzel", serif;
+                }
+                .stat-desc {
+                    font-size: 0.85rem;
+                    color: var(--text-muted);
+                    font-family: "Crimson Text", serif;
+                    letter-spacing: 0.5px;
+                }
+
+                .progress-bar-bg {
+                    width: 100%;
+                    height: 8px;
+                    background: rgba(33, 23, 17, 0.8);
+                    border: 1px solid rgba(195, 163, 122, 0.3);
+                    border-radius: 10px;
+                    margin-top: 15px;
+                    overflow: hidden;
+                    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+                }
+                body.light-theme .progress-bar-bg {
+                    background: rgba(0, 0, 0, 0.1);
+                }
+
+                .progress-bar-fill {
+                    height: 100%;
+                    border-radius: 10px;
+                    width: 0%;
+                    background: linear-gradient(90deg, var(--primary), #D9C5A3);
+                    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+                    box-shadow:
+                        0 0 10px var(--primary-glow),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+                }
+                /* در تم روشن گرادینت قرمز پررنگ */
+                body.light-theme .progress-bar-fill {
+                    background: linear-gradient(90deg, var(--primary), #A88C66);
+                }
+
+                /* * ==============================================
+             * CONFIG CARDS & DETAILS
+             * ==============================================
+             */
+                .section-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                    margin-bottom: 20px;
+                    padding-right: 5px;
+                    margin-top: 8px;
+                    cursor: pointer;
+                    user-select: none;
+                    padding: 15px;
+                    border-radius: var(--radius-md);
+                    transition: all 0.3s ease;
+                    background: linear-gradient(145deg, rgba(33, 23, 17, 0.7), rgba(43, 30, 22, 0.8));
+                    border: 1px solid rgba(195, 163, 122, 0.2);
+                    box-shadow:
+                        0 4px 12px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                }
+                .section-header:hover {
+                    background: linear-gradient(145deg, rgba(195, 163, 122, 0.1), rgba(168, 140, 102, 0.08));
+                    border-color: var(--primary);
+                    transform: translateY(-2px);
+                    box-shadow:
+                        0 6px 16px rgba(0, 0, 0, 0.4),
+                        0 0 15px rgba(195, 163, 122, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+                }
+                body.light-theme .section-header:hover {
+                    background: linear-gradient(145deg, rgba(139, 115, 85, 0.1), rgba(107, 85, 61, 0.08));
+                    border-color: var(--primary);
+                }
+
+                .section-header h3 {
+                    margin: 0;
+                    font-size: 1.2rem;
+                    flex-shrink: 0;
+                    color: var(--primary);
+                    font-family: "Cinzel", serif;
+                    text-shadow: 0 0 10px rgba(195, 163, 122, 0.3);
+                    letter-spacing: 0.5px;
+                }
+                .section-line {
+                    height: 3px;
+                    flex: 1;
+                    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+                    border-radius: 2px;
+                    opacity: 0.6;
+                }
+                .toggle-icon {
+                    font-size: 1rem;
+                    color: var(--primary);
+                    transition: all 0.3s ease;
+                    margin-inline-end: 10px;
+                    text-shadow: 0 0 5px rgba(195, 163, 122, 0.5);
+                }
+                .section-header:hover .toggle-icon {
+                    transform: scale(1.2);
+                }
+                .section-header.active .toggle-icon {
+                    transform: rotate(180deg) scale(1.2);
+                }
+
+                /* کانتینر لیست کانفیگ‌ها - پیش‌فرض مخفی */
+                .config-list {
+                    display: none;
+                    animation: slideDown 0.4s ease forwards;
+                    padding-bottom: 20px;
+                }
+                .config-list.show {
+                    display: block;
+                }
+
+                .config-card {
+                    background: linear-gradient(145deg, rgba(33, 23, 17, 0.8), rgba(43, 30, 22, 0.7));
+                    border: 1px solid rgba(195, 163, 122, 0.2);
+                    border-radius: var(--radius-md);
+                    padding: 20px;
+                    margin-bottom: 15px;
+                    margin-inline: auto;
+                    transition: all 0.3s ease;
+                    position: relative;
+                    box-shadow:
+                        0 4px 12px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                }
+                body.light-theme .config-card {
+                    background: #fff;
+                    border-color: rgba(0, 0, 0, 0.08);
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+                }
+                .config-card:hover {
+                    background: linear-gradient(145deg, rgba(195, 163, 122, 0.1), rgba(168, 140, 102, 0.08));
+                    border-color: var(--primary);
+                    transform: translateY(-3px);
+                    box-shadow:
+                        0 8px 20px rgba(0, 0, 0, 0.4),
+                        0 0 20px rgba(195, 163, 122, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+                }
+                body.light-theme .config-card:hover {
+                    background: linear-gradient(145deg, rgba(248, 244, 233, 0.95), rgba(240, 233, 216, 0.9));
+                    border-color: var(--primary);
+                    transform: translateY(-3px);
+                }
+
+                .config-top {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 12px;
+                }
+                .protocol-badge {
+                    background: linear-gradient(145deg, rgba(195, 163, 122, 0.2), rgba(168, 140, 102, 0.15));
+                    color: var(--primary);
+                    padding: 6px 12px;
+                    border-radius: 6px;
+                    font-size: 0.8rem;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    border: 1px solid rgba(195, 163, 122, 0.4);
+                    font-family: "Crimson Text", serif;
+                    box-shadow:
+                        0 2px 6px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                }
+                /* اصلاح بج در تم روشن */
+                body.light-theme .protocol-badge {
+                    background: rgba(255, 0, 60, 0.1);
+                    border-color: rgba(255, 0, 60, 0.2);
+                }
+                .config-name {
+                    font-size: 1rem;
+                    font-weight: 700;
+                    color: var(--text-main);
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    max-width: 60%;
+                    font-family: "Crimson Text", serif;
+                    letter-spacing: 0.5px;
+                }
+                body.light-theme .config-name {
+                    color: var(--text-main);
+                }
+
+                .config-toolbar {
+                    display: flex;
+                    gap: 10px;
+                    margin-top: 15px;
+                }
+                .tool-btn {
+                    flex: 1;
+                    padding: 10px;
+                    background: linear-gradient(145deg, rgba(33, 23, 17, 0.9), rgba(43, 30, 22, 0.8));
+                    border: 1px solid rgba(195, 163, 122, 0.3);
+                    border-radius: var(--radius-md);
+                    color: var(--primary);
+                    font-size: 0.9rem;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    font-family: "Crimson Text", serif;
+                    transition: all 0.3s ease;
+                    font-weight: 600;
+                    letter-spacing: 0.5px;
+                    box-shadow:
+                        0 2px 8px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                }
+                body.light-theme .tool-btn {
+                    background: linear-gradient(145deg, rgba(248, 244, 233, 0.9), rgba(240, 233, 216, 0.8));
+                    border-color: rgba(139, 115, 85, 0.3);
+                    color: var(--primary);
+                }
+                .tool-btn:hover {
+                    background: linear-gradient(145deg, rgba(195, 163, 122, 0.2), rgba(168, 140, 102, 0.15));
+                    border-color: var(--primary);
+                    color: var(--text-main);
+                    transform: translateY(-2px);
+                    box-shadow:
+                        0 4px 12px rgba(0, 0, 0, 0.4),
+                        0 0 15px rgba(195, 163, 122, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+                }
+                body.light-theme .tool-btn:hover {
+                    background: linear-gradient(145deg, rgba(139, 115, 85, 0.2), rgba(107, 85, 61, 0.15));
+                    border-color: var(--primary);
+                    color: var(--text-main);
+                }
+                .tool-btn.accent:hover {
+                    background: linear-gradient(145deg, rgba(195, 163, 122, 0.9), rgba(168, 140, 102, 0.8));
+                    border-color: var(--primary);
+                    color: #2B1E16;
+                }
+
+                .config-source {
+                    display: none;
+                    margin-top: 15px;
+                    background: linear-gradient(145deg, #1A120B, #2B1E16);
+                    border: 2px dashed rgba(195, 163, 122, 0.4);
+                    border-radius: 8px;
+                    padding: 15px;
+                    box-shadow:
+                        inset 0 2px 8px rgba(0, 0, 0, 0.5),
+                        0 0 15px rgba(195, 163, 122, 0.1);
+                }
+                .config-source.open {
+                    display: block;
+                    animation: fadeIn 0.3s;
+                }
+                body.light-theme .config-source {
+                    background: linear-gradient(145deg, #F0E9D8, #F8F4E9);
+                    border-color: rgba(139, 115, 85, 0.4);
+                    box-shadow:
+                        inset 0 2px 8px rgba(0, 0, 0, 0.1),
+                        0 0 15px rgba(139, 115, 85, 0.1);
+                }
+
+                .source-text {
+                    width: 100%;
+                    background: transparent;
+                    border: none;
+                    color: var(--primary);
+                    font-family: "Courier New", monospace;
+                    font-size: 0.8rem;
+                    resize: none;
+                    height: 80px;
+                    word-break: break-all;
+                    direction: ltr;
+                    line-height: 1.4;
+                    text-shadow: 0 0 5px rgba(195, 163, 122, 0.3);
+                    letter-spacing: 0.5px;
+                }
+                body.light-theme .source-text {
+                    color: var(--primary);
+                    text-shadow: 0 0 3px rgba(139, 115, 85, 0.2);
+                }
+
+                /* * ==============================================
+             * MODAL & TOAST
+             * ==============================================
+             */
+                .modal-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.85);
+                    backdrop-filter: blur(5px);
+                    z-index: 1000;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    opacity: 0;
+                    visibility: hidden;
+                    transition: 0.3s;
+                }
+                .modal-overlay.active {
+                    opacity: 1;
+                    visibility: visible;
+                }
+                .modal-box {
+                    background: linear-gradient(145deg, #2B1E16, #1A120B);
+                    width: 90%;
+                    max-width: 340px;
+                    padding: 30px;
+                    border-radius: 16px;
+                    border: 3px solid var(--primary);
+                    text-align: center;
+                    transform: scale(0.8);
+                    transition: 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+                    margin-inline: auto;
+                    box-shadow:
+                        0 20px 60px rgba(0, 0, 0, 0.7),
+                        0 0 40px rgba(195, 163, 122, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                    position: relative;
+                    overflow: hidden;
+                }
+                .modal-box::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: var(--parchment-texture);
+                    opacity: 0.2;
+                    pointer-events: none;
+                }
+                body.light-theme .modal-box {
+                    background: linear-gradient(145deg, #F8F4E9, #F0E9D8);
+                    border-color: var(--primary);
+                    box-shadow:
+                        0 20px 60px rgba(0, 0, 0, 0.3),
+                        0 0 40px rgba(139, 115, 85, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+                }
+                .modal-overlay.active .modal-box {
+                    transform: scale(1);
+                }
+
+                #qr-placeholder {
+                    background: linear-gradient(145deg, #F8F4E9, #F0E9D8);
+                    padding: 20px;
+                    border-radius: 12px;
+                    margin: 20px auto;
+                    margin-inline: auto;
+                    width: fit-content;
+                    /* رفع باگ QR در زبان‌های RTL و روسی */
+                    direction: ltr !important;
+                    text-align: center;
+                    border: 2px solid rgba(195, 163, 122, 0.4);
+                    box-shadow:
+                        0 8px 24px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+                }
+                #qr-placeholder img {
+                    display: block;
+                    margin: 0 auto;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                }
+
+                .modal-close {
+                    background: linear-gradient(145deg, rgba(195, 163, 122, 0.9), rgba(168, 140, 102, 0.8));
+                    color: #2B1E16;
+                    border: 2px solid var(--primary);
+                    width: 100%;
+                    padding: 14px;
+                    border-radius: 8px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    font-family: "Crimson Text", serif;
+                    font-size: 1rem;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    transition: all 0.3s ease;
+                    margin-top: 20px;
+                    box-shadow:
+                        0 4px 15px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+                }
+                .modal-close:hover {
+                    background: linear-gradient(145deg, rgba(217, 197, 163, 0.9), rgba(195, 163, 122, 0.8));
+                    transform: translateY(-2px);
+                    box-shadow:
+                        0 6px 20px rgba(0, 0, 0, 0.5),
+                        0 0 20px rgba(195, 163, 122, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+                }
+                body.light-theme .modal-close {
+                    background: linear-gradient(145deg, rgba(139, 115, 85, 0.9), rgba(107, 85, 61, 0.8));
+                    color: #F8F4E9;
+                }
+                body.light-theme .modal-close:hover {
+                    background: linear-gradient(145deg, rgba(168, 140, 102, 0.9), rgba(139, 115, 85, 0.8));
+                }
+
+                .toast {
+                    position: fixed;
+                    bottom: 40px;
+                    left: 50%;
+                    transform: translateX(-50%) translateY(100px);
+                    background: linear-gradient(145deg, #2B1E16, #1A120B);
+                    border: 2px solid var(--primary);
+                    color: var(--primary);
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    box-shadow:
+                        0 15px 40px rgba(0, 0, 0, 0.6),
+                        0 0 25px rgba(195, 163, 122, 0.3);
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    z-index: 2000;
+                    transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+                    white-space: nowrap;
+                    font-size: 1rem;
+                    font-family: "Crimson Text", serif;
+                    font-weight: 600;
+                    letter-spacing: 0.5px;
+                    text-transform: uppercase;
+                    backdrop-filter: blur(10px);
+                }
+                body.light-theme .toast {
+                    background: linear-gradient(145deg, #F8F4E9, #F0E9D8);
+                    border-color: var(--primary);
+                    color: var(--primary);
+                    box-shadow:
+                        0 15px 40px rgba(0, 0, 0, 0.3),
+                        0 0 25px rgba(139, 115, 85, 0.2);
+                }
+                .toast.show {
+                    transform: translateX(-50%) translateY(0);
+                }
+
+                /* RTL support for toast */
+                body[dir="rtl"] .toast {
+                    left: unset;
+                    right: 50%;
+                    transform: translateX(50%) translateY(100px);
+                }
+
+                body[dir="rtl"] .toast.show {
+                    transform: translateX(50%) translateY(0);
+                }
+
+                /* RTL support for modal overlay */
+                body[dir="rtl"] .modal-overlay {
+                    left: unset;
+                    right: 0;
+                }
+
+                /* Ensure modal box is centered in RTL */
+                body[dir="rtl"] .modal-box {
+                    margin-inline: auto;
+                }
+
+                .manual-fetch-btn {
+                    display: none;
+                    width: 100%;
+                    background: linear-gradient(145deg, rgba(33, 23, 17, 0.7), rgba(43, 30, 22, 0.6));
+                    border: 2px dashed rgba(195, 163, 122, 0.4);
+                    color: var(--text-muted);
+                    padding: 12px;
+                    border-radius: 8px;
+                    margin-top: 15px;
+                    cursor: pointer;
+                    font-size: 0.9rem;
+                    font-family: "Crimson Text", serif;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                    letter-spacing: 0.5px;
+                    box-shadow:
+                        0 4px 12px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                }
+                .manual-fetch-btn:hover {
+                    background: linear-gradient(145deg, rgba(195, 163, 122, 0.1), rgba(168, 140, 102, 0.08));
+                    border-color: var(--primary);
+                    color: var(--primary);
+                    transform: translateY(-2px);
+                    box-shadow:
+                        0 6px 16px rgba(0, 0, 0, 0.4),
+                        0 0 15px rgba(195, 163, 122, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+                }
+                body.light-theme .manual-fetch-btn {
+                    background: linear-gradient(145deg, rgba(248, 244, 233, 0.7), rgba(240, 233, 216, 0.6));
+                    border-color: rgba(139, 115, 85, 0.4);
+                    color: var(--text-muted);
+                }
+                body.light-theme .manual-fetch-btn:hover {
+                    background: linear-gradient(145deg, rgba(139, 115, 85, 0.1), rgba(107, 85, 61, 0.08));
+                    border-color: var(--primary);
+                    color: var(--primary);
+                }
+
+                @keyframes slideDown {
+                    from {
+                        transform: translateY(-30px);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateY(0);
+                        opacity: 1;
+                    }
+                }
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                    }
+                    to {
+                        opacity: 1;
+                    }
+                }
+                @keyframes fadeInUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                .footer {
+                    margin-top: 50px;
+                    text-align: center;
+                    font-size: 0.85rem;
+                    color: var(--text-muted);
+                    margin-inline: auto;
+                    font-family: "Crimson Text", serif;
+                    letter-spacing: 0.5px;
+                    padding: 20px;
+                    background: linear-gradient(145deg, rgba(33, 23, 17, 0.7), rgba(43, 30, 22, 0.8));
+                    border: 1px solid rgba(195, 163, 122, 0.2);
+                    border-radius: 12px;
+                    box-shadow:
+                        0 8px 24px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                }
+                .version-tag {
+                    font-family: "Courier New", monospace;
+                    opacity: 0.7;
+                    font-size: 0.8rem;
+                    margin-top: 10px;
+                    display: block;
+                    color: var(--primary);
+                    text-shadow: 0 0 5px rgba(195, 163, 122, 0.3);
+                }
+                body.light-theme .footer {
+                    background: linear-gradient(145deg, rgba(248, 244, 233, 0.7), rgba(240, 233, 216, 0.6));
+                    border-color: rgba(139, 115, 85, 0.3);
+                    color: var(--text-muted);
+                }
+                body.light-theme .version-tag {
+                    color: var(--primary);
+                    text-shadow: 0 0 3px rgba(139, 115, 85, 0.2);
+                }
+        </style>
+    </head>
+    <body>
+        <div class="bg-fixed"></div>
+        <div class="bg-spot spot-1"></div>
+        <div class="bg-spot spot-2"></div>
+
+        <div class="main-wrapper">
+            <div class="settings-bar">
+                <button
+                    class="icon-btn"
+                    onclick="toggleTheme()"
+                    title="Сменить тему"
+                >
+                    <svg
+                        id="theme-icon"
+                        style="width: 20px; height: 20px; fill: currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            class="moon"
+                            d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"
+                        />
+                    </svg>
+                </button>
+                <div class="lang-select-wrapper">
+                    <!-- پرچم‌ها حذف شدند -->
+                    <select
+                        class="lang-select"
+                        onchange="changeLanguage(this.value)"
+                        id="langSelect"
+                    >
+                        <option value="fa">فارسی</option>
+                        <option value="en">English</option>
+                        <option value="ar">العربية</option>
+                        <option value="ru">Русский</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="profile-card">
+                <div class="avatar-container">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"
+                        />
+                    </svg>
+                </div>
+                <h1 class="username-title">{{ user.username }}</h1>
+
+                {% if user.status == 'active' %}
+                <div class="status-chip st-active">
+                    <span class="dot"></span
+                    ><span data-translate="status_active">Активен</span>
+                </div>
+                {% elif user.status == 'limited' %}
+                <div class="status-chip st-limited">
+                    <span class="dot"></span
+                    ><span data-translate="status_limited"
+                        >Ограничено (трафик/время)</span
+                    >
+                </div>
+                {% elif user.status == 'expired' %}
+                <div class="status-chip st-expired">
+                    <span class="dot"></span
+                    ><span data-translate="status_expired">Просрочено</span>
+                </div>
+                {% elif user.status == 'disabled' %}
+                <div class="status-chip st-disabled">
+                    <span class="dot"></span
+                    ><span data-translate="status_disabled">Отключено</span>
+                </div>
+                {% else %}
+                <div class="status-chip st-limited">
+                    <span class="dot"></span>{{ user.status }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="sub-actions">
+                <a
+                    href="#"
+                    id="happ-link"
+                    class="btn-main"
+                    title="Добавить подписку в приложение happ"
+                >
+                    <svg class="btn-icon" viewBox="0 0 24 24">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                    </svg>
+                    <span data-translate="add_sub">Добавить</span>
+                </a>
+                <button
+                    class="btn-main icon-btn"
+                    onclick="copySubscription('{{ subscription_url }}')"
+                    title="Скопировать ссылку подписки"
+                >
+                    <svg class="btn-icon" viewBox="0 0 24 24">
+                        <path
+                            d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
+                        />
+                    </svg>
+                </button>
+                <button
+                    class="btn-main icon-btn"
+                    onclick="openQR('{{ subscription_url }}', 'Ссылка подписки')"
+                    title="QR подписки"
+                >
+                    <svg class="btn-icon" viewBox="0 0 24 24">
+                        <path
+                            d="M3 5v4h2V5h4V3H5c-1.1 0-2 .9-2 2zm2 10H3v4c0 1.1.9 2 2 2h4v-2H5v-4zm14 4h-4v2h4c1.1 0 2-.9 2-2v-4h-2v4zm0-16h-4v2h4v4h2V5c0-1.1-.9-2-2-2z"
+                        />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Download Section - moved above add button -->
+            <div class="platform-selector-box">
+                <div class="platform-selector-header">
+                    <div class="section-header" onclick="toggleDownloads(this)">
+                        <h3 data-translate="download_apps">
+                            Скачать приложения
+                        </h3>
+                        <div class="section-line"></div>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="platform-dropdown-wrapper">
+                        <button
+                            class="platform-dropdown-btn"
+                            onclick="
+                                togglePlatformMenu();
+                                event.stopPropagation();
+                            "
+                        >
+                            <span id="currentPlatformName">iOS</span>
+                            <svg
+                                style="width: 14px; height: 14px"
+                                viewBox="0 0 24 24"
+                            >
+                                <path d="M7 10l5 5 5-5z" fill="currentColor" />
+                            </svg>
+                        </button>
+                        <div
+                            class="platform-dropdown-menu"
+                            id="platformDropdownMenu"
+                        >
+                            <button
+                                class="platform-option"
+                                onclick="switchPlatform('ios', 'iOS')"
+                            >
+                                iOS
+                            </button>
+                            <button
+                                class="platform-option"
+                                onclick="switchPlatform('android', 'Android')"
+                            >
+                                Android
+                            </button>
+                            <button
+                                class="platform-option"
+                                onclick="switchPlatform('windows', 'Windows')"
+                            >
+                                Windows
+                            </button>
+                            <button
+                                class="platform-option"
+                                onclick="switchPlatform('macos', 'macOS')"
+                            >
+                                macOS
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="config-list" id="downloadContainer">
+                    <div class="platform-selector-container">
+                        <div class="instruction-buttons">
+                            <div class="platform-buttons" id="happ-ios-buttons">
+                                <a
+                                    href="https://apps.apple.com/ru/app/happ-proxy-utility-plus/id6746188973"
+                                    class="app-download-btn"
+                                    target="_blank"
+                                    >App Store (RU)</a
+                                >
+                                <a
+                                    href="https://apps.apple.com/us/app/happ-proxy-utility/id6504287215"
+                                    class="app-download-btn"
+                                    target="_blank"
+                                    >App Store (Global)</a
+                                >
+                            </div>
+                            <div
+                                class="platform-buttons"
+                                id="happ-android-buttons"
+                                style="display: none"
+                            >
+                                <a
+                                    href="https://play.google.com/store/apps/details?id=com.happproxy"
+                                    class="app-download-btn"
+                                    target="_blank"
+                                    >Google Play</a
+                                >
+                                <a
+                                    href="https://github.com/Happ-proxy/happ-android/releases/latest/download/Happ.apk"
+                                    class="app-download-btn"
+                                    target="_blank"
+                                    >Прямая загрузка APK</a
+                                >
+                            </div>
+                            <div
+                                class="platform-buttons"
+                                id="happ-windows-buttons"
+                                style="display: none"
+                            >
+                                <a
+                                    href="https://github.com/Happ-proxy/happ-desktop/releases/latest/download/setup-Happ.x64.exe"
+                                    class="app-download-btn"
+                                    target="_blank"
+                                    >Скачать для Windows</a
+                                >
+                            </div>
+                            <div
+                                class="platform-buttons"
+                                id="happ-macos-buttons"
+                                style="display: none"
+                            >
+                                <a
+                                    href="https://apps.apple.com/ru/app/happ-proxy-utility-plus/id6746188973"
+                                    class="app-download-btn"
+                                    target="_blank"
+                                    >App Store (RU)</a
+                                >
+                                <a
+                                    href="https://apps.apple.com/us/app/happ-proxy-utility/id6504287215"
+                                    class="app-download-btn"
+                                    target="_blank"
+                                    >App Store (Global)</a
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div
+                    class="stat-box"
+                    style="animation: fadeInUp 0.5s ease backwards"
+                >
+                    <svg
+                        style="
+                            width: 24px;
+                            height: 24px;
+                            fill: var(--primary);
+                            margin-bottom: 5px;
+                        "
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            d="M7.77 6.76L6.23 5.48.82 12l5.41 6.52 1.54-1.28L3.42 12l4.35-5.24zM7 13h2v-2H7v2zm10-2h-2v2h2v-2zm-6 2h2v-2h-2v2zm6.77-7.52l-1.54 1.28L20.58 12l-4.35 5.24 1.54 1.28L23.18 12l-5.41-6.52z"
+                        />
+                    </svg>
+                    <div class="stat-number" dir="ltr">
+                        {{ user.used_traffic | bytesformat }}
+                    </div>
+                    <div class="stat-desc">
+                        <span data-translate="usage_label">Использовано</span>
+                        {{ user.data_limit | bytesformat if user.data_limit else
+                        'Неограниченно' }}
+                    </div>
+                    {% if user.data_limit %} {% set usage_p = (user.used_traffic
+                    / user.data_limit * 100) | round(2) %}
+                    <div class="progress-bar-bg">
+                        <div
+                            class="progress-bar-fill"
+                            style="width: {{ usage_p }}%"
+                        ></div>
+                    </div>
+                    {% else %}
+                    <div class="progress-bar-bg">
+                        <div
+                            class="progress-bar-fill"
+                            style="width: 100%; background: #333"
+                        ></div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div
+                    class="stat-box"
+                    style="animation: fadeInUp 0.5s ease 0.1s backwards"
+                >
+                    <svg
+                        style="
+                            width: 24px;
+                            height: 24px;
+                            fill: var(--primary);
+                            margin-bottom: 5px;
+                        "
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"
+                        />
+                    </svg>
+                    {% if user.expire %} {% set days = ((user.expire -
+                    now()).total_seconds() / 86400) | int %}
+                    <div class="stat-number">{{ days }}</div>
+                    <div class="stat-desc" data-translate="days_left">
+                        Осталось дней
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div
+                            class="progress-bar-fill"
+                            style="width: 100%; filter: hue-rotate(40deg)"
+                        ></div>
+                    </div>
+                    {% else %}
+                    <div class="stat-number">∞</div>
+                    <div class="stat-desc" data-translate="time_unlimited">
+                        Без ограничения по времени
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div
+                            class="progress-bar-fill"
+                            style="width: 100%; background: #00ff88"
+                        ></div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="section-header" onclick="toggleConfigs(this)">
+                <h3 data-translate="your_connections">Ваши подключения</h3>
+                <div class="section-line"></div>
+                <span class="toggle-icon">▼</span>
+            </div>
+
+            <div class="config-list" id="configContainer">
+                <!-- ADDED: Copy All Configs Button -->
+                <button
+                    class="btn-main"
+                    style="
+                        width: 100%;
+                        margin-bottom: 15px;
+                        background: rgba(0, 255, 136, 0.1);
+                        border-color: rgba(0, 255, 136, 0.4);
+                    "
+                    onclick="copyAllConfigs()"
+                >
+                    <svg class="btn-icon" viewBox="0 0 24 24">
+                        <path
+                            d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
+                        />
+                    </svg>
+                    <span data-translate="copy_all"
+                        >Копировать все конфигурации</span
+                    >
+                </button>
+
+                {% for link in links %} {% set protocol = link.split('://')[0]
+                %}
+                <div
+                    class="config-card server-item"
+                    style="animation: fadeInUp 0.5s ease {{ loop.index0 * 0.1 }}s backwards;"
+                >
+                    <div class="config-top">
+                        <span class="protocol-badge">{{ protocol }}</span>
+                        <span class="config-name" dir="auto">
+                            {% if '#' in link %} {{ link.split('#')[-1] }} {%
+                            else %} Config #{{ loop.index }} {% endif %}
+                        </span>
+                    </div>
+                    <div class="config-toolbar">
+                        <button
+                            class="tool-btn accent"
+                            onclick="copyText('{{ link }}')"
+                        >
+                            <svg
+                                style="width: 16px; height: 16px"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    fill="currentColor"
+                                    d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
+                                />
+                            </svg>
+                            <span data-translate="btn_copy">Копировать</span>
+                        </button>
+                        <button
+                            class="tool-btn"
+                            onclick="openQR('{{ link }}', 'Config #{{ loop.index }}')"
+                        >
+                            <svg
+                                style="width: 16px; height: 16px"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    fill="currentColor"
+                                    d="M3 5v4h2V5h4V3H5c-1.1 0-2 .9-2 2zm2 10H3v4c0 1.1.9 2 2 2h4v-2H5v-4zm14 4h-4v2h4c1.1 0 2-.9 2-2v-4h-2v4zm0-16h-4v2h4v4h2V5c0-1.1-.9-2-2-2z"
+                                />
+                            </svg>
+                            QR
+                        </button>
+                        <button class="tool-btn" onclick="toggleSource(this)">
+                            <svg
+                                style="width: 16px; height: 16px"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    fill="currentColor"
+                                    d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
+                                />
+                            </svg>
+                            <span data-translate="btn_view">Просмотр</span>
+                        </button>
+                    </div>
+                    <div class="config-source">
+                        <textarea
+                            class="source-text"
+                            readonly
+                            onclick="this.select()"
+                        >
+{{ link }}</textarea
+                        >
+                        <div
+                            style="
+                                font-size: 0.7rem;
+                                color: #666;
+                                margin-top: 4px;
+                            "
+                            data-translate="manual_copy_hint"
+                        >
+                            Чтобы скопировать вручную, нажмите на текст
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div
+                    id="loading-msg"
+                    style="
+                        display: none;
+                        text-align: center;
+                        padding: 10px;
+                        color: #666;
+                        font-size: 0.8rem;
+                    "
+                    data-translate="loading"
+                >
+                    Загрузка данных...
+                </div>
+                <div
+                    id="error-msg"
+                    style="
+                        display: none;
+                        text-align: center;
+                        padding: 10px;
+                        color: #ff003c;
+                        font-size: 0.8rem;
+                    "
+                ></div>
+                <button
+                    id="retry-btn"
+                    class="manual-fetch-btn"
+                    onclick="checkAndLoadConfigs(true)"
+                    data-translate="retry"
+                >
+                    Повторная попытка загрузки конфигураций
+                </button>
+            </div>
+        </div>
+
+        <div
+            class="modal-overlay"
+            id="qrModal"
+            onclick="closeQR(event)"
+            style="display: none"
+        >
+            <div class="modal-box" onclick="event.stopPropagation()">
+                <h3 id="qrTitle" style="margin-top: 0; color: var(--text-main)">
+                    QR Code
+                </h3>
+                <div id="qr-placeholder"></div>
+                <button
+                    class="modal-close"
+                    onclick="closeQR()"
+                    data-translate="btn_close"
+                >
+                    Закрыть
+                </button>
+            </div>
+        </div>
+
+        <div class="toast" id="toast" style="display: none">
+            <svg
+                style="width: 20px; height: 20px; color: var(--status-active)"
+                viewBox="0 0 24 24"
+            >
+                <path
+                    fill="currentColor"
+                    d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+                />
+            </svg>
+            <span data-translate="toast_copied">Скопировано!</span>
+        </div>
+
+        <script>
+            // ==========================================
+            //  FIXED LOGIC FOR COPY & QR & UX
+            // ==========================================
+            function copySubscription(tmplLink) {
+                let finalLink = tmplLink;
+                if (!finalLink || finalLink.trim() === "") {
+                    finalLink = window.location.href;
+                }
+                copyText(finalLink);
+            }
+
+            document.addEventListener("DOMContentLoaded", function () {
+                // 1. Находим нашу кнопку
+                const linkElement = document.getElementById("happ-link");
+
+                if (linkElement) {
+                    // 2. Берем текущий URL страницы
+                    const currentUrl = window.location.href;
+
+                    // 3. Формируем новую ссылку
+                    const finalLink = "happ://add/" + currentUrl;
+
+                    // 4. Записываем её прямо в атрибут href кнопки
+                    linkElement.setAttribute("href", finalLink);
+                }
+            });
+
+            function copyText(text) {
+                if (!text) return;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard
+                        .writeText(text)
+                        .then(showToast)
+                        .catch(() => fallbackCopy(text));
+                } else {
+                    fallbackCopy(text);
+                }
+            }
+
+            // ADDED: Logic to copy all configs
+            function copyAllConfigs() {
+                const container = document.getElementById("configContainer");
+                const sourceTexts = container.querySelectorAll(".source-text");
+                if (sourceTexts.length === 0) {
+                    alert("Конфигурация для копирования не найдена!");
+                    return;
+                }
+                let allConfigs = "";
+                sourceTexts.forEach((txt) => {
+                    if (txt.value && txt.value.trim() !== "") {
+                        allConfigs += txt.value.trim() + "\n";
+                    }
+                });
+                if (allConfigs.trim() === "") {
+                    alert("Конфигурация для копирования не найдена!");
+                    return;
+                }
+                copyText(allConfigs);
+            }
+
+            // ADDED: Logic to toggle downloads section
+            function toggleDownloads(header) {
+                const list = document.getElementById("downloadContainer");
+                if (list.classList.contains("show")) {
+                    list.classList.remove("show");
+                    header.classList.remove("active");
+                } else {
+                    list.classList.add("show");
+                    header.classList.add("active");
+                }
+            }
+
+            function fallbackCopy(text) {
+                try {
+                    const tempInput = document.createElement("textarea");
+                    tempInput.value = text;
+                    tempInput.style.position = "fixed";
+                    tempInput.style.left = "-9999px";
+                    tempInput.style.top = "0";
+                    document.body.appendChild(tempInput);
+                    tempInput.focus();
+                    tempInput.select();
+                    const success = document.execCommand("copy");
+                    document.body.removeChild(tempInput);
+                    if (success) showToast();
+                    else
+                        alert(
+                            "Ошибка при копировании! Пожалуйста, скопируйте вручную.",
+                        );
+                } catch (e) {
+                    console.error(e);
+                    alert(
+                        "Ваш браузер не позволяет автоматическое копирование.",
+                    );
+                }
+            }
+
+            function showToast() {
+                const toast = document.getElementById("toast");
+                toast.style.display = "flex";
+                toast.classList.add("show");
+                setTimeout(() => {
+                    toast.classList.remove("show");
+                    setTimeout(() => {
+                        toast.style.display = "none";
+                    }, 400);
+                }, 2000);
+            }
+
+            let qrObj = null;
+            function openQR(text, title) {
+                let content = text;
+                const currentLang = localStorage.getItem("user_lang") || "ru";
+                // ترجمه داینامیک تایتل QR
+                if (title === "لینک اشتراک") {
+                    const titles = {
+                        fa: "لینک اشتراک",
+                        en: "Subscription Link",
+                        ar: "رابط الاشتراك",
+                        ru: "Ссылка подписки",
+                    };
+                    title = titles[currentLang] || title;
+                }
+                if (
+                    (!content || content.trim() === "") &&
+                    (title === "لینک اشتراک" ||
+                        title === "Subscription Link" ||
+                        title === "رابط الاشتراك" ||
+                        title === "Ссылка подписки")
+                ) {
+                    content = window.location.href;
+                }
+
+                const modal = document.getElementById("qrModal");
+                modal.style.display = "flex";
+                const container = document.getElementById("qr-placeholder");
+                const titleEl = document.getElementById("qrTitle");
+
+                try {
+                    title = decodeURIComponent(title);
+                } catch (e) {}
+                titleEl.textContent = title;
+
+                // پاکسازی QR قبلی
+                container.innerHTML = "";
+                try {
+                    // رفع باگ QR: اطمینان از پاک شدن و ساخت مجدد صحیح
+                    qrObj = new QRCode(container, {
+                        text: content,
+                        width: 200,
+                        height: 200,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.L, // سطح L برای دیتای زیاد بهتر جواب می‌دهد
+                    });
+                    modal.classList.add("active");
+                } catch (e) {
+                    console.error("QR Error:", e);
+                    container.innerHTML =
+                        '<p style="color:red; direction:ltr">QR Generation Error</p>';
+                    modal.classList.add("active");
+                }
+            }
+
+            function closeQR(e) {
+                const modal = document.getElementById("qrModal");
+                modal.classList.remove("active");
+                setTimeout(() => {
+                    modal.style.display = "none";
+                }, 300);
+            }
+
+            function toggleSource(btn) {
+                const card = btn.closest(".config-card");
+                const sourceBox = card.querySelector(".config-source");
+                if (sourceBox.classList.contains("open")) {
+                    sourceBox.classList.remove("open");
+                    btn.style.background = "";
+                    btn.style.color = "";
+                } else {
+                    sourceBox.classList.add("open");
+                    btn.style.background = "var(--primary)";
+                    btn.style.color = "#fff";
+                }
+            }
+
+            function toggleConfigs(header) {
+                const list = document.getElementById("configContainer");
+                if (list.classList.contains("show")) {
+                    list.classList.remove("show");
+                    header.classList.remove("active");
+                } else {
+                    list.classList.add("show");
+                    header.classList.add("active");
+                    setTimeout(() => {
+                        checkAndLoadConfigs();
+                    }, 100);
+                }
+            }
+
+            // ==========================================
+            //  ADVANCED CONFIG FETCHING
+            // ==========================================
+            let configsLoaded = false;
+            function checkAndLoadConfigs(forceRetry = false) {
+                const container = document.getElementById("configContainer");
+                // Modified: Check if .server-item exists OR if we already loaded clients.
+                if (container.querySelector(".server-item") && !forceRetry)
+                    return;
+                if (configsLoaded && !forceRetry) return;
+
+                let subUrl = "{{ subscription_url }}";
+                if (subUrl && !subUrl.startsWith("http")) {
+                    subUrl = window.location.origin + subUrl;
+                }
+                if (!subUrl) subUrl = window.location.href;
+
+                const loadingMsg = document.getElementById("loading-msg");
+                const errorMsg = document.getElementById("error-msg");
+                const retryBtn = document.getElementById("retry-btn");
+
+                loadingMsg.style.display = "block";
+                errorMsg.style.display = "none";
+                retryBtn.style.display = "none";
+
+                fetch(subUrl, { cache: "no-store" })
+                    .then((res) => {
+                        if (!res.ok) throw new Error("HTTP " + res.status);
+                        return res.text();
+                    })
+                    .then((text) => {
+                        if (!text) throw new Error("Empty response");
+                        let decoded = "";
+                        try {
+                            const cleanText = text.replace(/\s/g, "");
+                            decoded = atob(cleanText);
+                        } catch (e) {
+                            decoded = text;
+                        }
+                        const lines = decoded
+                            .split(/\r?\n/)
+                            .filter((line) => line.trim().length > 5);
+                        if (lines.length === 0)
+                            throw new Error("No configs found");
+
+                        renderClientConfigs(lines);
+                        configsLoaded = true;
+                        loadingMsg.style.display = "none";
+                    })
+                    .catch((err) => {
+                        console.error("Fetch error:", err);
+                        loadingMsg.style.display = "none";
+                        errorMsg.style.display = "block";
+                        errorMsg.textContent =
+                            "Не удалось получить конфигурации. (CORS или ошибка сети)";
+                        retryBtn.style.display = "block";
+                    });
+            }
+
+            function renderClientConfigs(links) {
+                const container = document.getElementById("configContainer");
+                const oldItems = container.querySelectorAll(".client-item");
+                oldItems.forEach((el) => el.remove());
+
+                // Notice: The "Copy All" button remains because it's static HTML at the top.
+
+                links.forEach((link, index) => {
+                    let protocol = "UNKNOWN";
+                    if (link.startsWith("vmess://")) protocol = "VMESS";
+                    else if (link.startsWith("vless://")) protocol = "VLESS";
+                    else if (link.startsWith("trojan://")) protocol = "TROJAN";
+                    else if (link.startsWith("ss://")) protocol = "SHADOWSOCKS";
+                    else if (link.startsWith("tuic://")) protocol = "TUIC";
+                    else if (
+                        link.startsWith("hy2://") ||
+                        link.startsWith("hysteria2://")
+                    )
+                        protocol = "HYSTERIA2";
+
+                    let configName = `Config #${index + 1}`;
+                    if (link.includes("#")) {
+                        try {
+                            configName = decodeURIComponent(
+                                link.split("#").pop(),
+                            );
+                        } catch (e) {
+                            configName = link.split("#").pop();
+                        }
+                    }
+
+                    const lang = localStorage.getItem("user_lang") || "ru";
+                    const t = translations[lang];
+
+                    const card = document.createElement("div");
+                    card.className = "config-card client-item";
+                    card.style.animation = `fadeInUp 0.5s ease ${index * 0.1}s backwards`;
+
+                    // Escaping single quotes for JS function calls
+                    const safeLink = link.replace(/'/g, "\\'");
+                    const safeName = configName.replace(/'/g, "\\'");
+
+                    card.innerHTML = `
+                    <div class="config-top">
+                        <span class="protocol-badge">${protocol}</span>
+                        <span class="config-name" dir="auto">${configName}</span>
+                    </div>
+                    <div class="config-toolbar">
+                        <button class="tool-btn accent" onclick="copyText('${safeLink}')">
+                            <svg style="width:16px;height:16px;" viewBox="0 0 24 24"><path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                            ${t.btn_copy}
+                        </button>
+                        <button class="tool-btn" onclick="openQR('${safeLink}', '${safeName}')">
+                            <svg style="width:16px;height:16px;" viewBox="0 0 24 24"><path fill="currentColor" d="M3 5v4h2V5h4V3H5c-1.1 0-2 .9-2 2zm2 10H3v4c0 1.1.9 2 2 2h4v-2H5v-4zm14 4h-4v2h4c1.1 0 2-.9 2-2v-4h-2v4zm0-16h-4v2h4v4h2V5c0-1.1-.9-2-2-2z"/></svg>
+                            QR
+                        </button>
+                        <button class="tool-btn" onclick="toggleSource(this)">
+                            <svg style="width:16px;height:16px;" viewBox="0 0 24 24"><path fill="currentColor" d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                            ${t.btn_view}
+                        </button>
+                    </div>
+                    <div class="config-source">
+                        <textarea class="source-text" readonly onclick="this.select()">${link}</textarea>
+                        <div style="font-size:0.7rem; color:#666; margin-top:4px;">${t.manual_copy_hint}</div>
+                    </div>
+                `;
+                    container.appendChild(card);
+                });
+            }
+
+            window.addEventListener("load", () => {
+                const fills = document.querySelectorAll(".progress-bar-fill");
+                fills.forEach((f) => {
+                    const w = f.style.width;
+                    f.style.width = "0%";
+                    setTimeout(() => (f.style.width = w), 300);
+                });
+                document
+                    .querySelectorAll(".server-item .config-name")
+                    .forEach((el) => {
+                        try {
+                            if (el.textContent.includes("%")) {
+                                el.textContent = decodeURIComponent(
+                                    el.textContent,
+                                );
+                            }
+                        } catch (e) {}
+                    });
+                initPreferences();
+            });
+
+            // ==========================================
+            //  NEW: MULTI-LANGUAGE & THEME LOGIC
+            // ==========================================
+            const translations = {
+                fa: {
+                    page_title: "پنل کاربری",
+                    status_active: "فعال",
+                    status_limited: "محدود شده (حجم/زمان)",
+                    status_expired: "منقضی شده",
+                    status_disabled: "غیرفعال شده",
+                    copy_sub: "کپی لینک اشتراک",
+                    qr_sub: "QR اشتراک",
+                    usage_label: "مصرف از",
+                    days_left: "روز باقی‌مانده",
+                    time_unlimited: "زمان نامحدود",
+                    your_connections: "کانکشن‌های شما",
+                    download_apps: "دانلود برنامه‌ها",
+                    copy_all: "کپی همه کانفیگ‌ها",
+                    android_app: "اندروید (v2rayNG)",
+                    ios_app: "آیفون (V2Box)",
+                    windows_app: "ویندوز (v2rayN)",
+                    linux_app: "لینوکس (Nekoray)",
+                    btn_copy: "کپی",
+                    btn_view: "مشاهده",
+                    btn_close: "بستن",
+                    toast_copied: "کپی شد!",
+                    manual_copy_hint: "برای کپی دستی روی متن کلیک کنید",
+                    loading: "در حال دریافت اطلاعات...",
+                    retry: "تلاش مجدد",
+                    dir: "rtl",
+                },
+                en: {
+                    page_title: "User Panel",
+                    status_active: "Active",
+                    status_limited: "Limited (Data/Time)",
+                    status_expired: "Expired",
+                    status_disabled: "Disabled",
+                    copy_sub: "Copy Link",
+                    qr_sub: "QR Code",
+                    usage_label: "Used from",
+                    days_left: "Days remaining",
+                    time_unlimited: "Unlimited Time",
+                    your_connections: "Connections",
+                    download_apps: "Download Apps",
+                    copy_all: "Copy All Configs",
+                    android_app: "Android (v2rayNG)",
+                    ios_app: "iOS (V2Box)",
+                    windows_app: "Windows (v2rayN)",
+                    linux_app: "Linux (Nekoray)",
+                    btn_copy: "Copy",
+                    btn_view: "View",
+                    btn_close: "Close",
+                    toast_copied: "Copied!",
+                    manual_copy_hint: "Click text to copy manually",
+                    loading: "Loading data...",
+                    retry: "Retry",
+                    dir: "ltr",
+                },
+                ar: {
+                    page_title: "لوحة المستخدم",
+                    status_active: "نشط",
+                    status_limited: "محدود (البيانات/الوقت)",
+                    status_expired: "منتهية الصلاحية",
+                    status_disabled: "معطل",
+                    copy_sub: "نسخ الرابط",
+                    qr_sub: "رمز QR",
+                    usage_label: "مستهلك من",
+                    days_left: "أيام متبقية",
+                    time_unlimited: "وقت غير محدود",
+                    your_connections: "اتصالاتك",
+                    download_apps: "تنزيل التطبيقات",
+                    copy_all: "نسخ جميع التكوينات",
+                    android_app: "أندرويد (v2rayNG)",
+                    ios_app: "آيفون (V2Box)",
+                    windows_app: "ويندوز (v2rayN)",
+                    linux_app: "لينكس (Nekoray)",
+                    btn_copy: "نسخ",
+                    btn_view: "عرض",
+                    btn_close: "إغلاق",
+                    toast_copied: "تم النسخ!",
+                    manual_copy_hint: "انقر فوق النص للنسخ يدوياً",
+                    loading: "جار تحميل البيانات...",
+                    retry: "أعد المحاولة",
+                    dir: "rtl",
+                },
+                ru: {
+                    page_title: "Панель пользователя",
+                    status_active: "Активный",
+                    status_limited: "Ограничено",
+                    status_expired: "Истекший",
+                    status_disabled: "Отключено",
+                    copy_sub: "Копировать",
+                    qr_sub: "QR-код",
+                    usage_label: "Использовано из",
+                    days_left: "Дней осталось",
+                    time_unlimited: "Безлимит",
+                    your_connections: "Подключения",
+                    download_apps: "Скачать приложения",
+                    copy_all: "Копировать все",
+                    android_app: "Android (v2rayNG)",
+                    ios_app: "iOS (V2Box)",
+                    windows_app: "Windows (v2rayN)",
+                    linux_app: "Linux (Nekoray)",
+                    btn_copy: "Копия",
+                    btn_view: "Вид",
+                    btn_close: "Закрыть",
+                    toast_copied: "Скопировано!",
+                    manual_copy_hint: "Нажмите текст для копирования",
+                    loading: "Загрузка...",
+                    retry: "Повторить",
+                    dir: "ltr",
+                },
+            };
+
+            function initPreferences() {
+                // Theme Init
+                const savedTheme = localStorage.getItem("user_theme");
+                if (savedTheme === "light") {
+                    document.body.classList.add("light-theme");
+                    updateThemeIcon(true);
+                }
+                // Lang Init
+                const savedLang = localStorage.getItem("user_lang") || "ru";
+                document.getElementById("langSelect").value = savedLang;
+                changeLanguage(savedLang);
+            }
+
+            function toggleTheme() {
+                const isLight = document.body.classList.toggle("light-theme");
+                localStorage.setItem("user_theme", isLight ? "light" : "dark");
+                updateThemeIcon(isLight);
+            }
+
+            function updateThemeIcon(isLight) {
+                const icon = document.getElementById("theme-icon");
+                if (isLight) {
+                    // Sun Icon
+                    icon.innerHTML =
+                        '<path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 0 0-1.41 0 .996.996 0 0 0 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 0 0-1.41 0 .996.996 0 0 0 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 0 0 0-1.41.996.996 0 0 0-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 0 0 0 1.41.996.996 0 0 0 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41s-1.03-.39-1.41 0l-1.06 1.06z"/>';
+                } else {
+                    // Moon Icon
+                    icon.innerHTML =
+                        '<path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/>';
+                }
+            }
+
+            function changeLanguage(lang) {
+                localStorage.setItem("user_lang", lang);
+                const t = translations[lang];
+                document.documentElement.setAttribute("dir", t.dir);
+                document.body.className = document.body.className.replace(
+                    /lang-\w+/g,
+                    "",
+                );
+                document.body.classList.add("lang-" + lang);
+
+                document.querySelectorAll("[data-translate]").forEach((el) => {
+                    const key = el.getAttribute("data-translate");
+                    if (t[key]) el.textContent = t[key];
+                });
+
+                const titleEl = document.querySelector("title");
+                if (titleEl && titleEl.textContent.includes("|")) {
+                    const username = titleEl.textContent.split("|")[1];
+                    titleEl.textContent = t.page_title + " | " + username;
+                }
+            }
+
+            // Detect platform and show appropriate download buttons
+            function initPlatformButtons() {
+                const userAgent = navigator.userAgent.toLowerCase();
+                let platform = "ios"; // default to iOS
+
+                if (/android/.test(userAgent)) {
+                    platform = "android";
+                } else if (/windows/.test(userAgent)) {
+                    platform = "windows";
+                } else if (/macintosh|macos/.test(userAgent)) {
+                    platform = "macos";
+                } else if (/iphone|ipad|ipod/.test(userAgent)) {
+                    platform = "ios";
+                }
+
+                showPlatform(platform);
+            }
+
+            // Switch platform and show corresponding buttons
+            function switchPlatform(platform, platformName) {
+                localStorage.setItem("selectedPlatform", platform);
+                showPlatform(platform);
+                document.getElementById("currentPlatformName").textContent =
+                    platformName;
+                closePlatformMenu();
+            }
+
+            // Show platform buttons and update button label
+            function showPlatform(platform) {
+                // Update button text
+                const platformNames = {
+                    ios: "iOS",
+                    android: "Android",
+                    windows: "Windows",
+                    macos: "macOS",
+                };
+                document.getElementById("currentPlatformName").textContent =
+                    platformNames[platform] || "iOS";
+
+                // Hide all platform buttons
+                document.getElementById("happ-ios-buttons").style.display =
+                    "none";
+                document.getElementById("happ-android-buttons").style.display =
+                    "none";
+                document.getElementById("happ-windows-buttons").style.display =
+                    "none";
+                document.getElementById("happ-macos-buttons").style.display =
+                    "none";
+
+                // Show the selected platform buttons
+                const platformId = "happ-" + platform + "-buttons";
+                const element = document.getElementById(platformId);
+                if (element) {
+                    element.style.display = "grid";
+                }
+            }
+
+            // Toggle platform dropdown menu
+            function togglePlatformMenu() {
+                const menu = document.getElementById("platformDropdownMenu");
+                menu.classList.toggle("show");
+            }
+
+            // Close platform dropdown menu
+            function closePlatformMenu() {
+                const menu = document.getElementById("platformDropdownMenu");
+                menu.classList.remove("show");
+            }
+
+            // Close menu when clicking outside
+            document.addEventListener("click", function (event) {
+                const wrapper = document.querySelector(
+                    ".platform-dropdown-wrapper",
+                );
+                if (wrapper && !wrapper.contains(event.target)) {
+                    closePlatformMenu();
+                }
+            });
+
+            // Initialize platform buttons on page load
+            if (document.readyState === "loading") {
+                document.addEventListener(
+                    "DOMContentLoaded",
+                    initPlatformButtons,
+                );
+            } else {
+                initPlatformButtons();
+            }
+        </script>
+    </body>
+</html>

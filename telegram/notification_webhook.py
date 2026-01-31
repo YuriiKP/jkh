@@ -5,15 +5,13 @@ import json
 import logging
 from typing import Optional
 
-from aiohttp import web
 from aiogram import Bot
-from aiogram.exceptions import TelegramForbiddenError, TelegramBadRequest
-from pydantic import ValidationError
-
-from models.notification import ReachedDaysLeft, Notification
-from storage import DB_M
+from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
+from aiohttp import web
 from keyboards import *
-
+from models.notification import Notification, ReachedDaysLeft
+from pydantic import ValidationError
+from storage import DB_M
 
 logger = logging.getLogger(__name__)
 
@@ -57,12 +55,10 @@ def register_pasarguard_notification_route(
 
         try:
             payload_list = await request.json()
-            payload = payload_list[0]  
-            logger.info(f"Пришло уведомление от панели. Тип: {payload.get("action")}")
+            payload = payload_list[0]
+            logger.info(f"Пришло уведомление от панели. Тип: {payload.get('action')}")
         except Exception:
-            return web.json_response(
-                {"ok": False, "error": "invalid_json"}, status=400
-            )
+            return web.json_response({"ok": False, "error": "invalid_json"}, status=400)
 
         # Все уведомления приходят в общей схеме Notification.*.
         # Нас интересует только reached_days_left, остальные игнорируем.
@@ -101,17 +97,21 @@ def register_pasarguard_notification_route(
             return web.json_response({"ok": True, "duplicate": True})
 
         try:
-            await bot.send_message(chat_id=user_id, text=notification_days_left_text(days_left))
-            logger.info(f"Уведомление отправлено пользователю в Телеграм | user_id: {user_id}")
+            await bot.send_message(
+                chat_id=user_id, text=notification_days_left_text(days_left)
+            )
+            logger.info(
+                f"Уведомление отправлено пользователю в Телеграм | user_id: {user_id}"
+            )
         except (TelegramForbiddenError, TelegramBadRequest):
             # Пользователь мог заблокировать бота/не начинал диалог — webhook считаем обработанным.
-            logger.info(f"Ошибка при отправке уведомления в Телеграм | user_id: {user_id}")
+            logger.info(
+                f"Ошибка при отправке уведомления в Телеграм | user_id: {user_id}"
+            )
             return web.json_response(
                 {"ok": True, "sent": False, "reason": "cannot_send"}
             )
 
         return web.json_response({"ok": True, "sent": True})
 
-
     app.router.add_post(path, pasarguard_notify_handler)
-
