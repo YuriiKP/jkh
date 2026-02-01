@@ -5,6 +5,7 @@ from aiogram import F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import (
     BotCommandScopeDefault,
+    BufferedInputFile,
     CallbackQuery,
     Message,
 )
@@ -12,6 +13,8 @@ from keyboards import *
 from loader import db_manage, dp, get_full_subscription_url, marzban_client
 from models.user import UserResponse
 from utils.marzban_api import MarzbanAPIError
+
+from ..common import edit_menu_with_image
 
 
 # Обработчик кнопки "Мой ключ"
@@ -22,7 +25,8 @@ async def my_key_handler(query: CallbackQuery, state: FSMContext):
     user_id = query.from_user.id
 
     async def message_no_keys():
-        await query.message.edit_text(
+        await edit_menu_with_image(
+            event=query,
             text=my_kyes_no_key,
             reply_markup=InlineKeyboardMarkup(
                 inline_keyboard=[
@@ -33,7 +37,7 @@ async def my_key_handler(query: CallbackQuery, state: FSMContext):
 
     # Есть ли пользователь в marzban
     try:
-        user_marz: UserResponse = await marzban_client.get_user(user_id)
+        user_marz: UserResponse = await marzban_client.get_user(str(user_id))
 
         # Если юзер есть в marzban то триала уже не должно быть
         user_tg = await db_manage.get_user_by_id(user_id)
@@ -46,7 +50,8 @@ async def my_key_handler(query: CallbackQuery, state: FSMContext):
         print(e)
 
     text = my_keys_stat_info(user_marz)
-    await query.message.edit_text(
+    await edit_menu_with_image(
+        event=query,
         text=text,
         reply_markup=InlineKeyboardMarkup(
             inline_keyboard=[
@@ -74,10 +79,11 @@ async def get_qr_code_handler(query: CallbackQuery, state: FSMContext):
     user_id = query.from_user.id
 
     try:
-        user_marz: UserResponse = await marzban_client.get_user(user_id)
+        user_marz: UserResponse = await marzban_client.get_user(str(user_id))
     except MarzbanAPIError as e:
         if e.status == 404:
-            await query.message.edit_text(
+            await edit_menu_with_image(
+                event=query,
                 text="Ключ не найден.",
                 reply_markup=InlineKeyboardMarkup(
                     inline_keyboard=[
@@ -109,7 +115,7 @@ async def get_qr_code_handler(query: CallbackQuery, state: FSMContext):
 
     # Сохраняем в буфер
     buffer = io.BytesIO()
-    img.save(buffer, format="PNG")
+    img.save(buffer, "PNG")
     buffer.seek(0)
 
     # Отправляем QR-код как фото

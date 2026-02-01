@@ -5,18 +5,14 @@
   "routing": {
     "rules": [
       {
-        "ip": [
-          "geoip:private"
-        ],
+        "ip": ["geoip:private"],
         "outboundTag": "BLOCK",
         "type": "field"
       },
       {
         "type": "field",
         "outboundTag": "BLOCK",
-        "protocol": [
-          "bittorrent"
-        ]
+        "protocol": ["bittorrent"]
       }
     ]
   },
@@ -37,27 +33,18 @@
         "realitySettings": {
           "show": false,
           "fingerprint": "chrome",
-          "dest": "dl.google.com:443",
+          "dest": "dropbox.com:443",
           "xver": 0,
-          "serverNames": [
-            "dl.google.com",
-            "www.dl.google.com"
-          ],
+          "serverNames": ["dropbox.com", "www.dropbox.com"],
           "privateKey": "cMO0WwnUAAuNFEGlxsw4y8rdBsS4aa33kAU1bGW0uB4",
           "publicKey": "5jAtH26rvjUVq3wulkb_90Y2tOv2IgkRla48Wm6dPAQ",
           "SpiderX": "",
-          "shortIds": [
-            "95afe7b7"
-          ]
+          "shortIds": ["95afe7b7"]
         }
       },
       "sniffing": {
         "enabled": true,
-        "destOverride": [
-          "http",
-          "tls",
-          "quic"
-        ],
+        "destOverride": ["http", "tls", "quic"],
         "metadataOnly": false
       }
     }

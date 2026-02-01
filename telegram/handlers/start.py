@@ -22,7 +22,7 @@ from models.proxy import ProxyTable, VlessSettings, XTLSFlows
 from models.user import UserCreate, UserModify, UserStatusCreate, UserStatusModify
 from utils.marzban_api import MarzbanAPIError
 
-from .common import send_menu_with_image
+from .common import edit_menu_with_image, send_menu_with_image
 
 
 # Старт с диплинком
@@ -142,7 +142,7 @@ async def inline_process_start_bot(query: CallbackQuery, state: FSMContext):
 
     # await query.message.delete()
     await state.clear()
-    await process_start_bot(query.message, query.from_user.id)
+    await process_start_bot(query, query.from_user.id)
 
 
 # Функция запуска
@@ -150,21 +150,31 @@ async def process_start_bot(message: Message | CallbackQuery, user_id: str | int
     user = await db_manage.get_user_by_id(user_id)
 
     if user is None:
+        # Получаем объект пользователя в зависимости от типа message
+        if isinstance(message, CallbackQuery):
+            from_user = message.from_user
+            msg_obj = message.message
+        else:
+            from_user = message.from_user
+            msg_obj = message
+
         await db_manage.add_new_user(
-            message.from_user.id,
-            message.from_user.username,
-            message.from_user.first_name,
-            message.from_user.last_name,
-            language=message.from_user.language_code,
+            from_user.id,
+            from_user.username or "",
+            from_user.first_name or "",
+            from_user.last_name or "",
+            language=from_user.language_code or "ru",
         )
 
-        await message.answer(text=rules_text, reply_markup=rules_menu())
+        await msg_obj.answer(text=rules_text, reply_markup=rules_menu())
 
         return
 
     # Нужен объект Message
     if isinstance(message, CallbackQuery):
-        message = message.message
+        msg_obj = message.message
+    else:
+        msg_obj = message
 
     await bot.set_my_commands(commands=user_commands, scope=BotCommandScopeDefault())
 
@@ -207,31 +217,26 @@ async def process_start_bot(message: Message | CallbackQuery, user_id: str | int
     status = user[5] if user else None
 
     # Определяем клавиатуру и текст
-    if status in ("admin", "main_admin") and message.text == "/start":
+    if (
+        status in ("admin", "main_admin")
+        and isinstance(msg_obj, Message)
+        and msg_obj.text == "/start"
+    ):
         keyboard = menu_keyboards[status]
         text_admin = await get_admin_text()
 
-        await message.answer(text=text_admin, reply_markup=keyboard)
+        await msg_obj.answer(text=text_admin, reply_markup=keyboard)
 
     text = start_help_message
 
-    try:
-        # Пытаемся отредактировать существующее сообщение на изображение с меню
-        await send_menu_with_image(
-            chat_id=message.chat.id, text=text, reply_markup=user_menu(user[7])
-        )
-        # Удаляем старое текстовое сообщение, если оно есть
-        try:
-            if message.text != "/start":
-                await message.delete()
-        except TelegramBadRequest:
-            pass  # Игнорируем, если уже удалено
+    # Отправляем меню с изображением
+    await send_menu_with_image(
+        chat_id=msg_obj.chat.id, text=text, reply_markup=user_menu(str(user[7]))
+    )
 
-    except Exception:
-        # Fallback: отправляем обычное сообщение
-        await message.answer(text=text, reply_markup=user_menu(user[7]))
-        try:
-            if message.text != "/start":
-                await message.delete()
-        except TelegramBadRequest:
-            pass  # Игнорируем, если уже удалено
+    # Удаляем старое текстовое сообщение, если оно есть и не команда /start
+    try:
+        if isinstance(msg_obj, Message) and msg_obj.text != "/start":
+            await msg_obj.delete()
+    except TelegramBadRequest:
+        pass  # Игнорируем, если уже удалено

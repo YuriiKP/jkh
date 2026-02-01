@@ -31,6 +31,7 @@ async def send_menu_with_image(chat_id: int, text: str, reply_markup=None):
                 photo=menu_image_id,
                 caption=text,
                 reply_markup=reply_markup,
+                parse_mode="HTML",
             )
         else:
             # Если не удалось загрузить изображение, отправляем обычное сообщение
@@ -45,12 +46,13 @@ async def send_menu_with_image(chat_id: int, text: str, reply_markup=None):
         )
 
 
-# Функция для редактирования меню
-async def edit_menu_with_image(event: Message | CallbackQuery, reply_markup=None):
+# Функция для редактирования меню с изображением
+async def edit_menu_with_image(
+    event: Message | CallbackQuery, text: str, reply_markup=None
+):
     """
     Редактирует меню как подпись к изображению.
     """
-
     if isinstance(event, CallbackQuery):
         # Проверяем, что сообщение существует и это не InaccessibleMessage
         if event.message and isinstance(event.message, Message):
@@ -61,14 +63,49 @@ async def edit_menu_with_image(event: Message | CallbackQuery, reply_markup=None
             return
 
     try:
-        await event.edit_caption(text=user_buy_text, reply_markup=buy_menu())
-    except TelegramBadRequest:
-        # Если нельзя редактировать, отправляем новое сообщение и удаляем старое
-        await event.answer_photo(
-            photo=MENU_IMAGE, text=user_buy_text, reply_markup=buy_menu()
+        # Пытаемся отредактировать подпись к изображению
+        await event.edit_caption(
+            caption=text, reply_markup=reply_markup, parse_mode="HTML"
         )
+    except TelegramBadRequest as e:
+        # Если нельзя редактировать (например, сообщение не содержит изображение),
+        # отправляем новое сообщение и удаляем старое
+        logger.warning(f"Cannot edit message caption: {e}. Sending new message.")
+
         try:
-            if event.text and not event.text.startswith("/"):
+            # Загружаем или получаем file_id изображения меню
+            menu_image_id = await load_menu_image()
+
+            if menu_image_id:
+                # Отправляем новое изображение с подписью
+                await bot.send_photo(
+                    chat_id=event.chat.id,
+                    photo=menu_image_id,
+                    caption=text,
+                    reply_markup=reply_markup,
+                    parse_mode="HTML",
+                )
+            else:
+                # Если не удалось загрузить изображение, отправляем обычное сообщение
+                await bot.send_message(
+                    chat_id=event.chat.id,
+                    text=text,
+                    reply_markup=reply_markup,
+                    parse_mode="HTML",
+                )
+
+            # Пытаемся удалить старое сообщение
+            try:
                 await event.delete()
-        except TelegramBadRequest:
-            pass
+            except TelegramBadRequest:
+                pass
+
+        except Exception as e:
+            logging.error(f"Error sending new menu message: {e}")
+            # Fallback: отправляем обычное сообщение
+            await bot.send_message(
+                chat_id=event.chat.id,
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode="HTML",
+            )
