@@ -22,7 +22,7 @@ from models.proxy import ProxyTable, VlessSettings, XTLSFlows
 from models.user import UserCreate, UserModify, UserStatusCreate, UserStatusModify
 from utils.marzban_api import MarzbanAPIError
 
-from .common import edit_menu_with_image, send_menu_with_image
+from .common import edit_menu_with_image
 
 
 # Старт с диплинком
@@ -230,13 +230,6 @@ async def process_start_bot(message: Message | CallbackQuery, user_id: str | int
     text = start_help_message
 
     # Отправляем меню с изображением
-    await send_menu_with_image(
-        chat_id=msg_obj.chat.id, text=text, reply_markup=user_menu(str(user[7]))
+    await edit_menu_with_image(
+        event=msg_obj, text=text, reply_markup=user_menu(str(user[7]))
     )
-
-    # Удаляем старое текстовое сообщение, если оно есть и не команда /start
-    try:
-        if isinstance(msg_obj, Message) and msg_obj.text != "/start":
-            await msg_obj.delete()
-    except TelegramBadRequest:
-        pass  # Игнорируем, если уже удалено
