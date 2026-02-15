@@ -1,4 +1,15 @@
 {
+  "dns": {
+    "tag": "dns_inbound",
+    "servers": [
+      "https+local://1.1.1.1/dns-query",
+      "localhost",
+      {
+        "address": "1.1.1.1",
+        "strategy": "UseIPv4"
+      }
+    ]
+  },
   "log": {
     "loglevel": "warning"
   },
@@ -6,69 +17,61 @@
     "rules": [
       {
         "ip": ["geoip:private"],
-        "outboundTag": "BLOCK",
-        "type": "field"
+        "type": "field",
+        "outboundTag": "BLOCK"
       },
       {
         "type": "field",
-        "outboundTag": "BLOCK",
-        "protocol": ["bittorrent"]
+        "protocol": ["bittorrent"],
+        "outboundTag": "BLOCK"
       }
     ]
   },
   "inbounds": [
     {
       "tag": "VLESS-TCP-0",
-      "listen": "0.0.0.0",
       "port": 443,
+      "listen": "0.0.0.0",
       "protocol": "vless",
       "settings": {
         "clients": [],
         "decryption": "none"
       },
-      "streamSettings": {
-        "network": "tcp",
-        "tcpSettings": {},
-        "security": "reality",
-        "realitySettings": {
-          "show": false,
-          "fingerprint": "chrome",
-          "dest": "dropbox.com:443",
-          "xver": 0,
-          "serverNames": ["dropbox.com", "www.dropbox.com"],
-          "privateKey": "cMO0WwnUAAuNFEGlxsw4y8rdBsS4aa33kAU1bGW0uB4",
-          "publicKey": "5jAtH26rvjUVq3wulkb_90Y2tOv2IgkRla48Wm6dPAQ",
-          "SpiderX": "",
-          "shortIds": ["95afe7b7"]
-        }
-      },
       "sniffing": {
         "enabled": true,
         "destOverride": ["http", "tls", "quic"],
         "metadataOnly": false
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "tcpSettings": {},
+        "realitySettings": {
+          "alpn": ["h2", "http/1.1"],
+          "dest": "dropbox.com:443",
+          "show": false,
+          "xver": 0,
+          "SpiderX": "",
+          "shortIds": ["1fec4405ff170ed9"],
+          "publicKey": "gtotm6x8K4YAzaqOBj0NpTORu4B7t2tKy99upXMos2w",
+          "privateKey": "ZsmV2FxMnX7VkYNkVP5PdSnB2cyjsex2XzJw2QKKfMg",
+          "fingerprint": "chrome",
+          "serverNames": ["dropbox.com", "www.dropbox.com"]
+        }
       }
     }
   ],
   "outbounds": [
     {
+      "tag": "DIRECT",
       "protocol": "freedom",
       "settings": {
         "domainStrategy": "UseIPv4"
-      },
-      "tag": "DIRECT"
+      }
     },
     {
-      "protocol": "blackhole",
-      "tag": "BLOCK"
+      "tag": "BLOCK",
+      "protocol": "blackhole"
     }
-  ],
-  "dns": {
-    "tag": "dns_inbound",
-    "servers": [
-      {
-        "address": "1.1.1.1",
-        "strategy": "UseIPv4"
-      }
-    ]
-  }
+  ]
 }

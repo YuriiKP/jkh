@@ -3,6 +3,7 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, LinkPreviewOptions, Message
+from aiogram.utils.i18n import gettext as _
 from keyboards import *
 from loader import dp
 
@@ -36,7 +37,7 @@ async def how_to_connect_handler(query: CallbackQuery, state: FSMContext):
     await state.clear()
 
     builder = InlineKeyboardBuilder()
-    builder.button(text=btn_main_menu, callback_data="start")
+    builder.button(text=_("🏠 Главное меню"), callback_data="start")
     builder.adjust(1)
 
     # Редактируем меню с изображением

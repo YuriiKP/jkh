@@ -1,59 +1,170 @@
-# Создание базы данных для бота
-Для бота нужно создать базу данных и выдать права 
-`docker exec -it mysql mysql -u root -p`
-`CREATE DATABASE IF NOT EXISTS telegram_db;`
+# JKH - Telegram VPN бот с панелью Pasarguard
 
-# Создаем нового пользователя
-`CREATE USER 'telegram_user'@'%' IDENTIFIED BY 'ваш_пароль';`
+***Примечание:** Данный проект является демонстрацией и обзором технологий для создания системы управления VPN-подписками. Использование VPN должно соответствовать законодательству вашей страны. Ответственность за развертывание и эксплуатацию системы, включая соблюдение требований лицензирования, налогообложения и защиты персональных данных, лежит на стороне, осуществляющей её запуск и администрирование.*
 
-# Выдаем права на базу telegram
-`GRANT ALL PRIVILEGES ON telegram_db.* TO 'telegram_user'@'%';`
+## Описание проекта
 
-# Применяем изменения
-`FLUSH PRIVILEGES;`
+JKH (Жилищный Канал Хостинга) - это комплексное решение для предоставления VPN-услуг через Telegram бота с использованием панели управления Pasarguard. Проект представляет собой полноценную инфраструктуру для управления VPN-подписками через интерфейс телеграм бота.
 
-# Выход
-`EXIT`
+**Основные компоненты:**
+- **Telegram бот** - интерфейс для пользователей и администраторов
+- **Панель Pasarguard** - система управления VPN серверами и пользователями [Ссылка на git](https://github.com/pasarguard/pasarguard)
+- **Node сервер** - Xray сервер для обработки VPN трафика
+- **База данных MySQL** - хранение данных пользователей и подписок
+- **Caddy** - веб-сервер с автоматическим SSL для проксирования трафика
+
+**Ключевые возможности:**
+- Продажа VPN-подписок через Telegram бота
+- Автоматическая генерация конфигураций для различных платформ
+- Управление тестовыми периодами (trial)
+- Административная панель для управления пользователями
+- Поддержка webhook и long-polling режимов работы бота
+- Автоматическое обновление SSL сертификатов через Certbot
+
+## Архитектура
+
+Проект построен на микросервисной архитектуре с использованием Docker Compose:
+
+```
+jkh/
+├── telegram/           # Telegram бот на Python (aiogram)
+│   ├── handlers/      # Обработчики команд
+│   ├── keyboards/     # Клавиатуры интерфейса
+│   ├── models/        # Модели данных
+│   └── utils/         # Вспомогательные функции
+├── templates/         # HTML шаблоны
+├── docker-compose.yaml # Конфигурация всех сервисов
+├── Dockerfile         # Сборка Pasarguard
+├── Caddyfile          # Конфигурация веб-сервера
+├── xray_config.json   # Конфигурация Xray
+└── init.sql           # Инициализация базы данных
+```
+
+## Быстрый старт
+Можно использовать [Dockploy](https://github.com/Dokploy/dokploy) для удобства
+
+### Предварительные требования
+
+1. **Сервер с Docker и Docker Compose**
+2. **Доменное имя** (для SSL сертификатов)
+3. **Telegram Bot Token** от [@BotFather](https://t.me/botfather)
+
+### Установка
+
+1. **Клонирование и настройка:**
+   ```bash
+   git clone <repository-url>
+   cd jkh
+   ```
+   Создайте файл .env на основе примера
+   ```bash
+   cp .env.example .env
+   ```
+   Отредактируйте .env файл
+   ```bash
+   nano .env
+   ```
+
+4. **Запуск системы:**
+   ```bash
+   docker-compose up -d
+   ```
+
+5. **Проверка работы:**
+   ```bash
+   docker-compose ps
+   docker-compose logs -f telegram
+   ```
+
+## Генерация ключей
+
+### X25519 ключи для Xray (можно сгенерировать в панели Pasarguard):
+```bash
+docker exec -it pasarguard xray x25519
+```
+
+### ShortId для конфигурации (можно сгенерировать в панели Pasarguard):
+```bash
+openssl rand -hex 4
+```
+
+## Настройка SSL сертификатов
+
+**Способ** 1
+Для ноды нужны сертификаты, как их сгенерировать можно прочитать здесь [Генерация SSL сертификатов](https://docs.pasarguard.org/ru/node/installation/#генерация-ssl-сертификата)
+
+**Способ** 2
+Я использую этот костыль:) 
+Либо альтернативный вариант, просто скопировать сертификаты, которые делает Caddy или попробовать указать путь до них в docker compose в сервисе node в переменных SSL_CERT_FILE и SSL_KEY_FILE
+
+Копируем сертификаты caddy. Они находятся в volumes докера по пути 
+/var/lib/docker/volumes/caddy_data/_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/ВАШ_ДОМЕН
+```bash
+    cp /var/lib/docker/volumes/caddy_data/_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/ВАШ_ДОМЕН/fullchain.pem /var/lib/pg-node/certs/fullchain.pem && \ 
+    cp /var/lib/docker/volumes/caddy_data/_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/ВАШ_ДОМЕН/privkey.pem /var/lib/pg-node/certs/privkey.pem
+```
+
+## Режимы работы Telegram бота
+
+Бот поддерживает два режима работы:
+
+### 1. Webhook режим
+- Бот поднимает aiohttp-сервер
+- Использует `setWebhook` для получения обновлений
+- Требует публичный URL с SSL
+
+**Настройка в .env:**
+```env
+WEBHOOK_PATH=/tg/webhook
+WEBHOOK_SECRET=ваш_секретный_токен
+WEB_SERVER_HOST=0.0.0.0
+WEB_SERVER_PORT=8080
+```
+
+### 2. Long-polling режим
+- Использует `start_polling()`
+- Не требует публичного URL
+- Проще в настройке
+
+## Функциональность бота
+
+### Для пользователей:
+- `/start` - начало работы с ботом
+- Получение тестового периода (trial)
+- Покупка подписок
+- Получение конфигураций для разных платформ
+- Просмотр оставшегося времени подписки
+- Техническая поддержка
+
+### Для администраторов:
+- Управление пользователями
+- Просмотр статистики
+- Рассылка по пользователям
+
+## Конфигурация xray 
+В настройки ядра в панели Pasarguard можно вставить конфиг из xray_config.json, вполне рабочий варинат.
 
 
+## Безопасность
 
-# Генерация пары ключей (Private + Public)
-`docker exec -it pasarguard xray x25519`
+### Рекомендации по безопасности:
+1. **Используйте сложные пароли** во всех компонентах системы
+2. **Настройте брандмауэр** для ограничения доступа к портам
+3. **Регулярно делайте бэкапы** базы данных
 
-# Генерация ShortId
-`openssl rand -hex 4`
+### Резервное копирование базы данных:
+```bash
+# Экспорт одной базы данных
+docker exec mysql mysqldump -u root -p'ПАРОЛЬ' telegram_db > backup.sql
 
+# Экспорт всех баз данных
+docker exec mysql mysqldump -u root -p'ПАРОЛЬ' --all-databases > full_dump.sql
 
-# Установка certbot
-`sudo apt-get install certbot -y`
+# Восстановление
+docker exec -i mysql mysql -u root -p'ПАРОЛЬ' telegram_db < backup.sql
+```
 
-# Создание сертификата узла
-`sudo certbot certonly --standalone -d example.com \
---deploy-hook "mkdir -p /var/lib/pg-node/certs && \
-cp /etc/letsencrypt/live/example.com/fullchain.pem /var/lib/pg-node/certs/fullchain.pem && \
-cp /etc/letsencrypt/live/example.com/privkey.pem /var/lib/pg-node/certs/privkey.pem && \
-chmod 644 /var/lib/pg-node/certs/fullchain.pem && \
-chmod 600 /var/lib/pg-node/certs/privkey.pem" && \
-docker restart node`
-
-# Перенос бэкапа базы данных 
-`docker exec mysql mysqldump -u root -p'ПАРОЛЬ' ИМЯ_БАЗЫ > backup.sql`
-`docker exec mysql mysqldump -u root -p'ПАРОЛЬ' --all-databases > dump.sql`
-
-
-`docker exec -i mysql mysql -u root -p'ПАРОЛЬ' ИМЯ_БАЗЫ < backup.sql`
-
-
-## Telegram bot: webhook / long-polling
-
-Бот умеет работать в двух режимах:
-
-- **Webhook (aiohttp)**: если в `.env` задан `WEBHOOK_PATH`, бот поднимает `aiohttp`-сервер на `WEB_SERVER_HOST:WEB_SERVER_PORT` и вызывает `setWebhook` на URL `PASARGUARD_BASE_URL + WEBHOOK_PATH` с `WEBHOOK_SECRET`.
-- **Long-polling**: если `WEBHOOK_PATH` не задан, бот стартует через `start_polling` (как раньше).
-
-Переменные окружения:
-
-- **WEB_SERVER_HOST**: хост для `aiohttp` (по умолчанию `0.0.0.0`)
-- **WEB_SERVER_PORT**: порт для `aiohttp` (по умолчанию `8080`)
-- **WEBHOOK_PATH**: путь вебхука (например, `/tg/webhook`)
-- **WEBHOOK_SECRET**: `secret_token` для Telegram webhook
+### Проверка состояния сервисов:
+```bash
+docker ps
+```

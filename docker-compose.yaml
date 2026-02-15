@@ -24,7 +24,17 @@ services:
     ports:
       - "127.0.0.1:3306:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p$$MYSQL_ROOT_PASSWORD",
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -53,7 +63,6 @@ services:
       - /var/lib/pasarguard:/var/lib/pasarguard
     network_mode: host
 
-
   node:
     image: pasarguard/node:latest
     # image: ghcr.io/pasarguard/node:latest
@@ -67,10 +76,8 @@ services:
       - SSL_CERT_FILE=/var/lib/pg-node/certs/fullchain.pem
       - SSL_KEY_FILE=/var/lib/pg-node/certs/privkey.pem
       - API_KEY
-      - GENERATED_CONFIG_PATH
     volumes:
       - /var/lib/pg-node:/var/lib/pg-node
-
 
   telegram:
     container_name: telegram
@@ -92,7 +99,6 @@ services:
       mysql:
         condition: service_healthy
 
-
   caddy:
     container_name: caddy
     image: caddy
@@ -112,7 +118,6 @@ services:
     depends_on:
       pasarguard:
         condition: service_started
-
 
 volumes:
   mysql-db-volume:

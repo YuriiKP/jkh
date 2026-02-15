@@ -1,11 +1,9 @@
 from datetime import datetime
 
-from aiogram.utils.formatting import TextMention
-from models.user import UserResponse
 from loader import get_full_subscription_url
+from models.user import UserResponse
 
 ### Кнопки меню
-
 # Кнопки админов
 btn_admins = "🔑 Админы"  # callback_data=
 about_users_bot = "👥 Пользователи"  # callback_data=
@@ -74,7 +72,7 @@ help_text = """
 По любым вопросам пишите мне @foteleg_b, открыт к общению и предложениям.
 """
 
-help_manual_text = f"""
+help_manual_text = """
 📖 <b>Как подключиться к VPN</b>
 
 - Перейдите по ссылке подписки
@@ -94,7 +92,7 @@ help_manual_text = f"""
 5. Нажмите "Подключиться"
 
 <b>💻 Для Windows | macOS</b>
-Можно скачать страницы на <a href="https://github.com/Happ-proxy"\>Github</a>
+Можно скачать страницы на <a href="https://github.com/Happ-proxy">Github</a>
 
 <b>📋 Реестр допущенного оборудования:)</b>
     • <b>Clash X</b> (macOS)
