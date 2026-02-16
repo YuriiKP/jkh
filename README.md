@@ -168,3 +168,37 @@ docker exec -i mysql mysql -u root -p'ПАРОЛЬ' telegram_db < backup.sql
 ```bash
 docker ps
 ```
+
+## Сканирование подсети для настройки xray
+
+1. Скачаем RealiTLScanner
+
+```bash
+wget https://github.com/XTLS/RealiTLScanner/releases/download/v0.2.1/RealiTLScanner-linux-64
+```
+
+2. Выдадим права на выполнение
+
+```bash
+chmod +x RealiTLScanner-linux-64
+```
+
+3. Запустим сканер
+
+```bash
+./RealiTLScanner-linux-64 --addr IP_АДРЕС_ВАШЕГО_СЕРВЕРА
+```
+Нужно немного подождать и в консоли появятся результаты. 
+Чтобы оставноить поиск `ctrl + c`
+
+
+## Проверка ip адреса арендованного vps
+1. https://www.ipqualityscore.com/free-ip-lookup-proxy-vpn-test/lookup/ВАШ_IP
+2. https://scamalytics.com/ip/ВАШ_IP
+3. https://check.spamhaus.org/
+
+Fraud Score:
+- 0-25   ✅ Отличная репутация
+- 26-50  ⚠️  Средняя 
+- 51-75  ❌ Плохая
+- 76-100 🚫 Очень плохая
