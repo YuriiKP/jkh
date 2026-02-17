@@ -81,7 +81,7 @@ async def pay_with_stars_handler(query: CallbackQuery, state: FSMContext):
     await state.clear()
 
     # 1. Формируем цену
-    prices = [LabeledPrice(label="1 месяц VPN", amount=55)]
+    prices = [LabeledPrice(label="1 месяц VPN", amount=1000)]
 
     # 2. Отправляем инвойс
     if query.message:
@@ -93,7 +93,7 @@ async def pay_with_stars_handler(query: CallbackQuery, state: FSMContext):
             currency="XTR",  # Код валюты для звезд тг
             reply_markup=InlineKeyboardMarkup(
                 inline_keyboard=[
-                    [InlineKeyboardButton(text=f"Оплатить 55 ⭐️", pay=True)],
+                    [InlineKeyboardButton(text="Оплатить 55 ⭐️", pay=True)],
                     [InlineKeyboardButton(text="Отмена", callback_data="buy")],
                 ]
             ),
