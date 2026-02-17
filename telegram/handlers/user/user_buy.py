@@ -81,7 +81,7 @@ async def pay_with_stars_handler(query: CallbackQuery, state: FSMContext):
     await state.clear()
 
     # 1. Формируем цену
-    prices = [LabeledPrice(label="1 месяц VPN", amount=1000)]
+    prices = [LabeledPrice(label="1 месяц VPN", amount=55)]
 
     # 2. Отправляем инвойс
     if query.message:
