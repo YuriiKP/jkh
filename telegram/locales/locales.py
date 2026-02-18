@@ -56,6 +56,11 @@ def setup_context(locales: Locales, lang: str):
     _current_lang.set(lang)
 
 
+def update_lang(lang: str):
+    """Обновляет язык"""
+    _current_lang.set(lang)
+
+
 def get_text(key: str, **kwargs) -> str:
     """Главная функция для получения перевода"""
     locales: Locales = _current_locales.get()

@@ -1,9 +1,12 @@
+from turtle import up
+
 from aiogram import F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from keyboards import *
 from loader import db_manage, dp
 from locales import get_text as _
+from locales import update_lang
 
 from ..common import edit_menu_with_image
 
@@ -53,18 +56,17 @@ async def lang_ru_handler(query: CallbackQuery, state: FSMContext):
     user_id = query.from_user.id
     await db_manage.update_user(user_id=user_id, language="ru")
 
+    # Обновляем контекст языка
+    update_lang("ru")
+
     await query.answer(_("language_changed_ru"))
 
     # Возвращаемся в меню профиля
-    user = await db_manage.get_user_by_id(user_id)
-    if user:
-        profile_text = _(
-            "profile_text",
-            user_id=query.from_user.id,
-            language="🇷🇺 Русский",
-        )
-    else:
-        profile_text = _("profile_default_text")
+    profile_text = _(
+        "profile_text",
+        user_id=user_id,
+        language="🇷🇺 Русский",
+    )
 
     await edit_menu_with_image(
         event=query, text=profile_text, reply_markup=profile_menu()
@@ -79,18 +81,17 @@ async def lang_en_handler(query: CallbackQuery, state: FSMContext):
     user_id = query.from_user.id
     await db_manage.update_user(user_id=user_id, language="en")
 
+    # Обновляем контекст языка
+    update_lang("en")
+
     await query.answer(_("language_changed_en"))
 
     # Возвращаемся в меню профиля
-    user = await db_manage.get_user_by_id(user_id)
-    if user:
-        profile_text = _(
-            "profile_text",
-            user_id=query.from_user.id,
-            language="🇬🇧 English",
-        )
-    else:
-        profile_text = _("profile_default_text")
+    profile_text = _(
+        "profile_text",
+        user_id=user_id,
+        language="🇬🇧 English",
+    )
 
     await edit_menu_with_image(
         event=query, text=profile_text, reply_markup=profile_menu()

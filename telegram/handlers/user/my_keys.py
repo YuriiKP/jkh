@@ -92,7 +92,10 @@ async def get_qr_code_handler(query: CallbackQuery, state: FSMContext):
     # Отправляем QR-код как фото
     await query.message.reply_photo(
         photo=BufferedInputFile(buffer.getvalue(), filename="qr_code.png"),
-        caption=_("my_keys_qr_code"),
+    )
+    # Отправляем текст отдельным сообщением
+    await query.message.answer(
+        text=_("my_keys_qr_code"),
         reply_markup=user_my_keys_qr_code(),
     )
 

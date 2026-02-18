@@ -1,8 +1,11 @@
+import logging
 from typing import Any, Awaitable, Callable, Dict
 
 from aiogram import BaseMiddleware
 from locales import Locales, setup_context
 from storage import DB_M
+
+logger = logging.getLogger(__name__)
 
 
 class MyLocalesMiddleware(BaseMiddleware):
@@ -33,8 +36,8 @@ class MyLocalesMiddleware(BaseMiddleware):
         if lang_source in ("ru", "en"):
             lang = lang_source
 
-        print("Язык интерфейса:", data["event_from_user"].language_code)
-        print("Язык из базы данных:", lang_source)
+        # print("Язык интерфейса:", data["event_from_user"].language_code)
+        # print("Язык из базы данных:", lang_source)
 
         # Добавляем в data
         data["lang"] = lang
