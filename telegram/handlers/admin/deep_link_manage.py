@@ -22,7 +22,7 @@ async def deep_link_menu(message: Message, state: FSMContext):
     await state.set_state(StateCreateDeepLink.days)
 
     await message.answer(
-        text="Введите количество дней подписки (целое число):",
+        text=_("deep_link_enter_days"),
         reply_markup=InlineKeyboardMarkup(
             inline_keyboard=[
                 [
@@ -39,7 +39,7 @@ async def deep_link_menu(message: Message, state: FSMContext):
 @dp.callback_query(F.data == "cancel_deep_link", IsMainAdmin())
 async def cancel_deep_link(query: CallbackQuery, state: FSMContext):
     await state.clear()
-    await query.message.edit_text("Создание диплинка отменено.")
+    await query.message.edit_text(_("deep_link_canceled"))
 
 
 # Получение количества дней и генерация диплинка
@@ -50,7 +50,7 @@ async def process_deep_link_days(message: Message, state: FSMContext):
         if days <= 0:
             raise ValueError
     except ValueError:
-        await message.answer("Пожалуйста, введите положительное целое число.")
+        await message.answer(_("deep_link_positive_integer"))
         return
 
     # Генерируем уникальный deep_link
@@ -61,10 +61,12 @@ async def process_deep_link_days(message: Message, state: FSMContext):
 
     await state.clear()
     await message.answer(
-        text=f"✅ Диплинк подписки на <b>{days}</b> дней создан.\n\n"
-        f"Ссылка для активации:\n<code>{start_link}</code>\n\n"
-        f"Диплинк: <code>{deep_link_str}</code>\n"
-        f"Одноразовый, после активации станет неактивным.",
+        text=_(
+            "deep_link_created",
+            days=days,
+            start_link=start_link,
+            deep_link_str=deep_link_str,
+        ),
         reply_markup=InlineKeyboardMarkup(
             inline_keyboard=[
                 [InlineKeyboardButton(text=_("btn_main_menu"), callback_data="start")]
@@ -78,7 +80,7 @@ async def process_deep_link_days(message: Message, state: FSMContext):
 async def list_deep_links_handler(query: CallbackQuery):
     deep_links = await db_manage.list_deep_links()
     if not deep_links:
-        await query.message.answer("Нет созданных диплинков.")
+        await query.message.answer(_("deep_link_no_links"))
         return
 
     text_lines = ["<b>Список диплинков подписки:</b>\n"]

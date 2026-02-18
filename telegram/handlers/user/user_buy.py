@@ -72,8 +72,12 @@ async def pay_with_card_handler(query: CallbackQuery, state: FSMContext):
             # provider_data=provider_data,
             reply_markup=InlineKeyboardMarkup(
                 inline_keyboard=[
-                    [InlineKeyboardButton(text="Оплатить 100 ₽", pay=True)],
-                    [InlineKeyboardButton(text="Отмена", callback_data="buy")],
+                    [InlineKeyboardButton(text=_("payment_pay_100_rub"), pay=True)],
+                    [
+                        InlineKeyboardButton(
+                            text=_("payment_cancel"), callback_data="buy"
+                        )
+                    ],
                 ]
             ),
         )
@@ -98,8 +102,12 @@ async def pay_with_stars_handler(query: CallbackQuery, state: FSMContext):
             currency="XTR",  # Код валюты для звезд тг
             reply_markup=InlineKeyboardMarkup(
                 inline_keyboard=[
-                    [InlineKeyboardButton(text="Оплатить 55 ⭐️", pay=True)],
-                    [InlineKeyboardButton(text="Отмена", callback_data="buy")],
+                    [InlineKeyboardButton(text=_("payment_pay_55_stars"), pay=True)],
+                    [
+                        InlineKeyboardButton(
+                            text=_("payment_cancel"), callback_data="buy"
+                        )
+                    ],
                 ]
             ),
         )
@@ -112,8 +120,8 @@ async def pay_with_support_handler(query: CallbackQuery, state: FSMContext):
     await state.clear()
 
     builder = InlineKeyboardBuilder()
-    builder.button(text="Написать в поддержку", url="https://t.me/foteleg_b")
-    builder.button(text=btn_back, callback_data="buy")
+    builder.button(text=_("payment_contact_support"), url="https://t.me/foteleg_b")
+    builder.button(text=_("btn_back"), callback_data="buy")
     builder.adjust(1)
 
     # Редактируем меню с изображением

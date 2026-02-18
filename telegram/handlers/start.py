@@ -44,7 +44,7 @@ async def process_start_bot_deep_link(
             user_id=message.from_user.id, status_user=status_user
         )
 
-        await message.answer(text=f"Поздравляю! Теперь ты {status_user}")
+        await message.answer(text=_("admin_congratulations", status_user=status_user))
 
         await process_start_bot(message, message.from_user.id)
         return
@@ -119,7 +119,7 @@ async def process_start_bot_deep_link(
             await db_manage.update_user(user_id, trial="false")
 
         await message.answer(
-            text=f"✅ Подписка активирована! Добавлено {deep_link_info.duration_days} дней."
+            text=_("admin_subscription_activated", days=deep_link_info.duration_days)
         )
         await process_start_bot(message, user_id)
         return
@@ -207,23 +207,23 @@ async def process_start_bot(message: Message | CallbackQuery, user_id: str | int
         incoming_gb = stats.incoming_bandwidth / (1024**3)
         outgoing_gb = stats.outgoing_bandwidth / (1024**3)
 
-        return (
-            f"📊 <b>Статистика сервера</b>:\n\n"
-            f"👥 <b>Пользователи</b>:\n"
-            f"  • Всего: {stats.total_user}\n"
-            f"  • Онлайн: {stats.online_users}\n"
-            f"  • Активные: {stats.active_users}\n"
-            f"  • На паузе: {stats.on_hold_users}\n"
-            f"  • Отключены: {stats.disabled_users}\n"
-            f"  • Истекли: {stats.expired_users}\n"
-            f"  • Ограничены: {stats.limited_users}\n\n"
-            f"💻 <b>Система</b>:\n"
-            f"  • Версия: {stats.version}\n"
-            f"  • CPU: {stats.cpu_usage:.1f}% ({stats.cpu_cores} ядер)\n"
-            f"  • RAM: {mem_used_gb:.2f} GB / {mem_total_gb:.2f} GB ({mem_percent:.1f}%)\n\n"
-            f"📡 <b>Трафик</b>:\n"
-            f"  • Входящий: {incoming_gb:.2f} GB\n"
-            f"  • Исходящий: {outgoing_gb:.2f} GB"
+        return _(
+            "admin_statistics_text",
+            total_user=stats.total_user,
+            online_users=stats.online_users,
+            active_users=stats.active_users,
+            on_hold_users=stats.on_hold_users,
+            disabled_users=stats.disabled_users,
+            expired_users=stats.expired_users,
+            limited_users=stats.limited_users,
+            version=stats.version,
+            cpu_usage=stats.cpu_usage,
+            cpu_cores=stats.cpu_cores,
+            mem_used_gb=mem_used_gb,
+            mem_total_gb=mem_total_gb,
+            mem_percent=mem_percent,
+            incoming_gb=incoming_gb,
+            outgoing_gb=outgoing_gb,
         )
 
     status = user[5] if user else None

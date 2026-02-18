@@ -30,7 +30,7 @@ async def show_info_about_users_bot(message: Message, state: FSMContext):
 
     all_users = await db_manage.count_users()
 
-    text = f"<b>👥 ПОЛЬЗОВАТЕЛИ</b>\n{all_users}"
+    text = _("admin_users_info", all_users=all_users)
 
     await message.answer(
         text=text,
@@ -38,12 +38,12 @@ async def show_info_about_users_bot(message: Message, state: FSMContext):
             inline_keyboard=[
                 [
                     InlineKeyboardButton(
-                        text="📨 Сделать рассылку", callback_data="mailing"
+                        text=_("admin_make_mailing"), callback_data="mailing"
                     )
                 ],
                 [
                     InlineKeyboardButton(
-                        text="⬇️ Выгрузить id", callback_data="down_users_id"
+                        text=_("admin_download_ids"), callback_data="down_users_id"
                     )
                 ],
             ]
@@ -71,10 +71,14 @@ async def setting_mailing(query: CallbackQuery, state: FSMContext):
     await state.set_state(State_Mailing.msg)
 
     await query.message.answer(
-        text="Отправьте или перешлите сообщение для рассылки:",
+        text=_("admin_send_mailing_message"),
         reply_markup=InlineKeyboardMarkup(
             inline_keyboard=[
-                [InlineKeyboardButton(text="❌ Отмена", callback_data="stop_mailing")]
+                [
+                    InlineKeyboardButton(
+                        text=_("admin_cancel"), callback_data="stop_mailing"
+                    )
+                ]
             ]
         ),
     )
@@ -101,9 +105,11 @@ async def take_msg_mailing(message: Message, state: FSMContext):
             for text_button, url in zip(text_buttons, urls):
                 builder.button(text=text_button, url=url)
 
-        builder.button(text="▶️ Добавить кнопку", callback_data="add_button")
-        builder.button(text="📤 Начать рассылку", callback_data="confirm_start_mailing")
-        builder.button(text="❌ Отмена", callback_data="stop_mailing")
+        builder.button(text=_("admin_add_button"), callback_data="add_button")
+        builder.button(
+            text=_("admin_start_mailing"), callback_data="confirm_start_mailing"
+        )
+        builder.button(text=_("admin_cancel"), callback_data="stop_mailing")
 
         builder.adjust(1)
 
@@ -126,9 +132,7 @@ async def take_msg_mailing(message: Message, state: FSMContext):
     async def add_button(query: CallbackQuery, state: FSMContext):
         await state.set_state(State_Mailing.add_button)
 
-        await query.message.answer(
-            text="Введите текст кнопки и ссылку в формате:\nТекст кнопки - https://example"
-        )
+        await query.message.answer(text=_("admin_button_format"))
 
     # Принимаем сообщение для кнопки
     @dp.message(State_Mailing.add_button, IsAdmin())
@@ -152,12 +156,12 @@ async def take_msg_mailing(message: Message, state: FSMContext):
                 inline_keyboard=[
                     [
                         InlineKeyboardButton(
-                            text="✅ Начать", callback_data="start_mailing"
+                            text=_("admin_start"), callback_data="start_mailing"
                         )
                     ],
                     [
                         InlineKeyboardButton(
-                            text="❌ Отмена", callback_data="stop_mailing"
+                            text=_("admin_cancel"), callback_data="stop_mailing"
                         )
                     ],
                 ]
@@ -181,7 +185,9 @@ async def take_msg_mailing(message: Message, state: FSMContext):
         count_msg = []
         for index, user in enumerate(users):
             if index % ind == 0:
-                await message.answer(text=f"Прогресс рассылки {int(index / ind * 20)}%")
+                await message.answer(
+                    text=_("admin_mailing_progress", progress=int(index / ind * 20))
+                )
 
             # Обработка отправки
             async def send_msg():
@@ -212,5 +218,10 @@ async def take_msg_mailing(message: Message, state: FSMContext):
 
         count_msg_len = len(count_msg)
         await message.answer(
-            text=f"<b>РАССЫЛКА ЗАВЕРШЕНА</b>\n\nВсего пользователей: {len(users)}\nУспешно отправленно: {count_msg_len}\nНе удалось отправить: {len(users) - count_msg_len}"
+            text=_(
+                "admin_mailing_completed",
+                total_users=len(users),
+                success_count=count_msg_len,
+                failed_count=len(users) - count_msg_len,
+            )
         )

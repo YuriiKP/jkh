@@ -28,6 +28,7 @@ btn_get_qr_code: "🖼 Get QR code" # callback_data='get_qr_code'
 btn_how_to_connect: "📖 How to connect" # callback_data='how_to_connect'
 btn_support: "💬 Contact support" # callback_data='support'
 btn_main_menu: "🏠 Main menu" # callback_data='start'
+btn_cancel: "❌ Cancel"
 
 start_help_message: |-
   🏢 <b>Management Company «ЖКХ VPN»</b> <i>(Housing Channel Hosting)</i>
@@ -107,7 +108,7 @@ my_keys_stat_info: |-
   🔗 <b>Subscription link:</b> {full_subscription_url}
 
 my_keys_qr_code: |-
-  "Scan the QR code to connect to the VPN."
+  Scan the QR code to connect to the VPN
 
 my_keys_qr_notice: |-
   "QR code sent"
@@ -155,3 +156,74 @@ rules_text: |-
   5. Requests are accepted through established technical support channels.
 
   6. Transfer of accounts, keys, or trial periods to third parties, as well as organizing collective access to the service's resources, is strictly prohibited. Attempts to bypass established system limits or actions leading to infrastructure degradation will result in account blocking without compensation for unused balance.
+
+# Admin texts
+admin_statistics_text: |-
+  📊 <b>Server Statistics</b>:
+
+  👥 <b>Users</b>:
+    • Total: {total_user}
+    • Online: {online_users}
+    • Active: {active_users}
+    • On hold: {on_hold_users}
+    • Disabled: {disabled_users}
+    • Expired: {expired_users}
+    • Limited: {limited_users}
+
+  💻 <b>System</b>:
+    • Version: {version}
+    • CPU: {cpu_usage:.1f}% ({cpu_cores} cores)
+    • RAM: {mem_used_gb:.2f} GB / {mem_total_gb:.2f} GB ({mem_percent:.1f}%)
+
+  📡 <b>Traffic</b>:
+    • Incoming: {incoming_gb:.2f} GB
+    • Outgoing: {outgoing_gb:.2f} GB
+
+admin_users_info: "<b>👥 USERS</b>\n{all_users}"
+
+admin_make_mailing: "📨 Make mailing"
+admin_download_ids: "⬇️ Download ids"
+admin_send_mailing_message: "Send or forward a message for mailing:"
+admin_cancel: "❌ Cancel"
+admin_add_button: "▶️ Add button"
+admin_start_mailing: "📤 Start mailing"
+admin_button_format: "Enter button text and link in format:\nButton text - https://example"
+admin_start: "✅ Start"
+admin_mailing_progress: "Mailing progress {progress}%"
+admin_mailing_completed: |-
+  <b>MAILING COMPLETED</b>
+
+  Total users: {total_users}
+  Successfully sent: {success_count}
+  Failed to send: {failed_count}
+
+admin_all_administrators: "ALL ADMINISTRATORS"
+admin_add_admin: "🛠 Add admin"
+admin_demote_admin: "🗑 Demote"
+admin_who_to_add: "Who to add?"
+admin_main_admin: "Main admin"
+admin_admin: "Admin"
+admin_send_user_id: "Send user id"
+admin_user_not_found: "User not found, send id again"
+admin_user_removed: "User {user_id} removed from admins"
+admin_congratulations: "Congratulations! Now you are {status_user}"
+admin_subscription_activated: "✅ Subscription activated! Added {days} days."
+
+# Deep link texts
+deep_link_enter_days: "Enter the number of subscription days (integer):"
+deep_link_canceled: "Deep link creation canceled."
+deep_link_positive_integer: "Please enter a positive integer."
+deep_link_created: |-
+  ✅ Deep link for <b>{days}</b> days subscription created.
+
+  Activation link:
+  <code>{start_link}</code>
+
+  Deep link: <code>{deep_link_str}</code>
+  One-time use, will become inactive after activation.
+
+# Payment texts
+payment_pay_100_rub: "Pay 100 ₽"
+payment_cancel: "Cancel"
+payment_pay_55_stars: "Pay 55 ⭐️"
+payment_contact_support: "Contact support"

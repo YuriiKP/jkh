@@ -24,7 +24,7 @@ async def admin_manage_menu(message: Message, state: FSMContext):
 
     admins = await db_manage.get_admins()
 
-    text = "<b>ВСЕ АДМИНИСТРАТОРЫ</b>"
+    text = f"<b>{_('admin_all_administrators')}</b>"
     for admin in admins:
         if int(admin[0]) == int(TG_ADMIN):
             pass
@@ -37,10 +37,14 @@ async def admin_manage_menu(message: Message, state: FSMContext):
             inline_keyboard=[
                 [
                     InlineKeyboardButton(
-                        text="🛠 Добавить админа", callback_data="add_admin"
+                        text=_("admin_add_admin"), callback_data="add_admin"
                     )
                 ],
-                [InlineKeyboardButton(text="🗑 Разжаловать", callback_data="ban_admin")],
+                [
+                    InlineKeyboardButton(
+                        text=_("admin_demote_admin"), callback_data="ban_admin"
+                    )
+                ],
             ]
         ),
     )
@@ -50,12 +54,12 @@ async def admin_manage_menu(message: Message, state: FSMContext):
 @dp.callback_query(F.data == "add_admin", IsMainAdmin())
 async def choice_add_admin(query: CallbackQuery, state: FSMContext):
     await query.message.answer(
-        text="Кого добавляем?",
+        text=_("admin_who_to_add"),
         reply_markup=InlineKeyboardMarkup(
             inline_keyboard=[
                 [
                     InlineKeyboardButton(
-                        text="Главного админа",
+                        text=_("admin_main_admin"),
                         callback_data=CB_ModerAdmins(
                             action="add_admin", status_user="main_admin"
                         ).pack(),
@@ -63,7 +67,7 @@ async def choice_add_admin(query: CallbackQuery, state: FSMContext):
                 ],
                 [
                     InlineKeyboardButton(
-                        text="Админа",
+                        text=_("admin_admin"),
                         callback_data=CB_ModerAdmins(
                             action="add_admin", status_user="admin"
                         ).pack(),
@@ -97,7 +101,7 @@ async def prpcess_add_admin(
 async def process_ban_admin(query: CallbackQuery, state: FSMContext):
     await state.set_state(State_Ban_Admin.msg)
 
-    await query.message.answer(text="Отправьте id пользователя")
+    await query.message.answer(text=_("admin_send_user_id"))
 
 
 # Полчение ид пользователя
@@ -108,9 +112,9 @@ async def ban_admin(message: Message, state: FSMContext):
 
         await db_manage.update_user(user_id=user_id, status_user="user")
 
-        await message.answer(text=f"Пользователь {message.text} удален из админов")
+        await message.answer(text=_("admin_user_removed", user_id=message.text))
 
         await state.clear()
 
     except TypeError and ValueError:
-        await message.answer(text="Такого пользователя нет, отправьте id заново")
+        await message.answer(text=_("admin_user_not_found"))
