@@ -11,11 +11,16 @@ btn_create_deep_link: "🔗 Create subscription deep link"
 
 # User menu buttons
 btn_buy: "💳 Buy" # callback_data='buy'
-btn_my_key: "🔐 My Key" # callback_data='my_key'
+btn_profile: "👤 Profile" # callback_data='btn_profile'
 btn_help: "🆘 Help" # callback_data='help'
 btn_back: "👈 Back"
 btn_rules_accept: "✅ Accept rules"
 btn_rules_decline: "❌ Decline rules"
+
+# Profile menu buttons
+btn_my_key: "🔐 My Key" # callback_data='my_key'
+btn_language: "🌐 Language" # callback_data='language'
+btn_back_to_main: "🏠 Main menu" # callback_data='start'
 
 btn_trial_buy: "🔎 Trial period" # callback_data='trial_bay'
 btn_buy_one_month: "🟢 1 month"
@@ -29,6 +34,32 @@ btn_how_to_connect: "📖 How to connect" # callback_data='how_to_connect'
 btn_support: "💬 Contact support" # callback_data='support'
 btn_main_menu: "🏠 Main menu" # callback_data='start'
 btn_cancel: "❌ Cancel"
+
+# Language selection buttons
+btn_lang_ru: "🇷🇺 Russian" # callback_data='lang_ru'
+btn_lang_en: "🇬🇧 English" # callback_data='lang_en'
+
+# Profile texts
+profile_text: |-
+  👤 <b>User Profile</b>
+
+  👤 <b>ID:</b> {user_id}
+  🌐 <b>Language:</b> {language}
+
+  Choose an action:
+
+profile_default_text: |-
+  👤 <b>User Profile</b>
+
+  Profile information is not available.
+
+language_selection_text: |-
+  🌐 <b>Language Selection</b>
+
+  Choose your preferred interface language:
+
+language_changed_ru: "✅ Language changed to Russian"
+language_changed_en: "✅ Language changed to English"
 
 start_help_message: |-
   🏢 <b>Management Company «ЖКХ VPN»</b> <i>(Housing Channel Hosting)</i>

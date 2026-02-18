@@ -13,12 +13,11 @@ def user_menu(trial: str):
 
     if trial == "true":
         builder.button(text=_("btn_trial_buy"), callback_data="trial_bay")
-        builder.button(text=_("btn_my_key"), callback_data="my_key")
         builder.button(text=_("btn_buy"), callback_data="buy")
     else:
         builder.button(text=_("btn_buy"), callback_data="buy")
-        builder.button(text=_("btn_my_key"), callback_data="my_key")
 
+    builder.button(text=_("btn_profile"), callback_data="btn_profile")
     builder.button(text=_("btn_help"), callback_data="help")
     builder.adjust(1, 2)
 
@@ -95,6 +94,30 @@ def user_my_keys_qr_code():
 
     builder.button(text=_("btn_how_to_connect"), callback_data="how_to_connect")
     builder.button(text=_("btn_main_menu"), callback_data="start")
+
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+def profile_menu():
+    """Меню профиля пользователя."""
+    builder = InlineKeyboardBuilder()
+
+    builder.button(text=_("btn_my_key"), callback_data="my_key")
+    builder.button(text=_("btn_language"), callback_data="language")
+    builder.button(text=_("btn_back_to_main"), callback_data="start")
+
+    builder.adjust(2, 1)
+    return builder.as_markup()
+
+
+def language_menu():
+    """Меню выбора языка."""
+    builder = InlineKeyboardBuilder()
+
+    builder.button(text=_("btn_lang_ru"), callback_data="btn_lang_ru")
+    builder.button(text=_("btn_lang_en"), callback_data="btn_lang_en")
+    builder.button(text=_("btn_back"), callback_data="btn_profile")
 
     builder.adjust(1)
     return builder.as_markup()

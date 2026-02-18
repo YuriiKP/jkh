@@ -11,11 +11,16 @@ btn_create_deep_link: "🔗 Создать диплинк подписки"
 
 # Кнопки пользовательского меню
 btn_buy: "💳 Купить" # callback_data='buy'
-btn_my_key: "🔐 Мой ключ" # callback_data='my_key'
+btn_profile: "👤 Профиль" # callback_data='btn_profile'
 btn_help: "🆘 Помощь" # callback_data='help'
 btn_back: "👈 Назад"
 btn_rules_accept: "✅ Принимаю правила"
 btn_rules_decline: "❌ Не принимаю правила"
+
+# Кнопки меню профиля
+btn_my_key: "🔐 Мой ключ" # callback_data='my_key'
+btn_language: "🌐 Язык" # callback_data='language'
+btn_back_to_main: "🏠 Главное меню" # callback_data='start'
 
 btn_trial_buy: "🔎 Пробный период" # callback_data='trial_bay'
 btn_buy_one_month: "🟢 1 месяц"
@@ -29,6 +34,32 @@ btn_how_to_connect: "📖 Как подключиться" # callback_data='how_
 btn_support: "💬 Связаться с поддержкой" # callback_data='support'
 btn_main_menu: "🏠 Главное меню" # callback_data='start'
 btn_cancel: "❌ Отмена"
+
+# Кнопки выбора языка
+btn_lang_ru: "🇷🇺 Русский" # callback_data='lang_ru'
+btn_lang_en: "🇬🇧 English" # callback_data='lang_en'
+
+# Тексты профиля
+profile_text: |-
+  👤 <b>Профиль пользователя</b>
+
+  👤 <b>ID:</b> {user_id}
+  🌐 <b>Язык:</b> {language}
+
+  Выберите действие:
+
+profile_default_text: |-
+  👤 <b>Профиль пользователя</b>
+
+  Информация о профиле недоступна.
+
+language_selection_text: |-
+  🌐 <b>Выбор языка</b>
+
+  Выберите предпочитаемый язык интерфейса:
+
+language_changed_ru: "✅ Язык изменен на русский"
+language_changed_en: "✅ Language changed to English"
 
 start_help_message: |-
   🏢 <b>Управляющая компания «ЖКХ ВПН»</b> <i>(Жилищный Канал Хостинга)</i>
