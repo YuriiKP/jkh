@@ -1,148 +1,157 @@
-active: "Активен"
-disabled: "Отключен"
-limited: "Ограничен"
-expired: "Истек"
-on_hold: "На паузе"
+active: "Active"
+disabled: "Disabled"
+limited: "Limited"
+expired: "Expired"
+on_hold: "On Hold"
 
-# Кнопки админов
-btn_admins: "🔑 Админы"
-about_users_bot: "👥 Пользователи"
-btn_create_deep_link: "🔗 Создать диплинк подписки"
+# Admin buttons
+btn_admins: "🔑 Admins"
+about_users_bot: "👥 Users"
+btn_create_deep_link: "🔗 Create subscription deep link"
 
-# Кнопки пользовательского меню
-btn_buy: "💳 Купить" # callback_data='buy'
-btn_my_key: "🔐 Мой ключ" # callback_data='my_key'
-btn_help: "🆘 Помощь" # callback_data='help'
-btn_back: "👈 Назад"
-btn_rules_accept: "✅ Принимаю правила"
-btn_rules_decline: "❌ Не принимаю правила"
+# User menu buttons
+btn_buy: "💳 Buy" # callback_data='buy'
+btn_my_key: "🔐 My Key" # callback_data='my_key'
+btn_help: "🆘 Help" # callback_data='help'
+btn_back: "👈 Back"
+btn_rules_accept: "✅ Accept rules"
+btn_rules_decline: "❌ Decline rules"
 
-btn_trial_buy: "🔎 Пробный период" # callback_data='trial_bay'
-btn_buy_one_month: "🟢 1 месяц"
-btn_pay_with_card: "💳 Картой РФ"
-btn_pay_with_stars: "⭐️ Звездами"
-btn_pay_with_support: "🛠️ Через поддержку"
-btn_get_qr_code: "🖼 Получить QR-код" # callback_data='get_qr_code'
+btn_trial_buy: "🔎 Trial period" # callback_data='trial_bay'
+btn_buy_one_month: "🟢 1 month"
+btn_pay_with_card: "💳 Russian card"
+btn_pay_with_stars: "⭐️ With Stars"
+btn_pay_with_support: "🛠️ Via support"
+btn_get_qr_code: "🖼 Get QR code" # callback_data='get_qr_code'
 
-# Кнопки меню помощи
-btn_how_to_connect: "📖 Как подключиться" # callback_data='how_to_connect'
-btn_support: "💬 Связаться с поддержкой" # callback_data='support'
-btn_main_menu: "🏠 Главное меню" # callback_data='start'
+# Help menu buttons
+btn_how_to_connect: "📖 How to connect" # callback_data='how_to_connect'
+btn_support: "💬 Contact support" # callback_data='support'
+btn_main_menu: "🏠 Main menu" # callback_data='start'
 
 start_help_message: |-
-  🏢 <b>Управляющая компания «ЖКХ ВПН»</b> <i>(Жилищный Канал Хостинга)</i>
+  🏢 <b>Management Company «ЖКХ VPN»</b> <i>(Housing Channel Hosting)</i>
 
-  — Обеспечиваем <b>высокое давление</b> в ваших цифровых магистралях.
-  — Подключение любых бытовых устройств (iOS, Android, PC).
+  — We provide <b>high pressure</b> in your digital highways.
+  — Connection of any household devices (iOS, Android, PC).
 
-  <i>Открыт к предложениям и пожеланиям! Если что-то не работает, что-то не получается, или нет нужной локации, пишите мне @foteleg_b. Постараюсь всё реализовать. Этим ВПН-ом я пользуюсь сам, так-что мне важен его перфоманс и обратная связь.</i>
+  <i>Open to suggestions and wishes! If something doesn't work, something isn't working out, or the desired location is missing, write to me @foteleg_b. I'll try to implement everything. I use this VPN myself, so its performance and feedback are important to me.</i>
 
 trial_days_text: |-
-  🔎 <b>Пробный период</b>
+  🔎 <b>Trial period</b>
 
-  Вы получили доступ к пробному периоду!
+  You have gained access to the trial period!
 
-  🔗 <b>Ссылка на подписку:</b>
+  🔗 <b>Subscription link:</b>
   {full_url}
 
-  📱 <b>Как использовать:</b>
-  1. Скопируйте ссылку выше
-  2. Откройте приложение VPN
-  3. Добавьте подписку по ссылке
+  📱 <b>How to use:</b>
+  1. Copy the link above
+  2. Open the VPN application
+  3. Add the subscription via the link
 
-  ⏰ Пробный период действует 3 деня.
+  ⏰ The trial period lasts for 3 days.
 
 help_text: |-
-  🆘 В этом разделе доступно:
+  🆘 This section provides:
 
-  Настройка: Пошаговые гайды для быстрого запуска.
+  Setup: Step-by-step guides for quick launch.
 
-  Решение проблем: Помощь, если возникли сложности с подключением.
+  Troubleshooting: Help if you encounter difficulties with connection.
 
-  По любым вопросам пишите мне @foteleg_b, открыт к общению и предложениям.
+  For any questions, write to me @foteleg_b, open to communication and suggestions.
 
 help_manual_text: |-
-  📖 <b>Как подключиться к VPN</b>
+  📖 <b>How to connect to VPN</b>
 
-  - Перейдите по ссылке подписки
-  - На странице будут ссылки на приложене happ (app store, google play, windows)
-  - После установки приложения нажимаем на кнопку добавить подписку и она автоматически добавися в приложение happ
+  - Go to the subscription link
+  - The page will have links to the happ application (app store, google play, windows)
+  - After installing the app, click the add subscription button and it will automatically be added to the happ app
 
 
 
-  <b>ДРУГИЕ СПОСОБЫ УСТАНОВКИ:</b>
+  <b>OTHER INSTALLATION METHODS:</b>
 
-  📱 <b>Для Android | iOS:</b>
+  📱 <b>For Android | iOS:</b>
 
-  1. Скопируйте ссылку на подписку
-  2. Скачайте приложение любой подходящий клиент (happ, v2raytun, hiddify ...)
-  3. Откройте и нажмите на "+" в правом верхнем углу
-  4. Выберите "Вставить из буфера обмена" или "QR-код"
-  5. Нажмите "Подключиться"
+  1. Copy the subscription link
+  2. Download any suitable client application (happ, v2raytun, hiddify ...)
+  3. Open it and click on "+" in the top right corner
+  4. Select "Paste from clipboard" or "QR-code"
+  5. Click "Connect"
 
-  <b>💻 Для Windows | macOS</b>
-  Можно скачать страницы на <a href="https://github.com/Happ-proxy">Github</a>
+  <b>💻 For Windows | macOS</b>
+  You can download pages from <a href="https://github.com/Happ-proxy">Github</a>
 
-  <b>📋 Реестр допущенного оборудования:)</b>
+  <b>📋 Registry of approved equipment:)</b>
       • <b>Clash X</b> (macOS)
       • <b>v2raytun</b> (Android, Windows, Ios, macOs)
       • <b>v2rayN</b> (Windows)
       • <b>Hiddify</b> (Android, Windows, iOS, macOS, Linux)
 
 
-  💡 <i>Если возникли проблемы, пишите @foteleg_b</i>
+  💡 <i>If you have any problems, write @foteleg_b</i>
 
 my_kyes_no_key: |-
-  ❌ У вас нет ЖКХ ключа
+  ❌ You don't have a ЖКХ key
 
-  <i>Жилищный Канал Хостинга</i>
+  <i>Housing Channel Hosting</i>
 
 my_keys_stat_info: |-
-  <b>🧾 КВИТАНЦИЯ ПО ЛИЦЕВОМУ СЧЕТУ</b>
+  <b>🧾 INVOICE FOR PERSONAL ACCOUNT</b>
 
-  {emoji} <b>Статус:</b> {status}
-  📊 <b>Расход трафика: {lifetime_used_gb:.2f} GB</b>
-  📅 <b>Срок действия:</b> {expire_text}
+  {emoji} <b>Status:</b> {status}
+  📊 <b>Traffic usage: {lifetime_used_gb:.2f} GB</b>
+  📅 <b>Validity period:</b> {expire_text}
 
-  🔗 <b>Ссылка на подписку:</b> {full_subscription_url}
+  🔗 <b>Subscription link:</b> {full_subscription_url}
+
+my_keys_qr_code: |-
+  "Scan the QR code to connect to the VPN."
+
+my_keys_qr_notice: |-
+  "QR code sent"
+
+my_keys_error_get_data: |-
+  "Error retrieving data."
 
 notification_days_left_text: |-
-  ⏰ <b>Напоминание</b>
+  ⏰ <b>Reminder</b>
 
-  Ваша подписка истекает через <b>{days_left}</b> {day_word}.
-  Чтобы продлить — перейдите в боте в оплату/продление.
+  Your subscription expires in <b>{days_left}</b> {day_word}.
+  To renew — go to payment/renewal in the bot.
 
 user_buy_text: |-
-  💳 <b>Оплата ЖКХ</b>
+  💳 <b>ЖКХ Payment</b>
 
-  📦 <b>Подписка на 1 месяц</b>
-      • Безлимитный трафик
-      • Высокая скорость
-      • Доступ ко всем серверам
-      • До 10 подключений/устройств
+  📦 <b>1-month subscription</b>
+      • Unlimited traffic
+      • High speed
+      • Access to all servers
+      • Up to 10 connections/devices
 
-  ⚠️ <i>ЖИЛИЩНЫЙ КАНАЛ ХОСТИНГА</i>
+  ⚠️ <i>HOUSING CHANNEL HOSTING</i>
 
 payment_method_text: |-
-  <b>Выберите способ оплаты</b>
+  <b>Select payment method</b>
 
-  💳 <b>Картой РФ</b> – оплата через ЮKassa
-  ⭐️ <b>Звездами</b> – оплата через Telegram Stars
-  🛠️ <b>Через поддержку</b> – напишите @foteleg_b
+  💳 <b>Russian card</b> – payment via ЮKassa
+  ⭐️ <b>With Stars</b> – payment via Telegram Stars
+  🛠️ <b>Via support</b> – write to @foteleg_b
 
 support_payment_text: |-
-  🛠️ Пополнение через поддержку
-  Для оплаты подписки напишите @foteleg_b
+  🛠️ Top-up via support
+  To pay for a subscription, write to @foteleg_b
 
 rules_text: |-
-  1. Сервис предоставляется исключительно для деятельности, не противоречащей международному и национальному праву.
+  1. The service is provided exclusively for activities not contrary to international and national law.
 
-  2. Администрация вправе приостановить оказание услуг в одностороннем порядке в случае несоблюдения Пользователем условий соглашения.
+  2. The Administration has the right to unilaterally suspend the provision of services in case of the User's non-compliance with the terms of the agreement.
 
-  3. Процедура возврата платежей регламентирована Политикой возврата средств.
+  3. The refund procedure is regulated by the Refund Policy.
 
-  4. Пользователь самостоятельно обеспечивает конфиденциальность и безопасность своих учетных данных.
+  4. The User independently ensures the confidentiality and security of their account credentials.
 
-  5. Запросы принимаются через установленные каналы технической поддержки.
+  5. Requests are accepted through established technical support channels.
 
-  6. Передача учетных записей, ключей или тестовых периодов третьим лицам, а равно организация коллективного доступа к ресурсам сервиса, строго запрещена. Попытки обхода установленных лимитов системы или действия, ведущие к деградации инфраструктуры, влекут за собой блокировку учетной записи без компенсации неиспользованного баланса.
+  6. Transfer of accounts, keys, or trial periods to third parties, as well as organizing collective access to the service's resources, is strictly prohibited. Attempts to bypass established system limits or actions leading to infrastructure degradation will result in account blocking without compensation for unused balance.

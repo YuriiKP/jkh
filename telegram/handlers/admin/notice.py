@@ -17,7 +17,7 @@ from aiogram.types import (
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from filters import IsAdmin
 from filters import TextBtn as __
-from keyboards import about_users_bot
+from keyboards import *
 from loader import bot, db_manage, dp
 from locales import get_text as _
 from utils import State_Mailing

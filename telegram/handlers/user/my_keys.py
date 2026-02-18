@@ -7,6 +7,8 @@ from aiogram.types import (
     BotCommandScopeDefault,
     BufferedInputFile,
     CallbackQuery,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
     Message,
 )
 from keyboards import *
@@ -27,13 +29,7 @@ async def my_key_handler(query: CallbackQuery, state: FSMContext):
 
     async def message_no_keys():
         await edit_menu_with_image(
-            event=query,
-            text=_("my_kyes_no_key"),
-            reply_markup=InlineKeyboardMarkup(
-                inline_keyboard=[
-                    [InlineKeyboardButton(text=btn_main_menu, callback_data="start")],
-                ]
-            ),
+            event=query, text=_("my_kyes_no_key"), reply_markup=user_btn_main_menu()
         )
 
     # Есть ли пользователь в marzban
@@ -52,23 +48,7 @@ async def my_key_handler(query: CallbackQuery, state: FSMContext):
 
     text = my_keys_stat_info(user_marz)
     await edit_menu_with_image(
-        event=query,
-        text=text,
-        reply_markup=InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text=btn_how_to_connect, callback_data="how_to_connect"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text=btn_get_qr_code, callback_data="get_qr_code"
-                    )
-                ],
-                [InlineKeyboardButton(text=btn_main_menu, callback_data="start")],
-            ]
-        ),
+        event=query, text=text, reply_markup=user_my_keys_stat_menu()
     )
 
 
@@ -84,21 +64,11 @@ async def get_qr_code_handler(query: CallbackQuery, state: FSMContext):
     except MarzbanAPIError as e:
         if e.status == 404:
             await edit_menu_with_image(
-                event=query,
-                text="Ключ не найден.",
-                reply_markup=InlineKeyboardMarkup(
-                    inline_keyboard=[
-                        [
-                            InlineKeyboardButton(
-                                text=btn_main_menu, callback_data="start"
-                            )
-                        ],
-                    ]
-                ),
+                event=query, text=_("my_kyes_no_key"), reply_markup=user_btn_main_menu()
             )
             return
         print(e)
-        await query.answer("Ошибка при получении данных.")
+        await query.answer(_("my_keys_error_get_data"))
         return
 
     # Генерация QR-кода из subscription_url
@@ -122,17 +92,8 @@ async def get_qr_code_handler(query: CallbackQuery, state: FSMContext):
     # Отправляем QR-код как фото
     await query.message.reply_photo(
         photo=BufferedInputFile(buffer.getvalue(), filename="qr_code.png"),
-        caption="Отсканируйте QR-код для подключения к VPN.",
-        reply_markup=InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text=btn_how_to_connect, callback_data="how_to_connect"
-                    )
-                ],
-                [InlineKeyboardButton(text=btn_main_menu, callback_data="start")],
-            ]
-        ),
+        caption=_("my_keys_qr_code"),
+        reply_markup=user_my_keys_qr_code(),
     )
 
-    await query.answer("QR-код отправлен")
+    await query.answer(_("my_keys_qr_notice"))

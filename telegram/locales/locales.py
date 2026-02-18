@@ -17,11 +17,9 @@ class Locales:
         """Загружаем все yaml файлы из папки"""
         path = Path("locales")
         for file in path.glob("*.yaml"):
-            print(file)
             lang = file.stem  # "ru.yaml" → "ru"
             with open(file, encoding="utf-8") as f:
                 self.translations[lang] = yaml.safe_load(f)
-        print(self.translations)
 
     def get_text(self, key: str, lang: str, **kwargs) -> str:
         """
