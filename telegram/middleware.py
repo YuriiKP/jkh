@@ -1,34 +1,45 @@
-from typing import Any
+from typing import Any, Awaitable, Callable, Dict
 
-from aiogram.types import TelegramObject
+from aiogram import BaseMiddleware
+from locales import Locales, setup_context
 from storage import DB_M
 
 
-class MyI18nMiddleware(I18nMiddleware):
+class MyLocalesMiddleware(BaseMiddleware):
     """
-    Const middleware chooses statically defined locale
+    Middleware, который выбирает язык
     """
 
-    def __init__(
-        self,
-        i18n: I18n,
-        i18n_key: str | None = "i18n",
-        middleware_key: str = "i18n_middleware",
-        db_manage: DB_M = None,
-    ) -> None:
-        super().__init__(i18n=i18n, i18n_key=i18n_key, middleware_key=middleware_key)
+    def __init__(self, locales: Locales, db_manage: DB_M):
+        self.locales = locales
         self.db_manage = db_manage
 
-    async def get_locale(self, event: TelegramObject, data: dict[str, Any]) -> str:
-        user_info = await self.db_manage.get_user_by_id(user_id=data["event_chat"].id)
+    async def __call__(
+        self,
+        handler: Callable[[Any, Dict[str, Any]], Awaitable[Any]],
+        event,
+        data: Dict[str, Any],
+    ):
+        user_id = data["event_chat"].id
+        user_info = await self.db_manage.get_user_by_id(user_id)
 
-        if user_info is None:
-            return "en"
+        # Дефолтный язык
+        # Определяем язык по умолчанию
+        lang = "en"
+        # Определяем язык: сначала из базы, если есть, иначе из Телеграм
+        lang_source = (
+            str(user_info[6]) if user_info else data["event_from_user"].language_code
+        )
+        if lang_source in ("ru", "en"):
+            lang = lang_source
 
-        locate_from_db = user_info[6]
-        print(locate_from_db)
+        print("Язык интерфейса:", data["event_from_user"].language_code)
+        print("Язык из базы данных:", lang_source)
 
-        if locate_from_db and locate_from_db in ("ru", "en"):
-            return locate_from_db
-        else:
-            return "en"
+        # Добавляем в data
+        data["lang"] = lang
+        data["locales"] = self.locales
+
+        setup_context(self.locales, lang)
+
+        return await handler(event, data)

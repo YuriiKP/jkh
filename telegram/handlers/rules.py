@@ -3,7 +3,7 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from keyboards import *
-from loader import dp
+from loader import db_manage, dp
 
 from handlers.start import process_start_bot
 
@@ -13,6 +13,9 @@ from .common import edit_menu_with_image
 @dp.callback_query(F.data == "btn_rules_accept")
 async def rules_accept_handler(query: CallbackQuery, state: FSMContext):
     await state.clear()
+
+    # Обновляем поле rules_accepted в базе данных
+    await db_manage.update_user(user_id=query.from_user.id, rules_accepted=True)
 
     if query.message:
         try:

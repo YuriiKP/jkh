@@ -31,6 +31,7 @@ class User(Base):
     status_user = Column(String(64), default="user")
     language = Column(String(2), default="ru")
     trial = Column(String(5), default="true")
+    rules_accepted = Column(Boolean, default=False)
 
 
 class Payment(Base):
@@ -98,7 +99,14 @@ class DB_M:
             await conn.run_sync(Base.metadata.create_all)
 
     async def add_new_user(
-        self, user_id, username, first_name, last_name, language="ru", trial="true"
+        self,
+        user_id,
+        username,
+        first_name,
+        last_name,
+        language="ru",
+        trial="true",
+        rules_accepted=False,
     ):
         async with self.async_session() as session:
             # Проверяем, существует ли пользователь
@@ -114,6 +122,7 @@ class DB_M:
                     last_name=last_name,
                     language=language,
                     trial="true",
+                    rules_accepted=rules_accepted,
                 )
                 session.add(new_user)
                 await session.commit()
@@ -126,7 +135,7 @@ class DB_M:
             if user is None:
                 return None
 
-            # Возвращаем в формате кортежа для совместимости: (user_id, username, first_name, last_name, reg_time, status_user, language, trial)
+            # Возвращаем в формате кортежа для совместимости: (user_id, username, first_name, last_name, reg_time, status_user, language, trial, rules_accepted)
             return (
                 user.user_id,
                 user.username,
@@ -136,6 +145,7 @@ class DB_M:
                 user.status_user,
                 user.language,
                 user.trial,
+                user.rules_accepted,
             )
 
     async def get_status_user(self, user_id):
@@ -256,52 +266,15 @@ class DB_M:
             records = result.scalars().all()
             return records
 
-    async def update_user(
-        self,
-        user_id,
-        username=None,
-        first_name=None,
-        last_name=None,
-        status_user=None,
-        language=None,
-        trial=None,
-    ) -> None:
-        old_user = await self.get_user_by_id(user_id)
-
-        if old_user is None:
+    async def update_user(self, user_id, **kwargs) -> None:
+        """
+        Обновляет данные пользователя.
+        """
+        if not kwargs:
             return
 
-        if username is None:
-            username = old_user[1]
-
-        if first_name is None:
-            first_name = old_user[2]
-
-        if last_name is None:
-            last_name = old_user[3]
-
-        if status_user is None:
-            status_user = old_user[5]
-
-        if language is None:
-            language = old_user[6]
-
-        if trial is None:
-            trial = old_user[7]
-
         async with self.async_session() as session:
-            stmt = (
-                update(User)
-                .where(User.user_id == user_id)
-                .values(
-                    username=username,
-                    first_name=first_name,
-                    last_name=last_name,
-                    status_user=status_user,
-                    language=language,
-                    trial=trial,
-                )
-            )
+            stmt = update(User).where(User.user_id == user_id).values(**kwargs)
             await session.execute(stmt)
             await session.commit()
 

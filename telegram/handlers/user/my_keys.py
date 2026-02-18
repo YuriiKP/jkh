@@ -11,6 +11,7 @@ from aiogram.types import (
 )
 from keyboards import *
 from loader import db_manage, dp, get_full_subscription_url, marzban_client
+from locales import get_text as _
 from models.user import UserResponse
 from utils.marzban_api import MarzbanAPIError
 
@@ -27,7 +28,7 @@ async def my_key_handler(query: CallbackQuery, state: FSMContext):
     async def message_no_keys():
         await edit_menu_with_image(
             event=query,
-            text=my_kyes_no_key,
+            text=_("my_kyes_no_key"),
             reply_markup=InlineKeyboardMarkup(
                 inline_keyboard=[
                     [InlineKeyboardButton(text=btn_main_menu, callback_data="start")],

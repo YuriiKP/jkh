@@ -6,6 +6,8 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.types import BufferedInputFile
 from dotenv import load_dotenv
+from locales import Locales
+from middleware import MyLocalesMiddleware
 from storage import DB_M
 from utils.marzban_api import MarzbanAPIClient
 
@@ -39,7 +41,6 @@ WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
 PASARGUARD_NOTIFY_PATH = (os.getenv("PASARGUARD_NOTIFY_PATH") or "").strip()
 PASARGUARD_NOTIFY_SECRET = os.getenv("PASARGUARD_NOTIFY_SECRET")
 
-
 bot = Bot(TG_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
@@ -54,7 +55,14 @@ marzban_client = MarzbanAPIClient(
 )
 
 
+# Создаем контекст для локализации и регистрируем мидлвару
+locale = Locales()
+locale_middleware = MyLocalesMiddleware(locale, db_manage)
+dp.update.middleware(locale_middleware)
+
+
 deep_links_admin_manage = {}
+
 
 MENU_IMAGE = ""
 

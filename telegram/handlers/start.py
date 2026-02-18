@@ -18,6 +18,7 @@ from loader import (
     dp,
     marzban_client,
 )
+from locales import get_text as _
 from models.proxy import ProxyTable, VlessSettings, XTLSFlows
 from models.user import UserCreate, UserModify, UserStatusCreate, UserStatusModify
 from utils.marzban_api import MarzbanAPIError
@@ -166,8 +167,19 @@ async def process_start_bot(message: Message | CallbackQuery, user_id: str | int
             language=from_user.language_code or "ru",
         )
 
-        await msg_obj.answer(text=rules_text, reply_markup=rules_menu())
+        await msg_obj.answer(text=_("rules_text"), reply_markup=rules_menu())
 
+        return
+
+    # Проверяем, принял ли пользователь правила
+    if not user[8]:  # rules_accepted находится на 8-й позиции (индекс 8)
+        # Нужен объект Message
+        if isinstance(message, CallbackQuery):
+            msg_obj = message.message
+        else:
+            msg_obj = message
+
+        await msg_obj.answer(text=_("rules_text"), reply_markup=rules_menu())
         return
 
     # Нужен объект Message
@@ -180,8 +192,8 @@ async def process_start_bot(message: Message | CallbackQuery, user_id: str | int
 
     menu_keyboards = {
         "user": user_menu(user[7]),
-        "admin": admin_menu,
-        "main_admin": main_admin_menu,
+        "admin": admin_menu(),
+        "main_admin": main_admin_menu(),
     }
 
     # Для админ-статистики
@@ -227,7 +239,7 @@ async def process_start_bot(message: Message | CallbackQuery, user_id: str | int
 
         await msg_obj.answer(text=text_admin, reply_markup=keyboard)
 
-    text = start_help_message
+    text = _("start_help_message")
 
     # Отправляем меню с изображением
     await edit_menu_with_image(

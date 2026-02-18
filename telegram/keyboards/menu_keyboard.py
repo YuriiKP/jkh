@@ -7,6 +7,7 @@ from aiogram.types import (
     ReplyKeyboardMarkup,
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from locales import get_text as _
 
 from keyboards.text import *
 
@@ -70,15 +71,20 @@ def user_payment_method_menu():
     return builder.as_markup()
 
 
-admin_menu = ReplyKeyboardMarkup(
-    keyboard=[[KeyboardButton(text=about_users_bot)]], resize_keyboard=True
-)
+def admin_menu():
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=about_users_bot)]], resize_keyboard=True
+    )
 
 
-main_admin_menu = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text=btn_admins), KeyboardButton(text=about_users_bot)],
-        [KeyboardButton(text=btn_create_deep_link)],
-    ],
-    resize_keyboard=True,
-)
+def main_admin_menu():
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=btn_admins),
+                KeyboardButton(text=_("about_users_bot")),
+            ],
+            [KeyboardButton(text=btn_create_deep_link)],
+        ],
+        resize_keyboard=True,
+    )

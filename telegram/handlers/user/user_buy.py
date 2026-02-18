@@ -13,6 +13,7 @@ from aiogram.types import (
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from keyboards import *
 from loader import YOO_KASSA_PROVIDER_TOKEN, db_manage, dp, marzban_client
+from locales import get_text as _
 from models.proxy import ProxyTable, VlessSettings, XTLSFlows
 from models.user import (
     UserCreate,
@@ -32,7 +33,9 @@ async def buy_handler(query: CallbackQuery, state: FSMContext):
     await state.clear()
 
     # Редактируем меню с изображением
-    await edit_menu_with_image(event=query, text=user_buy_text, reply_markup=buy_menu())
+    await edit_menu_with_image(
+        event=query, text=_("user_buy_text"), reply_markup=buy_menu()
+    )
 
 
 @dp.callback_query(F.data == "btn_buy_one_month")
@@ -41,7 +44,9 @@ async def buy_one_month_handler(query: CallbackQuery, state: FSMContext):
 
     # Показываем меню выбора способа оплаты
     await edit_menu_with_image(
-        event=query, text=payment_method_text, reply_markup=user_payment_method_menu()
+        event=query,
+        text=_("payment_method_text"),
+        reply_markup=user_payment_method_menu(),
     )
 
 
@@ -113,7 +118,7 @@ async def pay_with_support_handler(query: CallbackQuery, state: FSMContext):
 
     # Редактируем меню с изображением
     await edit_menu_with_image(
-        event=query, text=support_payment_text, reply_markup=builder.as_markup()
+        event=query, text=_("support_payment_text"), reply_markup=builder.as_markup()
     )
 
 

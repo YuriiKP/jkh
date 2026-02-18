@@ -1,8 +1,5 @@
-
-from aiogram.types import LabeledPrice, PreCheckoutQuery, Message
-
+from aiogram.types import PreCheckoutQuery
 from loader import dp
-
 
 
 @dp.pre_checkout_query()

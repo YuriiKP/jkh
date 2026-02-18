@@ -3,8 +3,9 @@ from datetime import datetime, timedelta
 from aiogram import F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
-from keyboards import help_menu, trial_days_text, user_menu
-from loader import db_manage, dp, marzban_client
+from keyboards import user_menu
+from loader import db_manage, dp, get_full_subscription_url, marzban_client
+from locales import get_text as _
 from models.proxy import ProxyTable, VlessSettings, XTLSFlows
 from models.user import UserCreate, UserResponse, UserStatusCreate
 from utils.marzban_api import MarzbanAPIError
@@ -61,8 +62,9 @@ async def trial_buy_handler(query: CallbackQuery, state: FSMContext):
     # Пользователь уже получил trial
     await db_manage.update_user(user_id, trial="false")
 
+    full_url = get_full_subscription_url(user_marz.subscription_url)
     if user_marz:
-        text = trial_days_text(user_marz.subscription_url)
+        text = _("trial_days_text", full_url=full_url)
         await edit_menu_with_image(
             event=query, text=text, reply_markup=user_menu(trial="false")
         )

@@ -1,6 +1,7 @@
 from aiogram.filters import Filter
 from aiogram.types import Message
 from loader import db_manage
+from locales import get_text as _
 
 
 class IsMainAdmin(Filter):
@@ -35,3 +36,13 @@ class IsUser(Filter):
             or status_user[0] == "admin"
             or status_user[0] == "main_admin"
         )
+
+
+class TextBtn(Filter):
+    def __init__(self, key: str):
+        self.key = key
+
+    # Вызывается, когда уже мидлвара установила язык
+    async def __call__(self, message: Message) -> bool:
+        translated = _(self.key)
+        return message.text == translated
