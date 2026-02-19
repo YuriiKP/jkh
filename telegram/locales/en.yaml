@@ -171,17 +171,13 @@ support_payment_text: |-
   To pay for a subscription, write to @foteleg_b
 
 rules_text: |-
-  1. The service is provided exclusively for activities not contrary to international and national law.
+🔹 Terms of Use:
 
-  2. The Administration has the right to unilaterally suspend the provision of services in case of the User's non-compliance with the terms of the agreement.
-
-  3. The refund procedure is regulated by the Refund Policy.
-
-  4. The User independently ensures the confidentiality and security of their account credentials.
-
-  5. Requests are accepted through established technical support channels.
-
-  6. Transfer of accounts, keys, or trial periods to third parties, as well as organizing collective access to the service's resources, is strictly prohibited. Attempts to bypass established system limits or actions leading to infrastructure degradation will result in account blocking without compensation for unused balance.
+1. The service (VLESS) is for traffic encryption only. It is prohibited to use it for bypassing blocks and whitelists.
+2. Illegal activities, account sharing, and bypassing load limits are prohibited.
+3. The user is solely responsible for their account and compliance with laws.
+4. The administration has the right to block violators without a refund.
+5. Refunds are only issued in case of service malfunction. For questions, contact support.
 
 # Admin texts
 admin_statistics_text: |-
