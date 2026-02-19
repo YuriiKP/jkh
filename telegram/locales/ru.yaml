@@ -38,6 +38,7 @@ btn_cancel: "❌ Отмена"
 # Кнопки выбора языка
 btn_lang_ru: "🇷🇺 Русский" # callback_data='lang_ru'
 btn_lang_en: "🇬🇧 English" # callback_data='lang_en'
+btn_lang_fa: "🇮🇷 Персидский" # callback_data='lang_fa'
 
 # Тексты профиля
 profile_text: |-
@@ -55,6 +56,7 @@ language_selection_text: |-
 
 language_changed_ru: "✅ Язык изменен на русский"
 language_changed_en: "✅ Language changed to English"
+language_changed_fa: "✅ Язык изменен на персидский"
 
 start_help_message: |-
   🏢 <b>Управляющая компания «ЖКХ ВПН»</b> <i>(Жилищный Канал Хостинга)</i>

@@ -117,6 +117,7 @@ def language_menu():
 
     builder.button(text=_("btn_lang_ru"), callback_data="btn_lang_ru")
     builder.button(text=_("btn_lang_en"), callback_data="btn_lang_en")
+    builder.button(text=_("btn_lang_fa"), callback_data="btn_lang_fa")
     builder.button(text=_("btn_back"), callback_data="btn_profile")
 
     builder.adjust(1)

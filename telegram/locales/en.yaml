@@ -38,6 +38,7 @@ btn_cancel: "❌ Cancel"
 # Language selection buttons
 btn_lang_ru: "🇷🇺 Russian" # callback_data='lang_ru'
 btn_lang_en: "🇬🇧 English" # callback_data='lang_en'
+btn_lang_fa: "🇮🇷 Persian" # callback_data='lang_fa'
 
 # Profile texts
 profile_text: |-
@@ -55,6 +56,7 @@ language_selection_text: |-
 
 language_changed_ru: "✅ Language changed to Russian"
 language_changed_en: "✅ Language changed to English"
+language_changed_fa: "✅ Language changed to Persian"
 
 start_help_message: |-
   🏢 <b>Management Company «ЖКХ VPN»</b> <i>(Housing Channel Hosting)</i>

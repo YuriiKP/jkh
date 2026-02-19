@@ -19,7 +19,12 @@ async def profile_handler(query: CallbackQuery, state: FSMContext):
 
     if user:
         current_lang = user[6]  # language находится на 6-й позиции (индекс 6)
-        lang_display = "🇷🇺 Русский" if current_lang == "ru" else "🇬🇧 English"
+        if current_lang == "ru":
+            lang_display = "🇷🇺 Русский"
+        elif current_lang == "fa":
+            lang_display = "🇮🇷 فارسی"
+        else:
+            lang_display = "🇬🇧 English"
 
         profile_text = _(
             "profile_text",
@@ -89,6 +94,31 @@ async def lang_en_handler(query: CallbackQuery, state: FSMContext):
         "profile_text",
         user_id=user_id,
         language="🇬🇧 English",
+    )
+
+    await edit_menu_with_image(
+        event=query, text=profile_text, reply_markup=profile_menu()
+    )
+
+
+# Обработчик выбора персидского языка
+@dp.callback_query(F.data == "btn_lang_fa")
+async def lang_fa_handler(query: CallbackQuery, state: FSMContext):
+    await state.clear()
+
+    user_id = query.from_user.id
+    await db_manage.update_user(user_id=user_id, language="fa")
+
+    # Обновляем контекст языка
+    update_lang("fa")
+
+    await query.answer(_("language_changed_fa"))
+
+    # Возвращаемся в меню профиля
+    profile_text = _(
+        "profile_text",
+        user_id=user_id,
+        language="🇮🇷 فارسی",
     )
 
     await edit_menu_with_image(

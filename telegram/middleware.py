@@ -33,7 +33,7 @@ class MyLocalesMiddleware(BaseMiddleware):
         lang_source = (
             str(user_info[6]) if user_info else data["event_from_user"].language_code
         )
-        if lang_source in ("ru", "en"):
+        if lang_source in ("ru", "en", "fa"):
             lang = lang_source
 
         # print("Язык интерфейса:", data["event_from_user"].language_code)
