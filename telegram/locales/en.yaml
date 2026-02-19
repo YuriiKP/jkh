@@ -171,13 +171,13 @@ support_payment_text: |-
   To pay for a subscription, write to @foteleg_b
 
 rules_text: |-
-🔹 Terms of Use:
+  🔹 Terms of Use:
 
-1. The service (VLESS) is for traffic encryption only. It is prohibited to use it for bypassing blocks and whitelists.
-2. Illegal activities, account sharing, and bypassing load limits are prohibited.
-3. The user is solely responsible for their account and compliance with laws.
-4. The administration has the right to block violators without a refund.
-5. Refunds are only issued in case of service malfunction. For questions, contact support.
+  1. The service (VLESS) is for traffic encryption only. It is prohibited to use it for bypassing blocks and whitelists.
+  2. Illegal activities, account sharing, and bypassing load limits are prohibited.
+  3. The user is solely responsible for their account and compliance with laws.
+  4. The administration has the right to block violators without a refund.
+  5. Refunds are only issued in case of service malfunction. For questions, contact support.
 
 # Admin texts
 admin_statistics_text: |-
