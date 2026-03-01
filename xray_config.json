@@ -1,19 +1,23 @@
+lemanapro.ru
+max.ru
+
+
 {
   "dns": {
-    "tag": "dns_inbound",
-    "servers": [
-      "https+local://1.1.1.1/dns-query",
-      "localhost",
-      {
-        "strategy": "UseIPv4"
-      }
-    ]
+    "servers": ["https://8.8.8.8/dns-query", "https://1.1.1.1/dns-query"],
+    "queryStrategy": "UseIP"
   },
   "log": {
     "loglevel": "warning"
   },
   "routing": {
     "rules": [
+      {
+        "port": "53",
+        "type": "field",
+        "network": "udp,tcp",
+        "outboundTag": "dns-out"
+      },
       {
         "ip": ["geoip:private"],
         "type": "field",
@@ -24,12 +28,13 @@
         "protocol": ["bittorrent"],
         "outboundTag": "BLOCK"
       }
-    ]
+    ],
+    "domainStrategy": "IPOnDemand"
   },
   "inbounds": [
     {
       "tag": "VLESS-TCP-0",
-      "port": 443,
+      "port": 6436,
       "listen": "0.0.0.0",
       "protocol": "vless",
       "settings": {
@@ -43,19 +48,111 @@
       },
       "streamSettings": {
         "network": "tcp",
+        "sockopt": {
+          "tcpFastOpen": true,
+          "tcpCongestion": "bbr",
+          "tcpKeepAliveIdle": 300
+        },
         "security": "reality",
         "tcpSettings": {},
         "realitySettings": {
-          "alpn": ["h2", "http/1.1"],
-          "dest": "dropbox.com:443",
+          "dest": "max.ru:443",
           "show": false,
           "xver": 0,
           "SpiderX": "",
-          "shortIds": ["1fec4405ff170ed9"],
-          "publicKey": "gtotm6x8K4YAzaqOBj0NpTORu4B7t2tKy99upXMos2w",
-          "privateKey": "ZsmV2FxMnX7VkYNkVP5PdSnB2cyjsex2XzJw2QKKfMg",
+          "shortIds": ["d08726fbf48d88e0"],
+          "privateKey": "vHxvGDt-l61RyDWTXTAvOQHK2WR9FKJhLrWrCcmrmbY",
           "fingerprint": "chrome",
-          "serverNames": ["dropbox.com", "www.dropbox.com"]
+          "serverNames": ["max.ru", "www.max.ru"],
+          "limitFallbackUpload": {
+            "afterBytes": 10485760,
+            "bytesPerSec": 102400,
+            "burstBytesPerSec": 5242880
+          }
+        }
+      }
+    },
+    {
+      "tag": "VLESS-GRPC-0",
+      "port": 6437,
+      "listen": "0.0.0.0",
+      "protocol": "vless",
+      "settings": {
+        "clients": [],
+        "decryption": "none"
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls", "quic"],
+        "metadataOnly": false
+      },
+      "streamSettings": {
+        "network": "grpc",
+        "sockopt": {
+          "tcpFastOpen": true,
+          "tcpCongestion": "bbr",
+          "tcpKeepAliveIdle": 300
+        },
+        "security": "reality",
+        "grpcSettings": {
+          "serviceName": "grpc"
+        },
+        "realitySettings": {
+          "target": "lemanapro.ru:443",
+          "show": false,
+          "xver": 0,
+          "serverNames": ["lemanapro.ru", "www.lemanapro.ru"],
+          "privateKey": "a-61V2LB1JFBeJByFI-H5dxBrB-1V7NeqXRQ0d1aX9c",
+          "shortIds": ["61a78915847ee512"],
+          "fingerprint": "chrome",
+          "limitFallbackUpload": {
+            "afterBytes": 10485760,
+            "bytesPerSec": 102400,
+            "burstBytesPerSec": 5242880
+          }
+        }
+      }
+    },
+    {
+      "tag": "VLESS-XHTTP-0",
+      "port": 6438,
+      "listen": "0.0.0.0",
+      "protocol": "vless",
+      "settings": {
+        "clients": [],
+        "decryption": "none"
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls", "quic"],
+        "metadataOnly": false
+      },
+      "streamSettings": {
+        "network": "xhttp",
+        "sockopt": {
+          "tcpFastOpen": true,
+          "tcpCongestion": "bbr",
+          "tcpKeepAliveIdle": 300
+        },
+        "security": "reality",
+        "xhttpSettings": {
+          "host": "berlin.de",
+          "mode": "auto",
+          "path": "/api/v1"
+        },
+        "realitySettings": {
+          "dest": "berlin.de:443",
+          "show": false,
+          "xver": 0,
+          "shortIds": ["154de2d3fcedde7e"],
+          "privateKey": "gGjRAKeFnD51z48H-l_tvNuHsUQajnd-hby1RrfXLl0",
+          "fingerprint": "chrome",
+          "serverNames": ["berlin.de", "www.berlin.de"],
+          "limitFallbackUpload": {
+            "afterBytes": 10485760,
+            "bytesPerSec": 102400,
+            "burstBytesPerSec": 5242880
+          }
         }
       }
     }
@@ -63,14 +160,18 @@
   "outbounds": [
     {
       "tag": "DIRECT",
-      "protocol": "freedom",
-      "settings": {
-        "domainStrategy": "UseIPv4"
-      }
+      "protocol": "freedom"
     },
     {
       "tag": "BLOCK",
       "protocol": "blackhole"
+    },
+    {
+      "tag": "dns-out",
+      "protocol": "dns",
+      "settings": {
+        "network": "tcp"
+      }
     }
   ]
 }
