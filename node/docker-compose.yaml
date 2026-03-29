@@ -1,0 +1,22 @@
+services:
+  node:
+    image: pasarguard/node:latest # image: ghcr.io/pasarguard/node:latest
+    container_name: node
+    restart: always
+    network_mode: host
+
+    environment:
+      SERVICE_PORT: 62050
+      SERVICE_PROTOCOL: "grpc"
+
+      SSL_CERT_FILE: "/etc/letsencrypt/live/at.animeme.ru/fullchain.pem"
+      SSL_KEY_FILE: "/etc/letsencrypt/live/at.animeme.ru/privkey.pem"
+      # api key must be a valid uuid (you can use any version you want)
+      API_KEY: "291d03ef-f63a-48d4-b93d-116d88f63d14"
+
+      GENERATED_CONFIG_PATH: "/var/lib/pg-node/generated"
+
+    volumes:
+      - /var/lib/pg-node:/var/lib/pg-node
+      - /etc/letsencrypt/live/at.animeme.ru/fullchain.pem:/etc/letsencrypt/live/at.animeme.ru/fullchain.pem
+      - /etc/letsencrypt/live/at.animeme.ru/privkey.pem:/etc/letsencrypt/live/at.animeme.ru/privkey.pem
