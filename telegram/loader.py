@@ -28,6 +28,10 @@ TG_ADMIN = os.getenv("TG_ADMIN")
 SQLALCHEMY_DATABASE_URL_TG = os.getenv("SQLALCHEMY_DATABASE_URL_TG")
 
 YOO_KASSA_PROVIDER_TOKEN = os.getenv("YOO_KASSA_PROVIDER_TOKEN")
+YOO_KASSA_SHOP_ID = os.getenv("YOO_KASSA_SHOP_ID")
+YOO_KASSA_SECRET_KEY = os.getenv("YOO_KASSA_SECRET_KEY")
+YOO_KASSA_WEBHOOK_PATH = os.getenv("YOO_KASSA_WEBHOOK_PATH", "/yookassa-webhook")
+YOO_KASSA_RETURN_URL = os.getenv("YOO_KASSA_RETURN_URL", "https://t.me/your_bot")
 
 # Webhook (опционально)
 BASE_WEBHOOK_URL = os.getenv("BASE_WEBHOOK_URL")
@@ -50,9 +54,20 @@ db_manage = DB_M(SQLALCHEMY_DATABASE_URL_TG)
 # Глобальный клиент Marzban API
 marzban_client = MarzbanAPIClient(
     base_url=PASARGUARD_BASE_URL,
-    admin_username=PASARGUARD_ADMIN_USERNAME,
-    admin_password=PASARGUARD_ADMIN_PASSWORD,
+    admin_username=PASARGUARD_ADMIN_USERNAME or "",
+    admin_password=PASARGUARD_ADMIN_PASSWORD or "",
 )
+
+# Глобальный клиент ЮKassa API
+if YOO_KASSA_SHOP_ID and YOO_KASSA_SECRET_KEY:
+    from utils.yookassa_api import YooKassaAPIClient
+
+    yookassa_client = YooKassaAPIClient(
+        shop_id=YOO_KASSA_SHOP_ID,
+        secret_key=YOO_KASSA_SECRET_KEY,
+    )
+else:
+    yookassa_client = None
 
 
 # Создаем контекст для локализации и регистрируем мидлвару

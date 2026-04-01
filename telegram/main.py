@@ -2,7 +2,7 @@ import asyncio
 
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiohttp import web
-from handlers import bot, dp
+from handlers import dp
 from loader import (
     BASE_WEBHOOK_URL,
     PASARGUARD_NOTIFY_PATH,
@@ -11,15 +11,18 @@ from loader import (
     WEB_SERVER_PORT,
     WEBHOOK_PATH,
     WEBHOOK_SECRET,
+    YOO_KASSA_SECRET_KEY,
+    YOO_KASSA_WEBHOOK_PATH,
     bot,
     db_manage,
     dp,
     load_menu_image,
 )
 from notification_webhook import register_pasarguard_notification_route
+from yookassa_webhook import register_yookassa_webhook_route
 
 
-def _join_url(base: str, path: str) -> str:
+def _join_url(base: str | None, path: str) -> str:
     base = (base or "").rstrip("/")
     path = (path or "").strip()
     if not path.startswith("/"):
@@ -63,6 +66,15 @@ def _build_webhook_app() -> web.Application:
             bot=bot,
             notify_path=PASARGUARD_NOTIFY_PATH,
             notify_secret=PASARGUARD_NOTIFY_SECRET,
+        )
+
+    # Ручка для уведомлений от ЮKassa
+    if YOO_KASSA_WEBHOOK_PATH:
+        register_yookassa_webhook_route(
+            app,
+            bot=bot,
+            webhook_path=YOO_KASSA_WEBHOOK_PATH,
+            secret_key=YOO_KASSA_SECRET_KEY,
         )
 
     # Telegram webhook — только если включен

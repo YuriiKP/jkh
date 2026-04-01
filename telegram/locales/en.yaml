@@ -251,3 +251,27 @@ payment_pay_100_rub: "Pay 100 ₽"
 payment_cancel: "Cancel"
 payment_pay_55_stars: "Pay 55 ⭐️"
 payment_contact_support: "Contact support"
+btn_pay_with_yookassa: "💳 Pay with card"
+payment_check_status: "🔍 Check payment status"
+payment_service_unavailable: "Payment service temporarily unavailable"
+payment_creation_failed: "Failed to create payment. Please try again later."
+yookassa_payment_instructions: |-
+  💳 <b>Payment via ЮKassa</b>
+
+  To pay for a subscription, click the button below.
+  You will be redirected to a secure ЮKassa payment page.
+
+  After successful payment, you will receive a notification in the bot.
+  If the notification does not arrive, click "Check payment status".
+payment_already_processed: |-
+  ✅ <b>Payment successfully processed!</b>
+
+  Your subscription has been activated for 30 days.
+  To get connection data, go to "My Keys".
+payment_not_found: |-
+  ⏳ <b>Payment not found</b>
+
+  If you have already paid, wait a few minutes.
+  Or try to pay again.
+invalid_request: "Invalid request"
+btn_try_again: "🔄 Try again"
