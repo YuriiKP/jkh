@@ -7,7 +7,7 @@ from aiogram.enums import ParseMode
 from aiogram.types import BufferedInputFile
 from dotenv import load_dotenv
 from locales import Locales
-from middleware import MyLocalesMiddleware
+from middleware import DebugModeMiddleware, MyLocalesMiddleware
 from storage import DB_M
 from utils.marzban_api import MarzbanAPIClient
 
@@ -39,6 +39,9 @@ WEBHOOK_PATH = os.getenv("WEBHOOK_PATH") or ""
 WEB_SERVER_HOST = os.getenv("WEB_SERVER_HOST", "127.0.0.1")
 WEB_SERVER_PORT = int(os.getenv("WEB_SERVER_PORT", "8080"))
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
+
+# Debug mode (опционально)
+DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
 # Pasarguard notifications (опционально)
 # Если переменная не задана/пустая — ручка уведомлений не поднимается, запуск без http-сервера.
@@ -72,8 +75,15 @@ else:
 
 # Создаем контекст для локализации и регистрируем мидлвару
 locale = Locales()
+
+# Регистрируем middleware для локализации (должен быть первым для установки языка)
 locale_middleware = MyLocalesMiddleware(locale, db_manage)
 dp.update.middleware(locale_middleware)
+
+# Регистрируем middleware для режима отладки
+if DEBUG is True:
+    debug_middleware = DebugModeMiddleware(db_manage)
+    dp.update.middleware(debug_middleware)
 
 
 deep_links_admin_manage = {}

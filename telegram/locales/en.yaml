@@ -266,12 +266,27 @@ yookassa_payment_instructions: |-
 payment_already_processed: |-
   ✅ <b>Payment successfully processed!</b>
 
-  Your subscription has been activated for 30 days.
+  Your subscription has been activated.
   To get connection data, go to "My Keys".
 payment_not_found: |-
   ⏳ <b>Payment not found</b>
 
-  If you have already paid, wait a few minutes.
-  Or try to pay again.
+  If you have already paid, wait a couple of minutes.
 invalid_request: "Invalid request"
 btn_try_again: "🔄 Try again"
+
+# Technical maintenance
+bot_under_maintenance: |-
+  ⚠️ <b>Bot is under technical maintenance</b>
+
+  Currently the bot is temporarily unavailable.
+  Please try again later.
+
+  We apologize for the inconvenience.
+bot_under_maintenance_alert: |-
+  ⚠️ Bot is under technical maintenance
+
+  Currently the bot is temporarily unavailable.
+  Please try again later.
+
+  We apologize for the inconvenience.
