@@ -1,6 +1,7 @@
 services:
   node:
     image: pasarguard/node:latest # image: ghcr.io/pasarguard/node:latest
+    pull_policy: always
     container_name: node
     restart: always
     network_mode: host
