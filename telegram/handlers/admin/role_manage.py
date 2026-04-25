@@ -13,6 +13,7 @@ from filters import IsAdmin, IsMainAdmin
 from filters import TextBtn as __
 from keyboards import *
 from loader import TG_ADMIN, bot, db_manage, deep_links_admin_manage, dp, symbols
+from locales import get_text as _
 from utils import CB_ModerAdmins, State_Ban_Admin
 
 
