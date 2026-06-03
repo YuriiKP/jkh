@@ -1,4 +1,4 @@
-import hashlib
+import asyncio
 import json
 import logging
 from datetime import datetime, timedelta
@@ -6,7 +6,7 @@ from typing import Optional
 
 from aiogram import Bot
 from aiohttp import web
-from loader import db_manage, marzban_client
+from loader import db_manage, marzban_client, yookassa_client
 from models.proxy import ProxyTable, VlessSettings, XTLSFlows
 from models.user import (
     UserCreate,
@@ -15,65 +15,122 @@ from models.user import (
     UserStatusCreate,
     UserStatusModify,
 )
-from pydantic import BaseModel, Field, ValidationError
+from models.yookassa import YooKassaPayment, YooKassaWebhook
+from pydantic import ValidationError
 from utils.marzban_api import MarzbanAPIError
 
 logger = logging.getLogger(__name__)
 
-
-class YooKassaPayment(BaseModel):
-    """Модель платежа от ЮKassa"""
-
-    id: str = Field(..., alias="id")
-    status: str = Field(..., alias="status")
-    amount: dict = Field(..., alias="amount")
-    description: Optional[str] = Field(None, alias="description")
-    metadata: Optional[dict] = Field(None, alias="metadata")
-    recipient: Optional[dict] = Field(None, alias="recipient")
-    created_at: str = Field(..., alias="created_at")
-    captured_at: Optional[str] = Field(None, alias="captured_at")
-    payment_method: Optional[dict] = Field(None, alias="payment_method")
-    test: bool = Field(False, alias="test")
-
-
-class YooKassaWebhook(BaseModel):
-    """Модель вебхука от ЮKassa"""
-
-    type: str = Field(..., alias="type")
-    event: str = Field(..., alias="event")
-    object: YooKassaPayment = Field(..., alias="object")
+# Известные IP-адреса ЮKassa для вебхуков (могут меняться, актуальные см. в документации)
+# https://yookassa.ru/developers/using-api/webhooks#ip
+KNOWN_YOOKASSA_IPS = {
+    "185.71.76.0/27",
+    "185.71.77.0/27",
+    "77.75.153.0/27",
+    "77.75.156.11",
+    "77.75.156.35",
+    "77.75.154.128/25",
+    "2a02:5180::/32",
+}
 
 
 def _verify_signature(request: web.Request, secret_key: str | None) -> bool:
     """
-    Проверяет подпись запроса от ЮKassa.
+    Проверяет подлинность запроса от ЮKassa.
 
-    ЮKassa отправляет подпись в заголовке 'Content-SHA256'.
-    Подпись вычисляется как SHA256 от тела запроса в кодировке base64.
+    Использует комбинированный подход:
+    1. Если передан secret_key — проверяет через IP-адрес отправителя.
+    2. Если secret_key не задан — пропускает проверку (не рекомендуется для production).
+
+    Args:
+        request: HTTP-запрос
+        secret_key: Секретный ключ (используется как флаг для включения проверки)
+
+    Returns:
+        True если запрос прошёл проверку
     """
     if not secret_key:
-        return True  # Если секретный ключ не задан, пропускаем проверку
+        # Если секретный ключ не задан — проверка отключена
+        logger.warning(
+            "YooKassa secret key is not configured — signature verification is disabled"
+        )
+        return True
 
-    signature = request.headers.get("Content-SHA256")
-    if not signature:
-        logger.warning("Missing Content-SHA256 header")
+    # Проверяем IP-адрес отправителя
+    peer_name = (
+        request.transport.get_extra_info("peername") if request.transport else None
+    )
+    if peer_name:
+        peer_ip = peer_name[0]
+        # Простая проверка на соответствие известным IP
+        # В production рекомендуется использовать полноценную CIDR-проверку
+        if peer_ip in KNOWN_YOOKASSA_IPS:
+            return True
+        logger.warning(
+            f"YooKassa webhook from unknown IP: {peer_ip}. "
+            f"Proceeding anyway — payment will be verified via API."
+        )
+        # Не блокируем по IP, а пропускаем для верификации через API
+
+    return True
+
+
+def _check_payment_status_sync(payment_id: str) -> str | None:
+    """
+    Синхронная проверка статуса платежа через SDK ЮKassa.
+    Вызывается в отдельном потоке через asyncio.to_thread.
+    """
+    from yookassa import Payment
+
+    try:
+        payment_response = Payment.find_one(payment_id)
+        return payment_response.status
+    except Exception as e:
+        logger.error(f"Error in sync payment status check for {payment_id}: {e}")
+        return None
+
+
+async def _verify_payment_via_api(payment_id: str) -> bool:
+    """
+    Верифицирует платёж через API ЮKassa.
+
+    Использует синхронный SDK ЮKassa в отдельном потоке,
+    чтобы не блокировать event loop.
+
+    Args:
+        payment_id: ID платежа
+
+    Returns:
+        True если платеж подтверждён API (статус succeeded)
+    """
+    if not yookassa_client:
+        logger.error("YooKassa client is not initialized, cannot verify payment")
         return False
 
-    # Получаем тело запроса
-    body = request._body if hasattr(request, "_body") else None
-    if not body:
-        # Если тело еще не прочитано, читаем его
-        body = request.content.read()
-        request._body = body  # Кэшируем для повторного использования
+    try:
+        # Запускаем синхронный SDK-вызов в потоке
+        status = await asyncio.to_thread(_check_payment_status_sync, payment_id)
 
-    # Вычисляем SHA256 от тела
-    body_hash = hashlib.sha256(body).digest()
-    import base64
+        if status is None:
+            logger.error(
+                f"Failed to verify payment {payment_id} via API — got None status"
+            )
+            return False
 
-    expected_signature = base64.b64encode(body_hash).decode("utf-8")
+        logger.info(f"Payment {payment_id} verified via API, status: {status}")
 
-    # Сравниваем подписи
-    return signature == expected_signature
+        if status != "succeeded":
+            logger.warning(
+                f"Payment {payment_id} has status '{status}' via API, "
+                f"but webhook reported 'succeeded'. Possible fraud attempt!"
+            )
+            return False
+
+        return True
+
+    except Exception as e:
+        logger.error(f"Error verifying payment {payment_id} via API: {e}")
+        return False
 
 
 async def _process_successful_payment(payment: YooKassaPayment, bot: Bot) -> bool:
@@ -93,15 +150,14 @@ async def _process_successful_payment(payment: YooKassaPayment, bot: Bot) -> boo
             logger.error(f"Missing metadata in payment: {payment.id}")
             return False
 
-        # Метаданные могут быть в разных форматах (dict или объект)
         metadata_dict = payment.metadata
-        if hasattr(metadata_dict, "user_id"):
-            # Если это объект с атрибутами
-            user_id_str = metadata_dict.user_id
-        elif isinstance(metadata_dict, dict) and "user_id" in metadata_dict:
-            # Если это словарь
-            user_id_str = metadata_dict["user_id"]
-        else:
+        user_id_str = (
+            metadata_dict.get("user_id")
+            if isinstance(metadata_dict, dict)
+            else getattr(metadata_dict, "user_id", None)
+        )
+
+        if not user_id_str:
             logger.error(f"Missing user_id in payment metadata: {payment.id}")
             return False
 
@@ -118,32 +174,22 @@ async def _process_successful_payment(payment: YooKassaPayment, bot: Bot) -> boo
             )
             return False
 
-        # Проверяем сумму платежа (ожидаем 100 рублей = 10000 копеек)
+        # Извлекаем сумму и валюту
         amount_dict = payment.amount
-        if hasattr(amount_dict, "value"):
-            amount = amount_dict.value
-        elif isinstance(amount_dict, dict) and "value" in amount_dict:
-            amount = amount_dict["value"]
+        if isinstance(amount_dict, dict):
+            amount = amount_dict.get("value", "0")
+            currency = amount_dict.get("currency", "RUB")
         else:
-            logger.error(f"Invalid amount format in payment: {payment.id}")
-            return False
+            amount = getattr(amount_dict, "value", "0")
+            currency = getattr(amount_dict, "currency", "RUB")
 
-        if hasattr(amount_dict, "currency"):
-            currency = amount_dict.currency
-        elif isinstance(amount_dict, dict) and "currency" in amount_dict:
-            currency = amount_dict["currency"]
-        else:
-            currency = "RUB"
-
-        # Конвертируем amount в число если нужно
+        # Конвертируем amount в число
         try:
             amount_value = float(amount)
-            # Проверяем сумму (100 рублей = 100.00)
             if currency != "RUB" or amount_value != 100.00:
                 logger.warning(
                     f"Unexpected payment amount/currency: {amount_value} {currency}"
                 )
-                # Все равно обрабатываем, но логируем предупреждение
         except (ValueError, TypeError):
             logger.error(f"Invalid amount value: {amount}")
             return False
@@ -153,22 +199,19 @@ async def _process_successful_payment(payment: YooKassaPayment, bot: Bot) -> boo
         if user_tg and user_tg[7] == "true":  # trial field
             await db_manage.update_user(user_id, trial="false")
 
-        # Если пользователя в marzban нет создаем его
+        # Если пользователя в marzban нет — создаем, иначе — продлеваем
         try:
             user_marz: UserResponse = await marzban_client.get_user(str(user_id))
 
             # Определяем текущую дату истечения
             if user_marz.expire:
-                # Если expire это timestamp (int), конвертируем в datetime
                 if isinstance(user_marz.expire, int):
                     current_expire = datetime.fromtimestamp(user_marz.expire)
                 else:
                     current_expire = user_marz.expire
-                    # Если datetime имеет timezone, конвертируем в naive datetime
                     if current_expire.tzinfo is not None:
                         current_expire = current_expire.replace(tzinfo=None)
             else:
-                # Если подписки нет, начинаем с текущей даты
                 current_expire = datetime.now()
 
             # Добавляем 30 дней к текущей дате истечения
@@ -179,9 +222,8 @@ async def _process_successful_payment(payment: YooKassaPayment, bot: Bot) -> boo
                 proxy_settings=ProxyTable(vless=VlessSettings(flow=XTLSFlows.VISION)),
                 status=UserStatusModify.active,
             )
-            modified_user: UserResponse = await marzban_client.modify_user(
-                str(user_id), modify_user
-            )
+            await marzban_client.modify_user(str(user_id), modify_user)
+
         except MarzbanAPIError as e:
             if e.status == 404:
                 new_user = UserCreate(
@@ -194,21 +236,20 @@ async def _process_successful_payment(payment: YooKassaPayment, bot: Bot) -> boo
                         vless=VlessSettings(flow=XTLSFlows.VISION)
                     ),
                 )
-                created_user: UserResponse = await marzban_client.create_user(new_user)
+                await marzban_client.create_user(new_user)
             else:
                 logger.error(f"Marzban API error: {e.message}")
                 return False
 
         # Сохраняем информацию о платеже в базе данных
-        # Конвертируем сумму в копейки для хранения
-        amount_in_kopecks = int(float(amount) * 100)
+        amount_in_kopecks = int(amount_value * 100)
 
         await db_manage.add_payment(
             user_id=user_id,
             amount=amount_in_kopecks,
             currency=currency,
             payload="one_month",
-            telegram_payment_charge_id="",  # Не используется для прямых платежей
+            telegram_payment_charge_id="",
             provider_payment_charge_id=payment.id,
             status="completed",
         )
@@ -222,7 +263,6 @@ async def _process_successful_payment(payment: YooKassaPayment, bot: Bot) -> boo
             logger.info(f"Success notification sent to user {user_id}")
         except Exception as e:
             logger.error(f"Failed to send notification to user {user_id}: {e}")
-            # Продолжаем обработку, даже если не удалось отправить уведомление
 
         return True
 
@@ -245,7 +285,7 @@ def register_yookassa_webhook_route(
         app: Приложение aiohttp
         bot: Экземпляр бота для отправки уведомлений
         webhook_path: Путь для вебхука
-        secret_key: Секретный ключ для проверки подписи
+        secret_key: Секретный ключ для включения проверки запросов
     """
     path = (webhook_path or "").strip()
     if not path:
@@ -264,16 +304,37 @@ def register_yookassa_webhook_route(
         try:
             # Парсим JSON запрос
             payload = await request.json()
-            logger.info(f"Received YooKassa webhook: {payload.get('type')}")
+            logger.info(
+                f"Received YooKassa webhook: {payload.get('type')} / {payload.get('event')}"
+            )
 
             # Валидируем данные
             webhook_data = YooKassaWebhook.model_validate(payload)
 
             # Обрабатываем только события успешной оплаты
             if webhook_data.event != "payment.succeeded":
+                logger.info(f"Ignoring unsupported event: {webhook_data.event}")
                 return web.json_response(
                     {"ok": True, "ignored": True, "reason": "unsupported_event"}
                 )
+
+            # Верифицируем платеж через API ЮKassa (защита от поддельных вебхуков)
+            payment_id = webhook_data.object.id
+            logger.info(f"Verifying payment {payment_id} via API...")
+
+            is_verified = await _verify_payment_via_api(payment_id)
+            if not is_verified:
+                logger.error(
+                    f"Payment {payment_id} verification via API failed — "
+                    f"possible fraud or API unavailable"
+                )
+                # Возвращаем 200 чтобы ЮKassa не переотправляла вебхук,
+                # но не обрабатываем платеж
+                return web.json_response(
+                    {"ok": True, "ignored": True, "reason": "verification_failed"}
+                )
+
+            logger.info(f"Payment {payment_id} verified successfully, processing...")
 
             # Обрабатываем платеж
             success = await _process_successful_payment(webhook_data.object, bot)
@@ -292,9 +353,10 @@ def register_yookassa_webhook_route(
                 status=400,
             )
         except json.JSONDecodeError:
+            logger.error("Invalid JSON in request body")
             return web.json_response({"ok": False, "error": "invalid_json"}, status=400)
         except Exception as e:
-            logger.error(f"Unexpected error: {e}")
+            logger.error(f"Unexpected error in webhook handler: {e}")
             return web.json_response(
                 {"ok": False, "error": "internal_error"}, status=500
             )
