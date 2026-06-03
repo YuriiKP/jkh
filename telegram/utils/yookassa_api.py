@@ -148,6 +148,7 @@ class YooKassaAPIClient:
         description: str,
         user_id: int,
         return_url: str,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Optional[str]:
         """
         Создает ссылку на оплату.
@@ -158,6 +159,7 @@ class YooKassaAPIClient:
             description: Описание платежа
             user_id: ID пользователя в Telegram
             return_url: URL для возврата после оплаты
+            metadata: Дополнительные метаданные (будет передано в create_payment)
 
         Returns:
             Ссылка на оплату или None в случае ошибки
@@ -168,6 +170,7 @@ class YooKassaAPIClient:
             description=description,
             user_id=user_id,
             return_url=return_url,
+            metadata=metadata,
         )
 
         if payment_data and "confirmation_url" in payment_data:
