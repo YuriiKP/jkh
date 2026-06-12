@@ -1,6 +1,14 @@
 from datetime import datetime
 
-from loader import get_full_subscription_url
+from loader import (
+    PRICE_1M_RUB,
+    PRICE_1M_STARS,
+    PRICE_3M_RUB,
+    PRICE_3M_STARS,
+    PRICE_6M_RUB,
+    PRICE_6M_STARS,
+    get_full_subscription_url,
+)
 from locales import get_text as _
 from models.user import UserResponse
 

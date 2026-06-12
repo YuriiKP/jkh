@@ -133,6 +133,14 @@ async def _verify_payment_via_api(payment_id: str) -> bool:
         return False
 
 
+# Словарь соответствия тарифов: tariff_key -> количество дней
+TARIFF_DAYS = {
+    "one_month": 30,
+    "three_months": 90,
+    "six_months": 180,
+}
+
+
 async def _process_successful_payment(payment: YooKassaPayment, bot: Bot) -> bool:
     """
     Обрабатывает успешный платеж.
@@ -183,16 +191,20 @@ async def _process_successful_payment(payment: YooKassaPayment, bot: Bot) -> boo
             amount = getattr(amount_dict, "value", "0")
             currency = getattr(amount_dict, "currency", "RUB")
 
-        # Конвертируем amount в число
+        # Конвертируем amount в число (просто логируем, не проверяем строго)
         try:
             amount_value = float(amount)
-            if currency != "RUB" or amount_value != 100.00:
-                logger.warning(
-                    f"Unexpected payment amount/currency: {amount_value} {currency}"
-                )
+            logger.info(f"Payment amount: {amount_value} {currency}")
         except (ValueError, TypeError):
             logger.error(f"Invalid amount value: {amount}")
             return False
+
+        # Определяем количество дней из метаданных (по умолчанию 30)
+        tariff_key = "one_month"
+        if isinstance(metadata_dict, dict):
+            tariff_key = metadata_dict.get("tariff", "one_month")
+        days = TARIFF_DAYS.get(tariff_key, 30)
+        logger.info(f"Tariff: {tariff_key}, days: {days}")
 
         # Если есть не активированный пробный период, отменяем его
         user_tg = await db_manage.get_user_by_id(user_id)
@@ -214,8 +226,8 @@ async def _process_successful_payment(payment: YooKassaPayment, bot: Bot) -> boo
             else:
                 current_expire = datetime.now()
 
-            # Добавляем 30 дней к текущей дате истечения
-            new_expire = current_expire + timedelta(days=30)
+            # Добавляем дни согласно тарифу
+            new_expire = current_expire + timedelta(days=days)
 
             modify_user = UserModify(
                 expire=new_expire,
@@ -230,7 +242,7 @@ async def _process_successful_payment(payment: YooKassaPayment, bot: Bot) -> boo
                     username=str(user_id),
                     note=f"User {user_id}",
                     status=UserStatusCreate.active,
-                    expire=datetime.now() + timedelta(days=30),
+                    expire=datetime.now() + timedelta(days=days),
                     group_ids=[1],
                     proxy_settings=ProxyTable(
                         vless=VlessSettings(flow=XTLSFlows.VISION)
@@ -248,7 +260,7 @@ async def _process_successful_payment(payment: YooKassaPayment, bot: Bot) -> boo
             user_id=user_id,
             amount=amount_in_kopecks,
             currency=currency,
-            payload="one_month",
+            payload=tariff_key,
             telegram_payment_charge_id="",
             provider_payment_charge_id=payment.id,
             status="completed",
@@ -258,7 +270,7 @@ async def _process_successful_payment(payment: YooKassaPayment, bot: Bot) -> boo
         try:
             await bot.send_message(
                 chat_id=user_id,
-                text="✅ Оплата прошла успешно! Ваша подписка обновлена на 30 дней. 🚀",
+                text=f"✅ Оплата прошла успешно! Ваша подписка обновлена на {days} дней. 🚀",
             )
             logger.info(f"Success notification sent to user {user_id}")
         except Exception as e:

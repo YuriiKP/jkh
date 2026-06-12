@@ -91,6 +91,12 @@ services:
       - PASARGUARD_BASE_URL
       - PASARGUARD_ADMIN_USERNAME
       - PASARGUARD_ADMIN_PASSWORD
+      - PRICE_1M_RUB
+      - PRICE_1M_STARS
+      - PRICE_3M_RUB
+      - PRICE_3M_STARS
+      - PRICE_6M_RUB
+      - PRICE_6M_STARS
     ports:
       - 8080:8080
     depends_on:

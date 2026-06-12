@@ -50,7 +50,7 @@ async def trial_buy_handler(query: CallbackQuery, state: FSMContext):
                 username=str(user_id),
                 note=f"{query.from_user.first_name} @{query.from_user.username}",
                 status=UserStatusCreate.active,
-                expire=datetime.now() + timedelta(3.0),
+                expire=datetime.now() + timedelta(1.0),
                 group_ids=[1],
                 proxy_settings=ProxyTable(vless=VlessSettings(flow=XTLSFlows.VISION)),
             )

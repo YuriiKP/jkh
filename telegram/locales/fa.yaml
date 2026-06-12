@@ -23,7 +23,9 @@ btn_language: "🌐 زبان" # callback_data='language'
 btn_back_to_main: "🏠 منوی اصلی" # callback_data='start'
 
 btn_trial_buy: "🔎 دوره آزمایشی" # callback_data='trial_bay'
-btn_buy_one_month: "🟢 ۱ ماه"
+btn_buy_one_month: "🟢 ۱ ماه — {rub} ₽"
+btn_buy_three_months: "🔵 ۳ ماه — {rub} ₽ ( ۵٪ تخفیف )"
+btn_buy_six_months: "🟣 ۶ ماه — {rub} ₽ ( ۱۰٪ تخفیف )"
 btn_pay_with_card: "💳 کارت روسیه"
 btn_pay_with_stars: "⭐️ با ستاره‌ها"
 btn_pay_with_support: "🛠️ از طریق پشتیبانی"
@@ -78,8 +80,6 @@ trial_days_text: |-
   ۱. لینک بالا را کپی کنید
   ۲. برنامه VPN را باز کنید
   ۳. اشتراک را از طریق لینک اضافه کنید
-
-  ⏰ دوره آزمایشی ۳ روز معتبر است.
 
 help_text: |-
   🆘 در این بخش موجود است:
@@ -153,11 +153,10 @@ notification_days_left_text: |-
 user_buy_text: |-
   💳 <b>پرداخت ЖКХ</b>
 
-  📦 <b>اشتراک ۱ ماهه</b>
-      • ترافیک نامحدود
-      • سرعت بالا
-      • دسترسی به تمام سرورها
-      • تا ۱۰ اتصال/دستگاه
+  📦 <b>تعرفه را انتخاب کنید:</b>
+      • 🟢 ۱ ماه — بدون تخفیف
+      • 🔵 ۳ ماه — ۵٪ تخفیف
+      • 🟣 ۶ ماه — ۱۰٪ تخفیف
 
   ⚠️ <i>کانال مسکونی هاستینگ</i>
 
@@ -247,9 +246,9 @@ deep_link_created: |-
   یکبار مصرف، پس از فعال‌سازی غیرفعال می‌شود.
 
 # Тексты для оплаты
-payment_pay_100_rub: "پرداخت ۱۰۰ ₽"
+payment_pay_rub: "پرداخت {amount} ₽"
 payment_cancel: "لغو"
-payment_pay_55_stars: "پرداخت ۵۵ ⭐️"
+payment_pay_stars: "پرداخت {stars} ⭐️"
 payment_contact_support: "نوشتن به پشتیبانی"
 btn_pay_with_yookassa: "💳 پرداخت با کارت"
 payment_check_status: "🔍 بررسی وضعیت پرداخت"

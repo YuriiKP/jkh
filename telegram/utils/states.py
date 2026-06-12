@@ -12,3 +12,9 @@ class State_Mailing(StatesGroup):
 
 class StateCreateDeepLink(StatesGroup):
     days = State()
+
+
+class StateTariffSelection(StatesGroup):
+    """Состояние для хранения выбранного тарифа при оплате"""
+
+    tariff = State()

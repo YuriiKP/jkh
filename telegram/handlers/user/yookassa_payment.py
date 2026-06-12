@@ -3,10 +3,44 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from keyboards import *
-from loader import YOO_KASSA_RETURN_URL, db_manage, dp, yookassa_client
+from loader import (
+    PRICE_1M_RUB,
+    PRICE_1M_STARS,
+    PRICE_3M_RUB,
+    PRICE_3M_STARS,
+    PRICE_6M_RUB,
+    PRICE_6M_STARS,
+    YOO_KASSA_RETURN_URL,
+    db_manage,
+    dp,
+    yookassa_client,
+)
 from locales import get_text as _
+from utils.states import StateTariffSelection
 
 from ..common import edit_menu_with_image
+
+# Словарь тарифов (дублируем для использования в этом файле)
+TARIFFS = {
+    "one_month": {
+        "label": "1 месяц",
+        "days": 30,
+        "rub": PRICE_1M_RUB,
+        "stars": PRICE_1M_STARS,
+    },
+    "three_months": {
+        "label": "3 месяца",
+        "days": 90,
+        "rub": PRICE_3M_RUB,
+        "stars": PRICE_3M_STARS,
+    },
+    "six_months": {
+        "label": "6 месяцев",
+        "days": 180,
+        "rub": PRICE_6M_RUB,
+        "stars": PRICE_6M_STARS,
+    },
+}
 
 
 @dp.callback_query(F.data == "btn_pay_with_yookassa")
@@ -14,6 +48,10 @@ async def pay_with_yookassa_handler(query: CallbackQuery, state: FSMContext):
     """
     Обработчик для создания платежа через ЮKassa.
     """
+    # Получаем выбранный тариф из состояния ДО очистки
+    state_data = await state.get_data()
+    tariff_key = state_data.get("tariff", "one_month")
+    tariff_info = TARIFFS.get(tariff_key, TARIFFS["one_month"])
     await state.clear()
 
     if not yookassa_client:
@@ -21,15 +59,22 @@ async def pay_with_yookassa_handler(query: CallbackQuery, state: FSMContext):
         return
 
     user_id = query.from_user.id
+    rub_amount = float(tariff_info["rub"])
+    label = tariff_info["label"]
+    days = tariff_info["days"]
 
     # Создаем ссылку на оплату
     payment_link = await yookassa_client.create_payment_link(
-        amount=100.00,  # 100 рублей
+        amount=rub_amount,
         currency="RUB",
-        description="Подписка на 1 месяц VPN",
+        description=f"Подписка на {label} VPN",
         user_id=user_id,
         return_url=YOO_KASSA_RETURN_URL,
-        metadata={"product": "vpn_subscription", "period": "30_days"},
+        metadata={
+            "product": "vpn_subscription",
+            "period": f"{days}_days",
+            "tariff": tariff_key,
+        },
     )
 
     if not payment_link:
@@ -38,7 +83,7 @@ async def pay_with_yookassa_handler(query: CallbackQuery, state: FSMContext):
 
     # Создаем клавиатуру с кнопкой для оплаты
     builder = InlineKeyboardBuilder()
-    builder.button(text=_("payment_pay_100_rub"), url=payment_link)
+    builder.button(text=_("payment_pay_rub", amount=rub_amount), url=payment_link)
     builder.button(
         text=_("payment_check_status"), callback_data=f"check_payment:{user_id}"
     )

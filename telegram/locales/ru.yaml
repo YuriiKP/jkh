@@ -23,7 +23,9 @@ btn_language: "🌐 Язык" # callback_data='language'
 btn_back_to_main: "🏠 Главное меню" # callback_data='start'
 
 btn_trial_buy: "🔎 Пробный период" # callback_data='trial_bay'
-btn_buy_one_month: "🟢 1 месяц"
+btn_buy_one_month: "🟢 1 месяц — {rub} ₽"
+btn_buy_three_months: "🔵 3 месяца — {rub} ₽ ( -5 %)"
+btn_buy_six_months: "🟣 6 месяцев — {rub} ₽ ( -10 %)"
 btn_pay_with_card: "💳 Картой РФ"
 btn_pay_with_stars: "⭐️ Звездами"
 btn_pay_with_support: "🛠️ Через поддержку"
@@ -78,8 +80,6 @@ trial_days_text: |-
   1. Скопируйте ссылку выше
   2. Откройте приложение VPN
   3. Добавьте подписку по ссылке
-
-  ⏰ Пробный период действует 3 деня.
 
 help_text: |-
   🆘 В этом разделе доступно:
@@ -153,11 +153,10 @@ notification_days_left_text: |-
 user_buy_text: |-
   💳 <b>Оплата ЖКХ</b>
 
-  📦 <b>Подписка на 1 месяц</b>
-      • Безлимитный трафик
-      • Высокая скорость
-      • Доступ ко всем серверам
-      • До 10 подключений/устройств
+  📦 <b>Выберите тариф:</b>
+      • 🟢 1 месяц — без скидки
+      • 🔵 3 месяца — скидка 5%
+      • 🟣 6 месяцев — скидка 10%
 
   ⚠️ <i>ЖИЛИЩНЫЙ КАНАЛ ХОСТИНГА</i>
 
@@ -247,9 +246,9 @@ deep_link_created: |-
   Одноразовый, после активации станет неактивным.
 
 # Тексты для оплаты
-payment_pay_100_rub: "Оплатить 100 ₽"
+payment_pay_rub: "Оплатить {amount} ₽"
 payment_cancel: "Отмена"
-payment_pay_55_stars: "Оплатить 55 ⭐️"
+payment_pay_stars: "Оплатить {stars} ⭐️"
 payment_contact_support: "Написать в поддержку"
 btn_pay_with_yookassa: "💳 Оплатить картой"
 payment_check_status: "🔍 Проверить статус оплаты"

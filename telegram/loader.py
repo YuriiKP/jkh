@@ -33,6 +33,17 @@ YOO_KASSA_SECRET_KEY = os.getenv("YOO_KASSA_SECRET_KEY")
 YOO_KASSA_WEBHOOK_PATH = os.getenv("YOO_KASSA_WEBHOOK_PATH", "/yookassa-webhook")
 YOO_KASSA_RETURN_URL = os.getenv("YOO_KASSA_RETURN_URL", "https://t.me/your_bot")
 
+# Цены тарифов (регулируются через переменные окружения)
+# 1 месяц
+PRICE_1M_RUB = int(os.getenv("PRICE_1M_RUB", "150"))
+PRICE_1M_STARS = int(os.getenv("PRICE_1M_STARS", "83"))
+# 3 месяца (скидка 5% от базовой цены)
+PRICE_3M_RUB = int(os.getenv("PRICE_3M_RUB", "428"))
+PRICE_3M_STARS = int(os.getenv("PRICE_3M_STARS", "236"))
+# 6 месяцев (скидка 10% от базовой цены)
+PRICE_6M_RUB = int(os.getenv("PRICE_6M_RUB", "810"))
+PRICE_6M_STARS = int(os.getenv("PRICE_6M_STARS", "446"))
+
 # Webhook (опционально)
 BASE_WEBHOOK_URL = os.getenv("BASE_WEBHOOK_URL")
 WEBHOOK_PATH = os.getenv("WEBHOOK_PATH") or ""

@@ -23,7 +23,9 @@ btn_language: "🌐 Language" # callback_data='language'
 btn_back_to_main: "🏠 Main menu" # callback_data='start'
 
 btn_trial_buy: "🔎 Trial period" # callback_data='trial_bay'
-btn_buy_one_month: "🟢 1 month"
+btn_buy_one_month: "🟢 1 month — {rub} ₽"
+btn_buy_three_months: "🔵 3 months — {rub} ₽ (-5%)"
+btn_buy_six_months: "🟣 6 months — {rub} ₽ (-10%)"
 btn_pay_with_card: "💳 Russian card"
 btn_pay_with_stars: "⭐️ With Stars"
 btn_pay_with_support: "🛠️ Via support"
@@ -78,8 +80,6 @@ trial_days_text: |-
   1. Copy the link above
   2. Open the VPN application
   3. Add the subscription via the link
-
-  ⏰ The trial period lasts for 3 days.
 
 help_text: |-
   🆘 This section provides:
@@ -153,11 +153,10 @@ notification_days_left_text: |-
 user_buy_text: |-
   💳 <b>ЖКХ Payment</b>
 
-  📦 <b>1-month subscription</b>
-      • Unlimited traffic
-      • High speed
-      • Access to all servers
-      • Up to 10 connections/devices
+  📦 <b>Choose a tariff:</b>
+      • 🟢 1 month — no discount
+      • 🔵 3 months — 5% discount
+      • 🟣 6 months — 10% discount
 
   ⚠️ <i>HOUSING CHANNEL HOSTING</i>
 
@@ -247,9 +246,9 @@ deep_link_created: |-
   One-time use, will become inactive after activation.
 
 # Payment texts
-payment_pay_100_rub: "Pay 100 ₽"
+payment_pay_rub: "Pay {amount} ₽"
 payment_cancel: "Cancel"
-payment_pay_55_stars: "Pay 55 ⭐️"
+payment_pay_stars: "Pay {stars} ⭐️"
 payment_contact_support: "Contact support"
 btn_pay_with_yookassa: "💳 Pay with card"
 payment_check_status: "🔍 Check payment status"
