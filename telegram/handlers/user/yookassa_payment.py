@@ -67,11 +67,11 @@ async def pay_with_yookassa_handler(query: CallbackQuery, state: FSMContext):
     payment_link = await yookassa_client.create_payment_link(
         amount=rub_amount,
         currency="RUB",
-        description=f"Подписка на {label} VPN",
+        description=f"Оплата сервиса ({label})",
         user_id=user_id,
         return_url=YOO_KASSA_RETURN_URL,
         metadata={
-            "product": "vpn_subscription",
+            "product": "service_access",
             "period": f"{days}_days",
             "tariff": tariff_key,
         },

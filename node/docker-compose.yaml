@@ -17,7 +17,11 @@ services:
 
       GENERATED_CONFIG_PATH: "/var/lib/pg-node/generated"
 
+      # Xray Paths (defaults usually work)
+      # XRAY_EXECUTABLE_PATH: "/home/xray_core/xray"
+
     volumes:
       - /var/lib/pg-node:/var/lib/pg-node
       - /etc/letsencrypt/live/at.animeme.ru/fullchain.pem:/etc/letsencrypt/live/at.animeme.ru/fullchain.pem
       - /etc/letsencrypt/live/at.animeme.ru/privkey.pem:/etc/letsencrypt/live/at.animeme.ru/privkey.pem
+      # - /home/xray_core/xray:/home/xray_core/xray

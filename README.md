@@ -92,7 +92,12 @@ openssl rand -hex 4
 ## Настройка SSL сертификатов
 
 **Способ** 1
-Для ноды нужны сертификаты, как их сгенерировать можно прочитать здесь [Генерация SSL сертификатов](https://docs.pasarguard.org/ru/node/installation/#генерация-ssl-сертификата)
+Для ноды нужны сертификаты, как их сгенерировать можно прочитать здесь [Генерация SSL сертификатов](https://docs.pasarguard.org/ru/node/configuration/#настройка-ssl-сертификата)
+Пару команд для генерации сертификатов:
+```bash
+apt install -y certbot
+certbot certonly --standalone -d example.com
+```
 
 **Способ** 2
 Я использую этот костыль:) 
@@ -221,6 +226,12 @@ chmod +x RealiTLScanner-linux-64
 
 
 ## Проверка ip адреса арендованного vps
+
+- Проверяем наличие IP-адреса в чёрных списках Роскомнадзора [ссылка 1 ](https://blocklist.rkn.gov.ru/) и [ссылка 2](https://2ip.ru/rkn-blacklist/).
+- Далее проверяем IP-адрес в спам-базах [ссылка](https://2ip.ru/spam/). Пару записей нормально, если больше - скорее всего, IP-адрес подозрительный.
+
+
+### Дополнительные ресурсы
 1. https://www.ipqualityscore.com/free-ip-lookup-proxy-vpn-test/lookup/ВАШ_IP
 2. https://scamalytics.com/ip/ВАШ_IP
 3. https://check.spamhaus.org/
@@ -230,3 +241,15 @@ Fraud Score:
 - 26-50  ⚠️  Средняя 
 - 51-75  ❌ Плохая
 - 76-100 🚫 Очень плохая
+
+
+## Дополнительно, что может быть полезным
+- Проверить, какие процессы слушают порт:
+```bash
+    sudo ss -tulpn | grep 443
+```
+
+- Проверить, что сервер слушает TLS на 443:
+```bash
+    xray tls ping example.com
+```
