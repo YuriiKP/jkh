@@ -1,7 +1,3 @@
-lemanapro.ru
-max.ru
-
-
 {
   "dns": {
     "servers": ["https://8.8.8.8/dns-query", "https://1.1.1.1/dns-query"],
@@ -400,4 +396,82 @@ max.ru
       }
     }
   ]
+}
+
+
+
+
+
+
+
+
+
+
+бэкап для сша
+{
+  "tag": "VLESS-XHTTP-2",
+  "port": 443,
+  "protocol": "vless",
+  "settings": {
+    "clients": [],
+    "decryption": "none",
+    "encryption": "none"
+  },
+  "sniffing": {
+    "enabled": true,
+    "destOverride": [
+      "http",
+      "tls",
+      "quic"
+    ],
+    "metadataOnly": false
+  },
+  "streamSettings": {
+    "network": "xhttp",
+    "sockopt": {
+      "tcpCongestion": "bbr",
+      "tcpKeepAliveIdle": 300
+    },
+    "security": "tls",
+    "finalmask": {
+      "tcp": [
+        {
+          "type": "fragment",
+          "settings": {
+            "delays": [
+              "20-40"
+            ],
+            "lengths": [
+              "50-100"
+            ],
+            "packets": "tlshello",
+            "maxSplit": "5-10"
+          }
+        }
+      ]
+    },
+    "tlsSettings": {
+      "alpn": [
+        "h2"
+      ],
+      "serverName": "us.belbita.online",
+      "fingerprint": "chrome",
+      "certificates": [
+        {
+          "keyFile": "/etc/letsencrypt/live/us.belbita.online/privkey.pem",
+          "serveOnNode": true,
+          "certificateFile": "/etc/letsencrypt/live/us.belbita.online/fullchain.pem"
+        }
+      ]
+    },
+    "xhttpSettings": {
+      "host": "us.belbita.online",
+      "mode": "stream-up",
+      "path": "/xhttp",
+      "extra": {
+        "noSSEHeader": false,
+        "xPaddingBytes": "100-1000"
+      }
+    }
+  }
 }

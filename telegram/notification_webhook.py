@@ -9,8 +9,6 @@ from aiogram import Bot
 from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 from aiohttp import web
 from keyboards import *
-from models.notification import Notification, ReachedDaysLeft
-from pydantic import ValidationError
 from storage import DB_M
 
 logger = logging.getLogger(__name__)
@@ -60,30 +58,32 @@ def register_pasarguard_notification_route(
         except Exception:
             return web.json_response({"ok": False, "error": "invalid_json"}, status=400)
 
-        # Все уведомления приходят в общей схеме Notification.*.
-        # Нас интересует только reached_days_left, остальные игнорируем.
         action = payload.get("action")
-        if action != Notification.Type.reached_days_left:
+        if action != "reached_days_left":
             return web.json_response(
                 {"ok": True, "ignored": True, "reason": "unsupported_action"}
             )
 
+        # Извлекаем данные напрямую из payload, без Pydantic-валидации
         try:
-            notification = ReachedDaysLeft.model_validate(payload)
-        except ValidationError as e:
+            username = str(payload.get("username", ""))
+            days_left = int(payload.get("days_left", 0))
+        except (ValueError, TypeError):
             return web.json_response(
-                {"ok": False, "error": "invalid_payload", "details": e.errors()},
-                status=400,
+                {"ok": False, "error": "invalid_payload"}, status=400
             )
 
-        days_left = int(notification.days_left)
+        if not username:
+            return web.json_response(
+                {"ok": False, "error": "username_required"}, status=400
+            )
 
         # В панели username = telegram user_id (см. create_user(username=str(user_id))).
         try:
-            user_id = int(notification.username)
-        except Exception:
+            user_id = int(username)
+        except ValueError:
             return web.json_response(
-                {"ok": False, "error": "user_id_required"}, status=400
+                {"ok": False, "error": "invalid_user_id"}, status=400
             )
 
         event_id = _stable_event_id(payload)
