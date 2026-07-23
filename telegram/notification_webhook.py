@@ -9,6 +9,7 @@ from aiogram import Bot
 from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 from aiohttp import web
 from keyboards import *
+from locales import Locales, setup_context
 from storage import DB_M
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,7 @@ def register_pasarguard_notification_route(
     *,
     db_manage: DB_M,
     bot: Bot,
+    locale: Locales,
     notify_path: str,
     notify_secret: Optional[str] = None,
 ) -> None:
@@ -95,6 +97,13 @@ def register_pasarguard_notification_route(
         )
         if not is_new:
             return web.json_response({"ok": True, "duplicate": True})
+
+        # Определяем язык пользователя и устанавливаем контекст локализации
+        user_info = await db_manage.get_user_by_id(user_id)
+        lang = str(user_info[6]) if user_info else "en"
+        if lang not in ("ru", "en", "fa"):
+            lang = "en"
+        setup_context(locale, lang)
 
         try:
             await bot.send_message(

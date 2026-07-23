@@ -147,7 +147,7 @@ my_keys_error_get_data: |-
 notification_days_left_text: |-
   ⏰ <b>یادآوری</b>
 
-  اشتراک شما تا <b>{days_left}</b> {day_word} دیگر منقضی می‌شود.
+  اشتراک شما تا <b>{days_left}</b> روز دیگر منقضی می‌شود.
   برای تمدید — در ربات به بخش پرداخت/تمدید بروید.
 
 user_buy_text: |-

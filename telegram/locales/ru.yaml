@@ -147,7 +147,7 @@ my_keys_error_get_data: |-
 notification_days_left_text: |-
   ⏰ <b>Напоминание</b>
 
-  Ваша подписка истекает через <b>{days_left}</b> {day_word}.
+  Ваша подписка истекает через <b>{days_left}</b> дн.
   Чтобы продлить — перейдите в боте в оплату/продление.
 
 user_buy_text: |-

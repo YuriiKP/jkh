@@ -147,7 +147,7 @@ my_keys_error_get_data: |-
 notification_days_left_text: |-
   ⏰ <b>Reminder</b>
 
-  Your subscription expires in <b>{days_left}</b> {day_word}.
+  Your subscription expires in <b>{days_left}</b> days.
   To renew — go to payment/renewal in the bot.
 
 user_buy_text: |-

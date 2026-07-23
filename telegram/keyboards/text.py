@@ -65,7 +65,4 @@ def my_keys_stat_info(user_marz: UserResponse):
 
 
 def notification_days_left_text(days_left) -> str:
-    # Определяем правильное склонение слова "день"
-    day_word = "день" if days_left == 1 else "дня"
-
-    return _("notification_days_left_text", days_left=days_left, day_word=day_word)
+    return _("notification_days_left_text", days_left=days_left)
