@@ -1,5 +1,9 @@
-root@legalchocolate:/home# vi xray_last_download.sh
 #!/bin/bash
+
+apt install unzip
+
+INSTALL_DIR="/home/xray_core"
+
 
 # 1. Определяем архитектуру процессора
 ARCH=$(uname -m)
@@ -27,13 +31,15 @@ DOWNLOAD_URL="https://github.com/XTLS/Xray-core/releases/download/${LATEST_VERSI
 echo "Скачиваем: $DOWNLOAD_URL"
 wget -q --show-progress "$DOWNLOAD_URL" -O xray.zip
 
-# 4. Распаковываем архив
+# 4. Создаём целевой каталог и распаковываем архив
+echo "Создаём каталог $INSTALL_DIR..."
+mkdir -p "$INSTALL_DIR"
 echo "Распаковываем архив..."
-unzip -o xray.zip
+unzip -o xray.zip -d "$INSTALL_DIR"
 
 # 5. Делаем файл исполняемым и очищаем мусор
-chmod +x xray
-rm xray.zip geoip.dat geosite.dat
+chmod +x "$INSTALL_DIR/xray"
+rm -f xray.zip
 
-echo "Готово! Файл xray успешно скачан и распакован."
-./xray version
+echo "Готово! Файл xray успешно установлен в $INSTALL_DIR."
+"$INSTALL_DIR/xray" version

@@ -76,10 +76,12 @@ services:
       - SSL_CERT_FILE=/var/lib/pg-node/certs/fullchain.pem
       - SSL_KEY_FILE=/var/lib/pg-node/certs/privkey.pem
       - API_KEY
-      # - XRAY_EXECUTABLE_PATH=/home/xray_core/xray
+      - XRAY_EXECUTABLE_PATH=/home/xray_core/xray
+      - XRAY_ASSETS_PATH=/home/xray_core
     volumes:
       - /var/lib/pg-node:/var/lib/pg-node
-      # - /home/xray_core/xray:/home/xray_core/xray
+      - /home/xray_core/xray:/home/xray_core/xray
+      - /home/xray_core:/home/xray_core
 
   telegram:
     container_name: telegram

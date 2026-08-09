@@ -3,10 +3,10 @@ from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from models.utils.models import DataLimitResetStrategy, UserStatus, UserStatusCreate
 from models.admin import AdminBase, AdminContactInfo
 from models.proxy import ProxyTable, ShadowsocksMethods, XTLSFlows
 from models.utils.helpers import fix_datetime_timezone
+from models.utils.models import DataLimitResetStrategy, UserStatus, UserStatusCreate
 
 from .validators import ListValidator, NumericValidatorMixin, UserValidator
 
@@ -28,7 +28,9 @@ class NextPlanModel(BaseModel):
 class User(BaseModel):
     proxy_settings: ProxyTable = Field(default_factory=ProxyTable)
     expire: dt | int | None = Field(default=None)
-    data_limit: int | None = Field(ge=0, default=None, description="data_limit can be 0 or greater")
+    data_limit: int | None = Field(
+        ge=0, default=None, description="data_limit can be 0 or greater"
+    )
     data_limit_reset_strategy: DataLimitResetStrategy | None = Field(default=None)
     note: str | None = Field(max_length=500, default=None)
     on_hold_expire_duration: int | None = Field(default=None)
@@ -104,7 +106,9 @@ class UserNotificationResponse(User):
     group_names: list[str] | None = Field(default_factory=list)
     model_config = ConfigDict(from_attributes=True)
 
-    @field_validator("used_traffic", "lifetime_used_traffic", "data_limit", mode="before")
+    @field_validator(
+        "used_traffic", "lifetime_used_traffic", "data_limit", mode="before"
+    )
     @classmethod
     def cast_to_int(cls, v):
         return NumericValidatorMixin.cast_to_int(v)
@@ -199,7 +203,9 @@ class UsernameGenerationStrategy(str, Enum):
 
 class BulkCreationBase(BaseModel):
     count: int = Field(gt=0, le=500)
-    strategy: UsernameGenerationStrategy = Field(default=UsernameGenerationStrategy.random)
+    strategy: UsernameGenerationStrategy = Field(
+        default=UsernameGenerationStrategy.random
+    )
 
 
 class BulkUsersFromTemplate(BulkCreationBase, CreateUserFromTemplate):
@@ -224,7 +230,9 @@ class BulkUsersFromTemplate(BulkCreationBase, CreateUserFromTemplate):
             if self.username not in (None, ""):
                 raise ValueError("username must be null when strategy is 'random'")
             if self.start_number is not None:
-                raise ValueError("start_number is only valid when strategy is 'sequence'")
+                raise ValueError(
+                    "start_number is only valid when strategy is 'sequence'"
+                )
         if self.strategy == UsernameGenerationStrategy.sequence and not self.username:
             raise ValueError("username is required when strategy is 'sequence'")
         return self

@@ -10,18 +10,20 @@ services:
       SERVICE_PORT: 62050
       SERVICE_PROTOCOL: "grpc"
 
-      SSL_CERT_FILE: "/etc/letsencrypt/live/at.animeme.ru/fullchain.pem"
-      SSL_KEY_FILE: "/etc/letsencrypt/live/at.animeme.ru/privkey.pem"
+      SSL_CERT_FILE: "/etc/letsencrypt/live/ses.belbita.online-0001/fullchain.pem"
+      SSL_KEY_FILE: "/etc/letsencrypt/live/ses.belbita.online-0001/privkey.pem"
       # api key must be a valid uuid (you can use any version you want)
-      API_KEY: "291d03ef-f63a-48d4-b93d-116d88f63d14"
+      API_KEY: "f967f3df-9416-4784-b81a-a93ab6593a83"
 
       GENERATED_CONFIG_PATH: "/var/lib/pg-node/generated"
 
       # Xray Paths (defaults usually work)
-      # XRAY_EXECUTABLE_PATH: "/home/xray_core/xray"
+      XRAY_EXECUTABLE_PATH: "/home/xray_core/xray"
+      XRAY_ASSETS_PATH: "/home/xray_core"
 
     volumes:
       - /var/lib/pg-node:/var/lib/pg-node
-      - /etc/letsencrypt/live/at.animeme.ru/fullchain.pem:/etc/letsencrypt/live/at.animeme.ru/fullchain.pem
-      - /etc/letsencrypt/live/at.animeme.ru/privkey.pem:/etc/letsencrypt/live/at.animeme.ru/privkey.pem
-      # - /home/xray_core/xray:/home/xray_core/xray
+      - /etc/letsencrypt/live/ses.belbita.online-0001/fullchain.pem:/etc/letsencrypt/live/ses.belbita.online-0001/fullchain.pem
+      - /etc/letsencrypt/live/ses.belbita.online-0001/privkey.pem:/etc/letsencrypt/live/ses.belbita.online-0001/privkey.pem
+      - /home/xray_core/xray:/home/xray_core/xray
+      - /home/xray_core:/home/xray_core
