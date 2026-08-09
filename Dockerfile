@@ -13,7 +13,7 @@ ENV PATH="/code/.venv/bin:$PATH"
 COPY templates/ /var/lib/pasarguard/templates/
 
 # Перезаписываем оригинальный share.py нашим патчем
-COPY app\subscription\share.py /code/app/subscription/share.py
+COPY app/subscription/share.py /code/app/subscription/share.py
 
 
 CMD ["bash", "-c", "alembic upgrade head && python main.py"]
