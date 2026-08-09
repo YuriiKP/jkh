@@ -488,9 +488,19 @@ async def process_inbounds_and_tags(
             )
 
     if isinstance(conf, XrayConfiguration):
-        return _render_auto_balancer_config(conf)
+        return _render_xray_with_auto(conf)
 
     return conf.render()
+
+
+def _render_xray_with_auto(conf: XrayConfiguration) -> str:
+    """Prepend an auto server selection config to the per-server xray configs."""
+    per_server_configs = json.loads(conf.render())
+    if not per_server_configs:
+        return conf.render()
+
+    auto_config = json.loads(_render_auto_balancer_config(conf))
+    return json.dumps([auto_config] + per_server_configs, indent=4)
 
 
 def _unique_tag(base_tag: str, used_tags: set[str]) -> str:
