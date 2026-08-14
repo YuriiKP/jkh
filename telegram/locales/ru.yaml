@@ -18,7 +18,6 @@ btn_rules_accept: "✅ Принимаю правила"
 btn_rules_decline: "❌ Не принимаю правила"
 
 # Кнопки меню профиля
-btn_my_key: "🔐 Мой ключ" # callback_data='my_key'
 btn_language: "🌐 Язык" # callback_data='language'
 btn_back_to_main: "🏠 Главное меню" # callback_data='start'
 
@@ -49,7 +48,21 @@ profile_text: |-
   👤 <b>ID:</b> {user_id}
   🌐 <b>Язык:</b> {language}
 
-  Выберите действие:
+  {emoji} <b>Статус:</b> {status}
+  📊 <b>Расход трафика: {lifetime_used_gb:.2f} GB</b>
+  📅 <b>Срок действия:</b> {expire_text}
+
+  🔗 <b>Ссылка для ручной подписки:</b> <code>{full_subscription_url}</code>
+
+profile_text_no_key: |-
+  👤 <b>Профиль пользователя</b>
+
+  👤 <b>ID:</b> {user_id}
+  🌐 <b>Язык:</b> {language}
+
+  ❌ У вас нет ЖКХ ключа
+
+  <i>Жилищный Канал Хостинга</i>
 
 language_selection_text: |-
   🌐 <b>Выбор языка</b>
@@ -133,15 +146,6 @@ my_kyes_no_key: |-
   ❌ У вас нет ЖКХ ключа
 
   <i>Жилищный Канал Хостинга</i>
-
-my_keys_stat_info: |-
-  <b>🧾 КВИТАНЦИЯ ПО ЛИЦЕВОМУ СЧЕТУ</b>
-
-  {emoji} <b>Статус:</b> {status}
-  📊 <b>Расход трафика: {lifetime_used_gb:.2f} GB</b>
-  📅 <b>Срок действия:</b> {expire_text}
-
-  🔗 <b>Ссылка на подписку:</b> {full_subscription_url}
 
 my_keys_qr_code: |-
   Отсканируйте QR-код для подключения к VPN

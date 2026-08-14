@@ -130,7 +130,7 @@ async def check_payment_status_handler(query: CallbackQuery, state: FSMContext):
     if successful_payment:
         # Если есть успешный платеж, показываем информацию о подписке
         builder = InlineKeyboardBuilder()
-        builder.button(text=_("btn_my_keys"), callback_data="my_keys")
+        builder.button(text=_("btn_profile"), callback_data="btn_profile")
         builder.button(text=_("btn_main_menu"), callback_data="start")
         builder.adjust(1)
 

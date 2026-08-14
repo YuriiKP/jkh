@@ -8,8 +8,8 @@ from typing import Optional
 from aiogram import Bot
 from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 from aiohttp import web
-from keyboards import *
 from locales import Locales, setup_context
+from locales import get_text as _
 from storage import DB_M
 
 logger = logging.getLogger(__name__)
@@ -107,7 +107,8 @@ def register_pasarguard_notification_route(
 
         try:
             await bot.send_message(
-                chat_id=user_id, text=notification_days_left_text(days_left)
+                chat_id=user_id,
+                text=_("notification_days_left_text", days_left=days_left),
             )
             logger.info(
                 f"Уведомление отправлено пользователю в Телеграм | user_id: {user_id}"

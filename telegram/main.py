@@ -95,7 +95,11 @@ async def _run_polling():
     Запуск бота в режиме лонг-поллинга.
     Выполняется внутри единственного события asyncio.run.
     """
-    await bot.delete_webhook(drop_pending_updates=True)
+    try:
+        await bot.delete_webhook(drop_pending_updates=True)
+    except Exception as e:
+        print(f"Ошибка удаления вебхука: {e}")
+
     await db_manage.create_tables()
     # Загружаем изображение меню при запуске
     try:

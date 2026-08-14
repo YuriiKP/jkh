@@ -6,8 +6,6 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from loader import PRICE_1M_RUB, PRICE_3M_RUB, PRICE_6M_RUB
 from locales import get_text as _
 
-from keyboards.text import *
-
 
 def user_menu(trial: str):
     builder = InlineKeyboardBuilder()
@@ -90,20 +88,8 @@ def user_btn_main_menu():
     return builder.as_markup()
 
 
-def user_my_keys_stat_menu():
-    """Меню с одной кнопкой выхода в главное меню."""
-    builder = InlineKeyboardBuilder()
-
-    builder.button(text=_("btn_how_to_connect"), callback_data="how_to_connect")
-    builder.button(text=_("btn_get_qr_code"), callback_data="get_qr_code")
-    builder.button(text=_("btn_main_menu"), callback_data="start")
-
-    builder.adjust(1)
-    return builder.as_markup()
-
-
-def user_my_keys_qr_code():
-    """Меню с одной кнопкой выхода в главное меню."""
+def user_qr_code_menu():
+    """Меню после отправки QR-кода."""
     builder = InlineKeyboardBuilder()
 
     builder.button(text=_("btn_how_to_connect"), callback_data="how_to_connect")
@@ -114,14 +100,15 @@ def user_my_keys_qr_code():
 
 
 def profile_menu():
-    """Меню профиля пользователя."""
+    """Меню профиля пользователя (с информацией о ключе)."""
     builder = InlineKeyboardBuilder()
 
-    builder.button(text=_("btn_my_key"), callback_data="my_key")
+    builder.button(text=_("btn_how_to_connect"), callback_data="how_to_connect")
+    builder.button(text=_("btn_get_qr_code"), callback_data="get_qr_code")
     builder.button(text=_("btn_language"), callback_data="language")
     builder.button(text=_("btn_back_to_main"), callback_data="start")
 
-    builder.adjust(2, 1)
+    builder.adjust(1, 1, 2)
     return builder.as_markup()
 
 

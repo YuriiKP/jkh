@@ -18,7 +18,6 @@ btn_rules_accept: "✅ قوانین را می‌پذیرم"
 btn_rules_decline: "❌ قوانین را نمی‌پذیرم"
 
 # Кнопки меню профиля
-btn_my_key: "🔐 کلید من" # callback_data='my_key'
 btn_language: "🌐 زبان" # callback_data='language'
 btn_back_to_main: "🏠 منوی اصلی" # callback_data='start'
 
@@ -49,7 +48,21 @@ profile_text: |-
   👤 <b>شناسه:</b> {user_id}
   🌐 <b>زبان:</b> {language}
 
-  عملیات مورد نظر را انتخاب کنید:
+  {emoji} <b>وضعیت:</b> {status}
+  📊 <b>مصرف ترافیک: {lifetime_used_gb:.2f} گیگابایت</b>
+  📅 <b>اعتبار:</b> {expire_text}
+
+  🔗 <b>لینک اشتراک دستی:</b> <code>{full_subscription_url}</code>
+
+profile_text_no_key: |-
+  👤 <b>پروفایل کاربر</b>
+
+  👤 <b>شناسه:</b> {user_id}
+  🌐 <b>زبان:</b> {language}
+
+  ❌ شما کلید ЖКХ ندارید
+
+  <i>کانال مسکونی هاستینگ</i>
 
 language_selection_text: |-
   🌐 <b>انتخاب زبان</b>
@@ -125,15 +138,6 @@ my_kyes_no_key: |-
   ❌ شما کلید ЖКХ ندارید
 
   <i>کانال مسکونی هاستینگ</i>
-
-my_keys_stat_info: |-
-  <b>🧾 قبض حساب شخصی</b>
-
-  {emoji} <b>وضعیت:</b> {status}
-  📊 <b>مصرف ترافیک: {lifetime_used_gb:.2f} گیگابایت</b>
-  📅 <b>اعتبار:</b> {expire_text}
-
-  🔗 <b>لینک اشتراک:</b> {full_subscription_url}
 
 my_keys_qr_code: |-
   QR-کد را برای اتصال به VPN اسکن کنید

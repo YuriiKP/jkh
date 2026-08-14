@@ -9,9 +9,16 @@ fi
 
 echo "🚀 Начало настройки сервера для Pasargard Node..."
 
+# # 1. Обновление системы и синхронизация времени
+# echo "⏳ Обновление пакетов и синхронизация времени..."
+# apt update && apt upgrade -y
+# timedatectl set-ntp true
+
 # 1. Обновление системы и синхронизация времени
-echo "⏳ Обновление пакетов и синхронизация времени..."
-apt update && apt upgrade -y
+echo " Обновление пакетов и синхронизация времени..."
+export DEBIAN_FRONTEND=noninteractive
+apt update
+apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade -y
 timedatectl set-ntp true
 
 # 2. Смена порта SSH на 1122
@@ -91,6 +98,21 @@ apt install unzip
 INSTALL_DIR="/home/xray_core"
 
 
+# 8 BBR
+cat >/etc/sysctl.d/99-remnawave-xhttp.conf <<'EOF'
+net.core.default_qdisc=fq
+net.ipv4.tcp_congestion_control=bbr
+net.ipv4.ip_forward=1
+fs.file-max=1048576
+EOF
+sysctl --system
+
+
+# 9 swap 2G
+swapoff -a && rm -f /swapfile && sed -i '/\/swapfile/d' /etc/fstab && fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile && echo '/swapfile none swap sw 0 0' >>/etc/fstab
+
+
+#**********************************************
 # 1. Определяем архитектуру процессора
 ARCH=$(uname -m)
 case "$ARCH" in

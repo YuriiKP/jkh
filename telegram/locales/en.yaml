@@ -18,7 +18,6 @@ btn_rules_accept: "✅ Accept rules"
 btn_rules_decline: "❌ Decline rules"
 
 # Profile menu buttons
-btn_my_key: "🔐 My Key" # callback_data='my_key'
 btn_language: "🌐 Language" # callback_data='language'
 btn_back_to_main: "🏠 Main menu" # callback_data='start'
 
@@ -49,7 +48,21 @@ profile_text: |-
   👤 <b>ID:</b> {user_id}
   🌐 <b>Language:</b> {language}
 
-  Choose an action:
+  {emoji} <b>Status:</b> {status}
+  📊 <b>Traffic usage: {lifetime_used_gb:.2f} GB</b>
+  📅 <b>Validity period:</b> {expire_text}
+
+  🔗 <b>Link for manual subscription:</b> <code>{full_subscription_url}</code>
+
+profile_text_no_key: |-
+  👤 <b>User Profile</b>
+
+  👤 <b>ID:</b> {user_id}
+  🌐 <b>Language:</b> {language}
+
+  ❌ You don't have a ЖКХ key
+
+  <i>Housing Channel Hosting</i>
 
 language_selection_text: |-
   🌐 <b>Language Selection</b>
@@ -125,15 +138,6 @@ my_kyes_no_key: |-
   ❌ You don't have a ЖКХ key
 
   <i>Housing Channel Hosting</i>
-
-my_keys_stat_info: |-
-  <b>🧾 INVOICE FOR PERSONAL ACCOUNT</b>
-
-  {emoji} <b>Status:</b> {status}
-  📊 <b>Traffic usage: {lifetime_used_gb:.2f} GB</b>
-  📅 <b>Validity period:</b> {expire_text}
-
-  🔗 <b>Subscription link:</b> {full_subscription_url}
 
 my_keys_qr_code: |-
   Scan the QR code to connect to the VPN
