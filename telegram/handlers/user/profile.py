@@ -84,9 +84,12 @@ async def get_marzban_user(user_id: int) -> UserResponse | None:
     return user_marz
 
 
-async def build_profile_text(user_id: int, language: str) -> str:
+async def build_profile_text(
+    user_id: int, language: str, user_marz: UserResponse | None = None
+) -> str:
     """Формирует текст профиля (с информацией о ключе или без неё)."""
-    user_marz = await get_marzban_user(user_id)
+    if user_marz is None:
+        user_marz = await get_marzban_user(user_id)
 
     if user_marz is None:
         return _("profile_text_no_key", user_id=user_id, language=language)
@@ -120,10 +123,19 @@ async def profile_handler(query: CallbackQuery, state: FSMContext):
         return
 
     current_lang = str(user[6])  # language находится на 6-й позиции (индекс 6)
-    profile_text = await build_profile_text(user_id, _lang_display(current_lang))
+    lang_display = _lang_display(current_lang)
+
+    user_marz = await get_marzban_user(user_id)
+    profile_text = await build_profile_text(user_id, lang_display, user_marz)
+
+    subscription_url = (
+        get_full_subscription_url(user_marz.subscription_url)
+        if user_marz is not None
+        else None
+    )
 
     await edit_menu_with_image(
-        event=query, text=profile_text, reply_markup=profile_menu()
+        event=query, text=profile_text, reply_markup=profile_menu(subscription_url)
     )
 
 
@@ -152,10 +164,17 @@ async def _lang_changed(
     await query.answer(_(notice_key))
 
     # Возвращаемся в меню профиля (с информацией о ключе)
-    profile_text = await build_profile_text(user_id, lang_display)
+    user_marz = await get_marzban_user(user_id)
+    profile_text = await build_profile_text(user_id, lang_display, user_marz)
+
+    subscription_url = (
+        get_full_subscription_url(user_marz.subscription_url)
+        if user_marz is not None
+        else None
+    )
 
     await edit_menu_with_image(
-        event=query, text=profile_text, reply_markup=profile_menu()
+        event=query, text=profile_text, reply_markup=profile_menu(subscription_url)
     )
 
 

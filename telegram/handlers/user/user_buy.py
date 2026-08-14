@@ -157,7 +157,9 @@ async def pay_with_stars_handler(query: CallbackQuery, state: FSMContext):
                     ],
                     [
                         InlineKeyboardButton(
-                            text=_("payment_cancel"), callback_data="buy"
+                            text=_("payment_cancel"),
+                            callback_data="buy",
+                            style="danger",
                         )
                     ],
                 ]

@@ -83,11 +83,15 @@ async def pay_with_yookassa_handler(query: CallbackQuery, state: FSMContext):
 
     # Создаем клавиатуру с кнопкой для оплаты
     builder = InlineKeyboardBuilder()
-    builder.button(text=_("payment_pay_rub", amount=rub_amount), url=payment_link)
+    builder.button(
+        text=_("payment_pay_rub", amount=rub_amount),
+        url=payment_link,
+        style="primary",
+    )
     builder.button(
         text=_("payment_check_status"), callback_data=f"check_payment:{user_id}"
     )
-    builder.button(text=_("payment_cancel"), callback_data="buy")
+    builder.button(text=_("payment_cancel"), callback_data="buy", style="danger")
     builder.adjust(1)
 
     # Отправляем сообщение со ссылкой на оплату
@@ -142,7 +146,11 @@ async def check_payment_status_handler(query: CallbackQuery, state: FSMContext):
     else:
         # Если платежа нет, предлагаем оплатить снова
         builder = InlineKeyboardBuilder()
-        builder.button(text=_("btn_try_again"), callback_data="btn_pay_with_yookassa")
+        builder.button(
+            text=_("btn_try_again"),
+            callback_data="btn_pay_with_yookassa",
+            style="primary",
+        )
         builder.button(text=_("btn_back"), callback_data="buy")
         builder.adjust(1)
 

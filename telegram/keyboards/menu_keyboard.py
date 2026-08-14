@@ -11,10 +11,12 @@ def user_menu(trial: str):
     builder = InlineKeyboardBuilder()
 
     if trial == "true":
-        builder.button(text=_("btn_trial_buy"), callback_data="trial_bay")
-        builder.button(text=_("btn_buy"), callback_data="buy")
+        builder.button(
+            text=_("btn_trial_buy"), callback_data="trial_bay", style="primary"
+        )
+        builder.button(text=_("btn_buy"), callback_data="buy", style="primary")
     else:
-        builder.button(text=_("btn_buy"), callback_data="buy")
+        builder.button(text=_("btn_buy"), callback_data="buy", style="primary")
 
     builder.button(text=_("btn_profile"), callback_data="btn_profile")
     builder.button(text=_("btn_help"), callback_data="help")
@@ -26,8 +28,16 @@ def user_menu(trial: str):
 def rules_menu():
     builder = InlineKeyboardBuilder()
 
-    builder.button(text=_("btn_rules_accept"), callback_data="btn_rules_accept")
-    builder.button(text=_("btn_rules_decline"), callback_data="btn_rules_decline")
+    builder.button(
+        text=_("btn_rules_accept"),
+        callback_data="btn_rules_accept",
+        style="success",
+    )
+    builder.button(
+        text=_("btn_rules_decline"),
+        callback_data="btn_rules_decline",
+        style="danger",
+    )
 
     builder.adjust(1)
 
@@ -48,14 +58,17 @@ def buy_menu():
     builder.button(
         text=_("btn_buy_one_month", rub=PRICE_1M_RUB),
         callback_data="btn_buy_one_month",
+        style="primary",
     )
     builder.button(
         text=_("btn_buy_three_months", rub=PRICE_3M_RUB),
         callback_data="btn_buy_three_months",
+        style="primary",
     )
     builder.button(
         text=_("btn_buy_six_months", rub=PRICE_6M_RUB),
         callback_data="btn_buy_six_months",
+        style="primary",
     )
     builder.button(text=_("btn_main_menu"), callback_data="start")
     builder.adjust(1)
@@ -68,9 +81,15 @@ def user_payment_method_menu():
     builder = InlineKeyboardBuilder()
 
     builder.button(
-        text=_("btn_pay_with_yookassa"), callback_data="btn_pay_with_yookassa"
+        text=_("btn_pay_with_yookassa"),
+        callback_data="btn_pay_with_yookassa",
+        style="primary",
     )
-    builder.button(text=_("btn_pay_with_stars"), callback_data="btn_pay_with_stars")
+    builder.button(
+        text=_("btn_pay_with_stars"),
+        callback_data="btn_pay_with_stars",
+        style="primary",
+    )
     builder.button(text=_("btn_pay_with_support"), callback_data="btn_pay_with_support")
     builder.button(text=_("btn_back"), callback_data="buy")
 
@@ -93,22 +112,28 @@ def user_qr_code_menu():
     builder = InlineKeyboardBuilder()
 
     builder.button(text=_("btn_how_to_connect"), callback_data="how_to_connect")
-    builder.button(text=_("btn_main_menu"), callback_data="start")
+    builder.button(text=_("btn_back"), callback_data="btn_profile")
 
     builder.adjust(1)
     return builder.as_markup()
 
 
-def profile_menu():
+def profile_menu(subscription_url: str | None = None):
     """Меню профиля пользователя (с информацией о ключе)."""
     builder = InlineKeyboardBuilder()
+
+    if subscription_url:
+        builder.button(text=_("btn_connect"), url=subscription_url, style="primary")
 
     builder.button(text=_("btn_how_to_connect"), callback_data="how_to_connect")
     builder.button(text=_("btn_get_qr_code"), callback_data="get_qr_code")
     builder.button(text=_("btn_language"), callback_data="language")
     builder.button(text=_("btn_back_to_main"), callback_data="start")
 
-    builder.adjust(1, 1, 2)
+    if subscription_url:
+        builder.adjust(1, 2, 2)
+    else:
+        builder.adjust(2, 2)
     return builder.as_markup()
 
 

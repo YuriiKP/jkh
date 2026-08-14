@@ -36,7 +36,7 @@ async def how_to_connect_handler(query: CallbackQuery, state: FSMContext):
     await state.clear()
 
     builder = InlineKeyboardBuilder()
-    builder.button(text=_("btn_main_menu"), callback_data="start")
+    builder.button(text=_("btn_back"), callback_data="btn_profile")
     builder.adjust(1)
 
     # Редактируем меню с изображением
