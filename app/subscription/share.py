@@ -30,7 +30,9 @@ from . import (
 
 SERVER_IP = "127.0.0.1"
 SERVER_IPV6 = "[::1]"
-AUTO_BALANCER_TAG = "🇪🇺 AUTO | Авто-сервер"
+AUTO_BALANCER_TAG = "AutoSelect"
+AUTO_REMARKS = "🇪🇺⚡ Автовыбор"
+AUTO_OUTBOUND_PREFIX = "bypass"
 
 
 def _build_subscription_config(
@@ -503,16 +505,6 @@ def _render_xray_with_auto(conf: XrayConfiguration) -> str:
     return json.dumps([auto_config] + per_server_configs, indent=4)
 
 
-def _unique_tag(base_tag: str, used_tags: set[str]) -> str:
-    tag = base_tag
-    counter = 2
-    while tag in used_tags:
-        tag = f"{base_tag} ({counter})"
-        counter += 1
-    used_tags.add(tag)
-    return tag
-
-
 def _render_auto_balancer_config(conf: XrayConfiguration) -> str:
     """Merge per-host xray configs into a single config with an auto server balancer."""
     if not conf.config:
@@ -521,40 +513,59 @@ def _render_auto_balancer_config(conf: XrayConfiguration) -> str:
     merged = copy.deepcopy(conf.config[0])
 
     template_tags = {outbound.get("tag") for outbound in conf.template.get("outbounds", [])}
-    used_tags = set(template_tags)
 
     host_outbounds: list[dict] = []
-    selector: list[str] = []
+    counter = 1
     for entry in conf.config:
-        entry_remark = entry.get("remarks") or "proxy"
         for outbound in entry.get("outbounds", []):
-            tag = outbound.get("tag")
-            if tag in template_tags:
+            if outbound.get("tag") in template_tags:
                 continue
-            if tag == "proxy":
-                outbound["tag"] = _unique_tag(entry_remark, used_tags)
-                selector.append(outbound["tag"])
-            else:
-                outbound["tag"] = _unique_tag(tag, used_tags)
+            outbound["tag"] = AUTO_OUTBOUND_PREFIX if counter == 1 else f"{AUTO_OUTBOUND_PREFIX}-{counter}"
+            counter += 1
             host_outbounds.append(outbound)
 
     merged["outbounds"] = host_outbounds + list(conf.template.get("outbounds", []))
-    merged["remarks"] = AUTO_BALANCER_TAG
+    merged["remarks"] = AUTO_REMARKS
 
-    merged["observatory"] = {
-        "enableConcurrency": True,
-        "probeInterval": "1m",
-        "probeUrl": "http://www.gstatic.com/generate_204",
-        "subjectSelector": selector,
+    # Fallback to the 4th server (as in the reference config), or the last one when fewer hosts.
+    host_count = counter - 1
+    if host_count >= 4:
+        fallback_tag = f"{AUTO_OUTBOUND_PREFIX}-4"
+    elif host_count > 1:
+        fallback_tag = f"{AUTO_OUTBOUND_PREFIX}-{host_count}"
+    elif host_count == 1:
+        fallback_tag = AUTO_OUTBOUND_PREFIX
+    else:
+        fallback_tag = ""
+
+    # Switch the auto-select from observatory/leastPing to burstObservatory/leastLoad.
+    merged.pop("observatory", None)
+    merged["burstObservatory"] = {
+        "pingConfig": {
+            "connectivity": "",
+            "destination": "http://www.gstatic.com/generate_204",
+            "interval": "10s",
+            "sampling": 6,
+            "timeout": "3s",
+        },
+        "subjectSelector": [AUTO_OUTBOUND_PREFIX],
     }
 
     routing = merged.setdefault("routing", {})
     routing.setdefault("balancers", []).append(
         {
             "tag": AUTO_BALANCER_TAG,
-            "selector": selector,
-            "strategy": {"type": "leastPing"},
-            "fallbackTag": selector[0] if selector else "",
+            "selector": [AUTO_OUTBOUND_PREFIX],
+            "strategy": {
+                "type": "leastLoad",
+                "settings": {
+                    "baselines": ["250ms", "700ms", "1500ms"],
+                    "expected": 3,
+                    "maxRTT": "3000ms",
+                    "tolerance": 0.2,
+                },
+            },
+            "fallbackTag": fallback_tag,
         }
     )
     routing.setdefault("rules", []).append(
