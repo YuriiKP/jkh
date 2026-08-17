@@ -1,0 +1,190 @@
+{
+  "log": {
+    "access": "",
+    "error": "",
+    "loglevel": "warning"
+  },
+  "policy": {
+    "system": {
+      "statsOutboundDownlink": true,
+      "statsOutboundUplink": true
+    },
+    "levels": {
+      "8": {
+        "connIdle": 300,
+        "downlinkOnly": 1,
+        "handshake": 4,
+        "uplinkOnly": 1
+      }
+    }
+  },
+  "inbounds": [
+    {
+      "tag": "socks",
+      "port": 10808,
+      "listen": "0.0.0.0",
+      "protocol": "socks",
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls"],
+        "routeOnly": false
+      },
+      "settings": {
+        "auth": "noauth",
+        "udp": true,
+        "allowTransparent": false
+      }
+    },
+    {
+      "tag": "http",
+      "port": 10809,
+      "listen": "0.0.0.0",
+      "protocol": "http",
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls"],
+        "routeOnly": false
+      },
+      "settings": {
+        "auth": "noauth",
+        "udp": true,
+        "allowTransparent": false
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "freedom",
+      "tag": "direct"
+    },
+    {
+      "protocol": "blackhole",
+      "tag": "block"
+    }
+  ],
+  "dns": {
+    "queryStrategy": "UseIP",
+    "servers": [
+      "localhost",
+      { "address": "https://dns.google/dns-query" },
+      {
+        "address": "https://77.88.8.8/dns-query",
+        "domains": [
+          "geosite:category-ru",
+          "geosite:yandex",
+          "geosite:vk",
+          "geosite:category-gov-ru"
+        ]
+      },
+      "8.8.8.8",
+      "8.8.4.4"
+    ]
+  },
+  "routing": {
+    "domainMatcher": "hybrid",
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "outboundTag": "block",
+        "protocol": ["bittorrent"]
+      },
+      {
+        "outboundTag": "block",
+        "domain": [
+          "domain:2ip.ru",
+          "domain:ipinfo.io",
+          "domain:whatismyipaddress.com"
+        ]
+      },
+      {
+        "outboundTag": "direct",
+        "ip": ["geoip:private"]
+      },
+      {
+        "outboundTag": "direct",
+        "domain": [
+          "geosite:private",
+          "domain:mtalk.google.com",
+          "domain:push.apple.com",
+          "domain:identity.apple.com",
+          "domain:appattest.apple.com",
+          "domain:deviceenrollment.apple.com",
+          "domain:deviceservices-external.apple.com",
+          "keyword:-courier.push.apple.com",
+          "domain:api.push.apple.com",
+          "domain:push-apple.com.akadns.net",
+          "domain:*.push.apple.com",
+          "domain:*.appattest.apple.com",
+          "domain:appsflyersdk.com",
+          "domain:tracker-api.my.com"
+        ]
+      },
+      {
+        "outboundTag": "direct",
+        "ip": ["17.0.0.0/8", "193.200.10.0/23", "91.223.63.0/24"]
+      },
+      {
+        "outboundTag": "proxy",
+        "ip": ["188.225.87.42"]
+      },
+      {
+        "outboundTag": "direct",
+        "domain": [
+          "geosite:category-ru",
+          "geosite:category-gov-ru",
+          "geosite:category-bank-ru",
+          "geosite:category-ecommerce-ru",
+          "geosite:category-retail-ru",
+          "geosite:category-media-ru",
+          "geosite:category-travel-ru",
+          "geosite:category-forums-ru",
+          "geosite:yandex",
+          "geosite:vk",
+          "geosite:mailru",
+          "geosite:2gis",
+          "geosite:kinopoisk",
+          "geosite:dzen",
+          "geosite:avito",
+          "geosite:mts-ru",
+          "geosite:megafon",
+          "geosite:kaspersky",
+          "geosite:gismeteo",
+          "geosite:kontur",
+          "geosite:magnit",
+          "geosite:mvideo",
+          "geosite:habr",
+          "regexp:^(.+\\.)?yandex\\.(aero|az|by|cloud|co\\.il|com(\\.am|\\.ge|\\.ru|\\.tr|\\.ua)?|de|ee|eu|fi|fr|jobs|kg|kz|lt|lv|md|net|org|pl|ru|st|sx|tj|tm|tr|ua|uz)$",
+          "regexp:^(.+\\.)?vk\\.(com|ru)$",
+          "regexp:^(.+\\.)?mail\\.ru$",
+          "regexp:^(.+\\.)?ok\\.ru$",
+          "regexp:^(.+\\.)?2gis\\.(ae|am|az|by|com(\\.cy)?|cz|ge|kg|kz|ru|tj|ua|uz)$",
+          "regexp:^(.+\\.)?vtb\\.ru$",
+          "regexp:^(.+\\.)?rzd\\.ru$",
+          "regexp:^(.+\\.)?gosuslugi\\.ru$",
+          "regexp:^(.+\\.)?ozon\\.ru$",
+          "regexp:^(.+\\.)?wb\\.ru$",
+          "regexp:^(.+\\.)?wildberries\\.ru$",
+          "regexp:^(.+\\.)?kinopoisk\\.ru$",
+          "regexp:^(.+\\.)?alfa.*\\.ru$",
+          "regexp:^(.+\\.)?t(2|ele2)\\.ru$",
+          "regexp:^(.+\\.)?lemanapro\\.ru$",
+          "regexp:^(.+\\.)?rutube\\.ru$",
+          "regexp:^(.+\\.)?mts.*\\.ru$",
+          "regexp:^(.+\\.)?dzen.*\\.ru$",
+          "regexp:^(.+\\.)?x5.*\\.ru$",
+          "regexp:^(.+\\.)?beeline\\.ru$",
+          "regexp:^(.+\\.)?megafon\\.ru$",
+          "domain:xn--90acagbhgpca7c8c7f.xn--p1ai",
+          "domain:xn--80ajghoc2aj1c8b.xn--p1ai",
+          "domain:xn--90aivcdt6dxbc.xn--p1ai",
+          "domain:xn--b1aew.xn--p1ai",
+          "domain:sdk-api.apptracer.ru"
+        ]
+      },
+      {
+        "outboundTag": "direct",
+        "ip": ["geoip:ru"]
+      }
+    ]
+  }
+}
