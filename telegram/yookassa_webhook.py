@@ -1,23 +1,16 @@
 import asyncio
 import json
 import logging
-from datetime import datetime, timedelta
 from typing import Optional
 
 from aiogram import Bot
 from aiohttp import web
-from loader import db_manage, marzban_client, yookassa_client
-from models.proxy import ProxyTable, VlessSettings, XTLSFlows
-from models.user import (
-    UserCreate,
-    UserModify,
-    UserResponse,
-    UserStatusCreate,
-    UserStatusModify,
-)
+from loader import db_manage, subscription_service, yookassa_client
 from models.yookassa import YooKassaPayment, YooKassaWebhook
 from pydantic import ValidationError
+from tariffs import get_tariff
 from utils.marzban_api import MarzbanAPIError
+from utils.subscription import SubscriptionError
 
 logger = logging.getLogger(__name__)
 
@@ -133,14 +126,6 @@ async def _verify_payment_via_api(payment_id: str) -> bool:
         return False
 
 
-# Словарь соответствия тарифов: tariff_key -> количество дней
-TARIFF_DAYS = {
-    "one_month": 30,
-    "three_months": 90,
-    "six_months": 180,
-}
-
-
 async def _process_successful_payment(payment: YooKassaPayment, bot: Bot) -> bool:
     """
     Обрабатывает успешный платеж.
@@ -199,59 +184,35 @@ async def _process_successful_payment(payment: YooKassaPayment, bot: Bot) -> boo
             logger.error(f"Invalid amount value: {amount}")
             return False
 
-        # Определяем количество дней из метаданных (по умолчанию 30)
-        tariff_key = "one_month"
-        if isinstance(metadata_dict, dict):
-            tariff_key = metadata_dict.get("tariff", "one_month")
-        days = TARIFF_DAYS.get(tariff_key, 30)
-        logger.info(f"Tariff: {tariff_key}, days: {days}")
+        # Определяем тариф из метаданных (неизвестный тариф -> тариф по умолчанию)
+        tariff_key = (
+            metadata_dict.get("tariff") if isinstance(metadata_dict, dict) else None
+        )
+        tariff = get_tariff(tariff_key)
+        days = tariff.days
+        logger.info(f"Tariff: {tariff.key}, days: {days}")
 
         # Если есть не активированный пробный период, отменяем его
         user_tg = await db_manage.get_user_by_id(user_id)
         if user_tg and user_tg[7] == "true":  # trial field
             await db_manage.update_user(user_id, trial="false")
 
-        # Если пользователя в marzban нет — создаем, иначе — продлеваем
+        # Выдаём или продлеваем доступ. Сервис гарантирует, что пользователь
+        # окажется в нужной группе Pasarguard (по умолчанию "main") и получит
+        # активную подписку, иначе у оплатившего не будет доступа к сервису.
         try:
-            user_marz: UserResponse = await marzban_client.get_user(str(user_id))
-
-            # Определяем текущую дату истечения
-            if user_marz.expire:
-                if isinstance(user_marz.expire, int):
-                    current_expire = datetime.fromtimestamp(user_marz.expire)
-                else:
-                    current_expire = user_marz.expire
-                    if current_expire.tzinfo is not None:
-                        current_expire = current_expire.replace(tzinfo=None)
-            else:
-                current_expire = datetime.now()
-
-            # Добавляем дни согласно тарифу
-            new_expire = current_expire + timedelta(days=days)
-
-            modify_user = UserModify(
-                expire=new_expire,
-                proxy_settings=ProxyTable(vless=VlessSettings(flow=XTLSFlows.VISION)),
-                status=UserStatusModify.active,
+            await subscription_service.grant(
+                user_id=user_id,
+                days=days,
+                tariff=tariff.key,
+                note=f"User {user_id}",
             )
-            await marzban_client.modify_user(str(user_id), modify_user)
-
+        except SubscriptionError as e:
+            logger.error(f"Не удалось выдать подписку пользователю {user_id}: {e}")
+            return False
         except MarzbanAPIError as e:
-            if e.status == 404:
-                new_user = UserCreate(
-                    username=str(user_id),
-                    note=f"User {user_id}",
-                    status=UserStatusCreate.active,
-                    expire=datetime.now() + timedelta(days=days),
-                    group_ids=[1],
-                    proxy_settings=ProxyTable(
-                        vless=VlessSettings(flow=XTLSFlows.VISION)
-                    ),
-                )
-                await marzban_client.create_user(new_user)
-            else:
-                logger.error(f"Marzban API error: {e.message}")
-                return False
+            logger.error(f"Marzban API error: {e.message}")
+            return False
 
         # Сохраняем информацию о платеже в базе данных
         amount_in_kopecks = int(amount_value * 100)

@@ -1,16 +1,22 @@
-from datetime import datetime, timedelta
+import logging
 
 from aiogram import F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from keyboards import user_menu
-from loader import db_manage, dp, get_full_subscription_url, marzban_client
+from loader import (
+    db_manage,
+    dp,
+    get_full_subscription_url,
+    subscription_service,
+)
 from locales import get_text as _
-from models.proxy import ProxyTable, VlessSettings, XTLSFlows
-from models.user import UserCreate, UserResponse, UserStatusCreate
 from utils.marzban_api import MarzbanAPIError
+from utils.subscription import SubscriptionError
 
 from ..common import edit_menu_with_image
+
+logger = logging.getLogger(__name__)
 
 
 # Обработчик кнопки "Пробный период"
@@ -31,40 +37,23 @@ async def trial_buy_handler(query: CallbackQuery, state: FSMContext):
             )
         return
 
-    # Если пользователя в marzban нет создаем его
+    # Выдаём пробный доступ (1 день). Сервис гарантирует, что пользователь
+    # попадёт в нужную группу Pasarguard (по умолчанию "main").
     try:
-        user_marz: UserResponse = await marzban_client.get_user(str(user_id))
-    except MarzbanAPIError as e:
-        if e.status == 404:
-            # Ошибка в панели, on_hold корректно вообще не работает
-            # new_user = UserCreate(
-            #     username=str(user_id),
-            #     note=f'{query.from_user.first_name} @{query.from_user.username}',
-            #     status=UserStatusCreate.on_hold,
-            #     on_hold_expire_duration=86400 * 3,  # 3 дня в секундах
-            #     group_ids=[1],
-            #     proxy_settings=ProxyTable(vless=VlessSettings(flow=XTLSFlows.VISION))
-            # )
-
-            new_user = UserCreate(
-                username=str(user_id),
-                note=f"{query.from_user.first_name} @{query.from_user.username}",
-                status=UserStatusCreate.active,
-                expire=datetime.now() + timedelta(1.0),
-                group_ids=[1],
-                proxy_settings=ProxyTable(vless=VlessSettings(flow=XTLSFlows.VISION)),
-            )
-            user_marz: UserResponse = await marzban_client.create_user(new_user)
-
-        else:
-            print(e.message)
+        user_marz = await subscription_service.grant(
+            user_id=user_id,
+            days=1,
+            note=f"{query.from_user.first_name} @{query.from_user.username}",
+        )
+    except (SubscriptionError, MarzbanAPIError) as e:
+        logger.error(f"Не удалось выдать пробный доступ пользователю {user_id}: {e}")
+        return
 
     # Пользователь уже получил trial
     await db_manage.update_user(user_id, trial="false")
 
     full_url = get_full_subscription_url(user_marz.subscription_url)
-    if user_marz:
-        text = _("trial_days_text", full_url=full_url)
-        await edit_menu_with_image(
-            event=query, text=text, reply_markup=user_menu(trial="false")
-        )
+    text = _("trial_days_text", full_url=full_url)
+    await edit_menu_with_image(
+        event=query, text=text, reply_markup=user_menu(trial="false")
+    )

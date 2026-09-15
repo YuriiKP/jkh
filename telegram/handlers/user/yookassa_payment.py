@@ -2,45 +2,16 @@ from aiogram import F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from keyboards import *
 from loader import (
-    PRICE_1M_RUB,
-    PRICE_1M_STARS,
-    PRICE_3M_RUB,
-    PRICE_3M_STARS,
-    PRICE_6M_RUB,
-    PRICE_6M_STARS,
     YOO_KASSA_RETURN_URL,
     db_manage,
     dp,
     yookassa_client,
 )
 from locales import get_text as _
-from utils.states import StateTariffSelection
+from tariffs import get_tariff
 
 from ..common import edit_menu_with_image
-
-# Словарь тарифов (дублируем для использования в этом файле)
-TARIFFS = {
-    "one_month": {
-        "label": "1 месяц",
-        "days": 30,
-        "rub": PRICE_1M_RUB,
-        "stars": PRICE_1M_STARS,
-    },
-    "three_months": {
-        "label": "3 месяца",
-        "days": 90,
-        "rub": PRICE_3M_RUB,
-        "stars": PRICE_3M_STARS,
-    },
-    "six_months": {
-        "label": "6 месяцев",
-        "days": 180,
-        "rub": PRICE_6M_RUB,
-        "stars": PRICE_6M_STARS,
-    },
-}
 
 
 @dp.callback_query(F.data == "btn_pay_with_yookassa")
@@ -50,8 +21,7 @@ async def pay_with_yookassa_handler(query: CallbackQuery, state: FSMContext):
     """
     # Получаем выбранный тариф из состояния ДО очистки
     state_data = await state.get_data()
-    tariff_key = state_data.get("tariff", "one_month")
-    tariff_info = TARIFFS.get(tariff_key, TARIFFS["one_month"])
+    tariff = get_tariff(state_data.get("tariff"))
     await state.clear()
 
     if not yookassa_client:
@@ -59,21 +29,19 @@ async def pay_with_yookassa_handler(query: CallbackQuery, state: FSMContext):
         return
 
     user_id = query.from_user.id
-    rub_amount = float(tariff_info["rub"])
-    label = tariff_info["label"]
-    days = tariff_info["days"]
+    rub_amount = float(tariff.rub)
 
     # Создаем ссылку на оплату
     payment_link = await yookassa_client.create_payment_link(
         amount=rub_amount,
         currency="RUB",
-        description=f"Оплата сервиса ({label})",
+        description=f"Оплата сервиса ({tariff.title})",
         user_id=user_id,
         return_url=YOO_KASSA_RETURN_URL,
         metadata={
             "product": "service_access",
-            "period": f"{days}_days",
-            "tariff": tariff_key,
+            "period": f"{tariff.days}_days",
+            "tariff": tariff.key,
         },
     )
 
@@ -113,10 +81,9 @@ async def check_payment_status_handler(query: CallbackQuery, state: FSMContext):
         await query.answer(_("payment_service_unavailable"), show_alert=True)
         return
 
-    # Извлекаем user_id из callback_data
+    # Извлекаем user_id из callback_data (не переопределяем функцию перевода `_`)
     try:
-        _, user_id_str = query.data.split(":")
-        user_id = int(user_id_str)
+        user_id = int(query.data.split(":", 1)[1])
     except (ValueError, IndexError):
         await query.answer(_("invalid_request"), show_alert=True)
         return

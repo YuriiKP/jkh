@@ -280,6 +280,12 @@ payment_not_found: |-
   If you have already paid, wait a couple of minutes.
 invalid_request: "Invalid request"
 btn_try_again: "🔄 Try again"
+payment_success_stars: |-
+  ✅ <b>Payment with Stars was successful!</b>
+
+  Subscription activated for {days} days.
+  Connection details are in the "Profile" section.
+payment_error: "⚠️ Failed to process the payment. Please contact support @foteleg_b."
 
 # Technical maintenance
 bot_under_maintenance: |-

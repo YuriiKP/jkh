@@ -1,13 +1,21 @@
 import asyncio
+import ssl
 from typing import Any, Dict, List, Optional
 
 import aiohttp
 from aiohttp import ClientResponse
-import ssl
 
 # Важно: здесь используются абсолютные импорты относительно пакета `telegram`,
 # чтобы модуль корректно работал при запуске скрипта `telegram/main.py`.
-from models.admin import AdminDetails, AdminCreate, AdminModify, Token
+from models.admin import AdminCreate, AdminDetails, AdminModify, Token
+from models.group import GroupCreate, GroupResponse, GroupsResponse
+from models.node import (
+    NodeCreate,
+    NodeModify,
+    NodeResponse,
+    NodesResponse,
+)
+from models.system import SystemStats
 from models.user import (
     UserCreate,
     UserModify,
@@ -19,13 +27,6 @@ from models.user_template import (
     UserTemplateModify,
     UserTemplateResponse,
 )
-from models.node import (
-    NodeCreate,
-    NodeModify,
-    NodeResponse,
-    NodesResponse,
-)
-from models.system import SystemStats
 
 
 class MarzbanAPIError(Exception):
@@ -85,7 +86,7 @@ class MarzbanAPIClient:
         """Ленивая инициализация aiohttp‑сессии."""
         if self._session is None:
             self._session = aiohttp.ClientSession(timeout=self._timeout)
-            
+
             # Временно отключаем проверку SSL для обхода проблем с сертификатами
             # connector = aiohttp.TCPConnector(verify_ssl=False)
             # self._session = aiohttp.ClientSession(timeout=self._timeout, connector=connector)
@@ -187,22 +188,22 @@ class MarzbanAPIClient:
     # ------------------------------------------------------------------
 
     async def _authenticate(self) -> None:
-            """Выполнить аутентификацию администратора и сохранить токен."""
-            form_data: Dict[str, str] = {
-                "grant_type": "password",
-                "username": self._admin_username,
-                "password": self._admin_password,
-            }
-            
-            session = await self._get_session()
-            async with session.post(
-                f"{self._base_url}/api/admin/token",
-                data=form_data,
-            ) as resp_token:
-                await self._raise_for_status(resp_token)
-                data_token = await resp_token.json()
-                token = Token.model_validate(data_token)
-                self._access_token = token.access_token
+        """Выполнить аутентификацию администратора и сохранить токен."""
+        form_data: Dict[str, str] = {
+            "grant_type": "password",
+            "username": self._admin_username,
+            "password": self._admin_password,
+        }
+
+        session = await self._get_session()
+        async with session.post(
+            f"{self._base_url}/api/admin/token",
+            data=form_data,
+        ) as resp_token:
+            await self._raise_for_status(resp_token)
+            data_token = await resp_token.json()
+            token = Token.model_validate(data_token)
+            self._access_token = token.access_token
 
     # ------------------------------------------------------------------
     # Admin API
@@ -317,6 +318,37 @@ class MarzbanAPIClient:
 
         data = await self._request("GET", "/api/users", params=params)
         return UsersResponse.model_validate(data)
+
+    # ------------------------------------------------------------------
+    # Groups API
+    # ------------------------------------------------------------------
+
+    async def list_groups(
+        self,
+        *,
+        offset: int | None = None,
+        limit: int | None = None,
+    ) -> GroupsResponse:
+        """GET /api/groups — список групп."""
+        params: Dict[str, Any] = {}
+        if offset is not None:
+            params["offset"] = offset
+        if limit is not None:
+            params["limit"] = limit
+
+        data = await self._request("GET", "/api/groups", params=params)
+        return GroupsResponse.model_validate(data)
+
+    async def get_group(self, group_id: int) -> GroupResponse:
+        """GET /api/group/{group_id} — получить группу по id."""
+        data = await self._request("GET", f"/api/group/{group_id}")
+        return GroupResponse.model_validate(data)
+
+    async def create_group(self, group: GroupCreate) -> GroupResponse:
+        """POST /api/group — создать группу."""
+        payload = group.model_dump(exclude_none=True, mode="json")
+        data = await self._request("POST", "/api/group", json=payload)
+        return GroupResponse.model_validate(data)
 
     # ------------------------------------------------------------------
     # User Templates API

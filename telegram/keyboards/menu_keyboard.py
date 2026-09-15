@@ -3,8 +3,8 @@ from aiogram.types import (
     ReplyKeyboardMarkup,
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from loader import PRICE_1M_RUB, PRICE_3M_RUB, PRICE_6M_RUB
 from locales import get_text as _
+from tariffs import TARIFFS
 
 
 def user_menu(trial: str):
@@ -55,21 +55,14 @@ def help_menu():
 
 def buy_menu():
     builder = InlineKeyboardBuilder()
-    builder.button(
-        text=_("btn_buy_one_month", rub=PRICE_1M_RUB),
-        callback_data="btn_buy_one_month",
-        style="primary",
-    )
-    builder.button(
-        text=_("btn_buy_three_months", rub=PRICE_3M_RUB),
-        callback_data="btn_buy_three_months",
-        style="primary",
-    )
-    builder.button(
-        text=_("btn_buy_six_months", rub=PRICE_6M_RUB),
-        callback_data="btn_buy_six_months",
-        style="primary",
-    )
+
+    for tariff in TARIFFS:
+        builder.button(
+            text=_(tariff.label_key, rub=tariff.rub),
+            callback_data=tariff.callback,
+            style="primary",
+        )
+
     builder.button(text=_("btn_main_menu"), callback_data="start")
     builder.adjust(1)
 

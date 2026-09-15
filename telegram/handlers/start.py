@@ -1,5 +1,3 @@
-from datetime import datetime, timedelta
-
 from aiogram import F
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import CommandObject, CommandStart
@@ -17,11 +15,11 @@ from loader import (
     deep_links_admin_manage,
     dp,
     marzban_client,
+    subscription_service,
 )
 from locales import get_text as _
-from models.proxy import ProxyTable, VlessSettings, XTLSFlows
-from models.user import UserCreate, UserModify, UserStatusCreate, UserStatusModify
 from utils.marzban_api import MarzbanAPIError
+from utils.subscription import SubscriptionError
 
 from .common import edit_menu_with_image
 
@@ -66,52 +64,19 @@ async def process_start_bot_deep_link(
             await process_start_bot(message, user_id)
             return
 
-        # Продлеваем подписку пользователя через Marzban
+        # Выдаём/продлеваем подписку. Сервис гарантирует, что пользователь
+        # попадёт в нужную группу Pasarguard (по умолчанию "main").
         try:
-            user_marz = await marzban_client.get_user(str(user_id))
-            # Определяем текущую дату истечения
-            if user_marz.expire:
-                # Если expire это timestamp (int), конвертируем в datetime
-                if isinstance(user_marz.expire, int):
-                    current_expire = datetime.fromtimestamp(user_marz.expire)
-                else:
-                    current_expire = user_marz.expire
-                    # Если datetime имеет timezone, конвертируем в naive datetime
-                    if current_expire.tzinfo is not None:
-                        current_expire = current_expire.replace(tzinfo=None)
-            else:
-                # Если подписки нет, начинаем с текущей даты
-                current_expire = datetime.now()
-
-            # Добавляем дни из диплинка
-            new_expire = current_expire + timedelta(days=deep_link_info.duration_days)
-
-            modify_user = UserModify(
-                expire=new_expire,
-                proxy_settings=ProxyTable(vless=VlessSettings(flow=XTLSFlows.VISION)),
-                status=UserStatusModify.active,
+            await subscription_service.grant(
+                user_id=user_id,
+                days=deep_link_info.duration_days,
+                note=f"{message.from_user.first_name} @{message.from_user.username}",
             )
-            user_marz = await marzban_client.modify_user(str(user_id), modify_user)
-        except MarzbanAPIError as e:
-            if e.status == 404:
-                # Пользователя нет в Marzban, создаем нового
-                new_user = UserCreate(
-                    username=str(user_id),
-                    note=f"{message.from_user.first_name} @{message.from_user.username}",
-                    status=UserStatusCreate.active,
-                    expire=datetime.now()
-                    + timedelta(days=deep_link_info.duration_days),
-                    group_ids=[1],
-                    proxy_settings=ProxyTable(
-                        vless=VlessSettings(flow=XTLSFlows.VISION)
-                    ),
-                )
-                user_marz = await marzban_client.create_user(new_user)
-            else:
-                # Ошибка API, логируем и продолжаем обычный старт
-                print(f"Marzban API error: {e.message}")
-                await process_start_bot(message, user_id)
-                return
+        except (SubscriptionError, MarzbanAPIError) as e:
+            # Не удалось выдать доступ — логируем и продолжаем обычный старт
+            print(f"Subscription error: {e}")
+            await process_start_bot(message, user_id)
+            return
 
         # Обновляем поле trial в таблице users (если нужно)
         user_tg = await db_manage.get_user_by_id(user_id)
