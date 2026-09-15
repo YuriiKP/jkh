@@ -100,15 +100,14 @@ def register_pasarguard_notification_route(
     async def _handle_user_expired(
         payload: dict[str, Any], user_id: int, username: str
     ) -> web.Response:
-        """Подписка закончилась: применяем шаблон и уведомляем пользователя."""
-        if user_template_service is None or not user_template_service.enabled:
-            logger.warning(
-                "Получено событие user_expired, но шаблон не настроен (EXPIRED_TEMPLATE_NAME) — пропускаем"
-            )
-            return web.json_response(
-                {"ok": True, "ignored": True, "reason": "template_not_configured"}
-            )
+        """
+        Подписка закончилась: применяем шаблон (если он настроен) и уведомляем
+        пользователя.
 
+        Уведомление отправляется ВСЕГДА, даже если шаблон не настроен или
+        применить его не удалось: иначе пользователь не узнает, что подписка
+        закончилась, и не сможет её продлить.
+        """
         # Для дедупликации берём только стабильные поля: повторная доставка
         # того же события даст тот же id, а новое истечение (после продления) — новый.
         user_payload = payload.get("user") or {}
@@ -129,16 +128,24 @@ def register_pasarguard_notification_route(
         if not is_new:
             return web.json_response({"ok": True, "duplicate": True})
 
-        applied = True
-        try:
-            user = await user_template_service.apply(username)
-            logger.info(
-                "Пользователю %s применён шаблон после окончания подписки",
-                user.username,
+        applied = False
+        if user_template_service is None or not user_template_service.enabled:
+            logger.warning(
+                "Событие user_expired: шаблон не настроен, задайте EXPIRED_TEMPLATE_NAME в .env и пересоздайте контейнер. Пользователь %s уведомлён без применения шаблона",
+                username,
             )
-        except (UserTemplateError, MarzbanAPIError) as e:
-            applied = False
-            logger.error("Не удалось применить шаблон пользователю %s: %s", username, e)
+        else:
+            try:
+                user = await user_template_service.apply(username)
+                applied = True
+                logger.info(
+                    "Пользователю %s применён шаблон после окончания подписки",
+                    user.username,
+                )
+            except (UserTemplateError, MarzbanAPIError) as e:
+                logger.error(
+                    "Не удалось применить шаблон пользователю %s: %s", username, e
+                )
 
         await _setup_user_lang(user_id)
         sent = await _send_user_message(user_id, _("notification_user_expired_text"))

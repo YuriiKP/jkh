@@ -70,8 +70,11 @@ class UserTemplateService:
                 self._resolved_id = template.id
                 return template.id
 
+        available = (
+            ", ".join(sorted(t.name for t in templates if t.name)) or "нет шаблонов"
+        )
         raise UserTemplateError(
-            f"Шаблон '{self._template_name}' не найден в Pasarguard. Создайте его в панели или поправьте EXPIRED_TEMPLATE_NAME."
+            f"Шаблон '{self._template_name}' не найден в Pasarguard. Доступные шаблоны: {available}"
         )
 
     async def apply(self, username: str) -> UserResponse:

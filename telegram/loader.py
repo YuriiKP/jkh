@@ -80,6 +80,15 @@ user_template_service = UserTemplateService(
     template_name=EXPIRED_TEMPLATE_NAME,
 )
 
+logging.info(
+    "Применение шаблона после окончания подписки: %s",
+    (
+        f"включено, шаблон '{EXPIRED_TEMPLATE_NAME}'"
+        if user_template_service.enabled
+        else "ВЫКЛЮЧЕНО (не задан EXPIRED_TEMPLATE_NAME в .env)"
+    ),
+)
+
 # Глобальный клиент ЮKassa API
 if YOO_KASSA_SHOP_ID and YOO_KASSA_SECRET_KEY:
     from utils.yookassa_api import YooKassaAPIClient
