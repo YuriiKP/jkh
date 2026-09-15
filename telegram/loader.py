@@ -12,6 +12,7 @@ from storage import DB_M
 from tariffs import DEFAULT_GROUP_NAME
 from utils.marzban_api import MarzbanAPIClient
 from utils.subscription import SubscriptionService
+from utils.user_template import UserTemplateService
 
 logging.basicConfig(level=logging.INFO)
 
@@ -67,6 +68,16 @@ marzban_client = MarzbanAPIClient(
 subscription_service = SubscriptionService(
     marzban_client,
     default_group_name=DEFAULT_GROUP_NAME,
+)
+
+# Имя шаблона Pasarguard, который применяется к пользователю после окончания подписки.
+# Если переменная не задана — применение шаблона выключено.
+EXPIRED_TEMPLATE_NAME = (os.getenv("EXPIRED_TEMPLATE_NAME") or "").strip() or None
+
+# Сервис применения шаблона после окончания подписки (webhook user_expired).
+user_template_service = UserTemplateService(
+    marzban_client,
+    template_name=EXPIRED_TEMPLATE_NAME,
 )
 
 # Глобальный клиент ЮKassa API

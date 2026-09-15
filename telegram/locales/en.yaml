@@ -157,6 +157,12 @@ notification_days_left_text: |-
   Your subscription expires in <b>{days_left}</b> days.
   To renew — go to payment/renewal in the bot.
 
+notification_user_expired_text: |-
+  ⌛️ <b>Subscription expired</b>
+
+  Your subscription has expired.
+  To restore access — renew it in the bot.
+
 user_buy_text: |-
   💳 <b>ЖКХ Payment</b>
 

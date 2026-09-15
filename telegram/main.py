@@ -18,6 +18,7 @@ from loader import (
     dp,
     load_menu_image,
     locale,
+    user_template_service,
 )
 from notification_webhook import register_pasarguard_notification_route
 from yookassa_webhook import register_yookassa_webhook_route
@@ -68,6 +69,7 @@ def _build_webhook_app() -> web.Application:
             locale=locale,
             notify_path=PASARGUARD_NOTIFY_PATH,
             notify_secret=PASARGUARD_NOTIFY_SECRET,
+            user_template_service=user_template_service,
         )
 
     # Ручка для уведомлений от ЮKassa

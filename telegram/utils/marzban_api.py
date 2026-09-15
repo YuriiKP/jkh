@@ -17,6 +17,8 @@ from models.node import (
 )
 from models.system import SystemStats
 from models.user import (
+    CreateUserFromTemplate,
+    ModifyUserByTemplate,
     UserCreate,
     UserModify,
     UserResponse,
@@ -276,6 +278,44 @@ class MarzbanAPIClient:
                 data = await self._request("POST", "/api/user", json=payload)
                 return UserResponse.model_validate(data)
             raise
+
+    async def create_user_from_template(
+        self,
+        username: str,
+        *,
+        user_template_id: int,
+        note: str | None = None,
+    ) -> UserResponse:
+        """POST /api/user/from_template — создать пользователя из шаблона."""
+        payload = CreateUserFromTemplate(
+            username=username,
+            user_template_id=user_template_id,
+            note=note,
+        ).model_dump(exclude_none=True, mode="json")
+        data = await self._request("POST", "/api/user/from_template", json=payload)
+        return UserResponse.model_validate(data)
+
+    async def modify_user_with_template(
+        self,
+        username: str,
+        *,
+        user_template_id: int,
+        note: str | None = None,
+    ) -> UserResponse:
+        """PUT /api/user/from_template/{username} — применить шаблон к пользователю."""
+        payload = ModifyUserByTemplate(
+            user_template_id=user_template_id,
+            note=note,
+        ).model_dump(exclude_none=True, mode="json")
+        data = await self._request(
+            "PUT", f"/api/user/from_template/{username}", json=payload
+        )
+        return UserResponse.model_validate(data)
+
+    async def get_user_template(self, template_id: int) -> UserTemplateResponse:
+        """GET /api/user_template/{template_id} — получить шаблон по id."""
+        data = await self._request("GET", f"/api/user_template/{template_id}")
+        return UserTemplateResponse.model_validate(data)
 
     async def get_user(self, username: str) -> UserResponse:
         """GET /api/user/{username} — получить пользователя по username."""
