@@ -56,7 +56,9 @@ class SubscriptionService:
 
     Гарантирует, что после вызова `grant` пользователь:
     - существует в панели и активен;
-    - находится в нужной группе (а значит, имеет доступ к сервису);
+    - находится ровно в одной группе — целевой (а значит, имеет доступ к сервису),
+      и ни в каких других группах;
+    - имеет безлимитный трафик;
     - имеет срок подписки, продлённый на запрошенное число дней.
     """
 
@@ -165,11 +167,13 @@ class SubscriptionService:
             note=note or f"User {user_id}",
             status=UserStatusCreate.active,
             expire=datetime.now() + timedelta(days=days),
+            # data_limit=0 — безлимитный трафик
+            data_limit=0,
             group_ids=[group_id],
             proxy_settings=ProxyTable(vless=VlessSettings(flow=XTLSFlows.VISION)),
         )
         user = await self._client.create_user(new_user)
-        self._verify_group(user, group_id)
+        self._verify_single_group(user, group_id)
         return user
 
     async def _extend_user(
@@ -179,16 +183,20 @@ class SubscriptionService:
         group_id: int,
     ) -> UserResponse:
         new_expire = _to_naive_datetime(user.expire) + timedelta(days=days)
-        group_ids = self._merge_group_ids(user.group_ids, group_id)
 
+        # Пользователь должен остаться ровно в одной группе — целевой:
+        # перезаписываем список групп, а не дополняем его, чтобы исключить
+        # доступ через посторонние группы.
+        # data_limit=0 — безлимитный трафик (в т.ч. сбрасывает прежний лимит).
         update = UserModify(
             expire=new_expire,
-            group_ids=group_ids,
+            data_limit=0,
+            group_ids=[group_id],
             proxy_settings=ProxyTable(vless=VlessSettings(flow=XTLSFlows.VISION)),
             status=UserStatusModify.active,
         )
         modified = await self._client.modify_user(user.username, update)
-        self._verify_group(modified, group_id)
+        self._verify_single_group(modified, group_id)
         return modified
 
     # ------------------------------------------------------------------
@@ -196,21 +204,19 @@ class SubscriptionService:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _merge_group_ids(existing: list[int] | None, group_id: int) -> list[int]:
-        """Добавляет группу к уже имеющимся у пользователя, сохраняя остальные."""
-        group_ids = list(existing) if existing else []
-        if group_id not in group_ids:
-            group_ids.append(group_id)
-        return group_ids
+    def _verify_single_group(user: UserResponse, group_id: int) -> None:
+        """
+        Проверяет, что пользователь состоит ровно в одной группе — целевой.
 
-    @staticmethod
-    def _verify_group(user: UserResponse, group_id: int) -> None:
-        """Логирует предупреждение, если пользователь всё же остался без нужной группы."""
-        group_ids = user.group_ids or []
-        if group_id not in group_ids:
+        Логирует предупреждение, если состав групп отличается: это означает,
+        что либо у пользователя нет доступа (пустой список), либо он остался
+        в посторонних группах. Такое несоответствие не должно остаться незамеченным.
+        """
+        group_ids = set(user.group_ids or [])
+        if group_ids != {group_id}:
             logger.warning(
-                "Пользователь %s не попал в группу %s (group_ids=%s)",
+                "Пользователь %s должен быть только в группе %s, но состоит в %s",
                 user.username,
                 group_id,
-                group_ids,
+                sorted(group_ids),
             )

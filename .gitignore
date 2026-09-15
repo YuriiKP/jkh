@@ -214,3 +214,4 @@ debug.py
 api.json
 ruff.toml
 pyrightconfig.json
+in *
