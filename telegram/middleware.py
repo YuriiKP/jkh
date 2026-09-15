@@ -9,6 +9,29 @@ from storage import DB_M
 logger = logging.getLogger(__name__)
 
 
+def _get_user_id(data: Dict[str, Any]) -> int | None:
+    """
+    Возвращает id пользователя из апдейта.
+
+    Часть апдейтов не содержит чат (например, `pre_checkout_query`),
+    поэтому берём пользователя из `event_context`/`event_from_user`,
+    а не из `event_chat`, иначе получаем KeyError.
+    """
+    context = data.get("event_context")
+    if context is not None and getattr(context, "user_id", None) is not None:
+        return context.user_id
+
+    user = data.get("event_from_user")
+    if user is not None:
+        return user.id
+
+    chat = data.get("event_chat")
+    if chat is not None:
+        return chat.id
+
+    return None
+
+
 class MyLocalesMiddleware(BaseMiddleware):
     """
     Middleware, который выбирает язык
@@ -24,21 +47,24 @@ class MyLocalesMiddleware(BaseMiddleware):
         event,
         data: Dict[str, Any],
     ):
-        user_id = data["event_chat"].id
-        user_info = await self.db_manage.get_user_by_id(user_id)
+        user_id = _get_user_id(data)
+
+        user_info = None
+        if user_id is not None:
+            user_info = await self.db_manage.get_user_by_id(user_id)
+
+        # Определяем язык: сначала из базы, иначе из Telegram
+        lang_source = None
+        if user_info:
+            lang_source = str(user_info[6])
+        else:
+            from_user = data.get("event_from_user")
+            lang_source = getattr(from_user, "language_code", None)
 
         # Дефолтный язык
-        # Определяем язык по умолчанию
         lang = "en"
-        # Определяем язык: сначала из базы, если есть, иначе из Телеграм
-        lang_source = (
-            str(user_info[6]) if user_info else data["event_from_user"].language_code
-        )
         if lang_source in ("ru", "en", "fa"):
             lang = lang_source
-
-        # print("Язык интерфейса:", data["event_from_user"].language_code)
-        # print("Язык из базы данных:", lang_source)
 
         # Добавляем в data
         data["lang"] = lang
@@ -65,9 +91,13 @@ class DebugModeMiddleware(BaseMiddleware):
         event,
         data: Dict[str, Any],
     ):
+        user_id = _get_user_id(data)
+
+        # Не удалось определить пользователя — пропускаем апдейт дальше
+        if user_id is None:
+            return await handler(event, data)
 
         # Проверяем статус пользователя, если админ - пропускаем
-        user_id = data["event_chat"].id
         status_user = await self.db_manage.get_status_user(user_id)
 
         if status_user and status_user[0] in ("admin", "main_admin"):
@@ -75,9 +105,9 @@ class DebugModeMiddleware(BaseMiddleware):
 
         # Если пользователь не админ, отправляем сообщение о тех. работах
         try:
-            if event.message is not None:
+            if getattr(event, "message", None) is not None:
                 await event.message.answer(text=_("bot_under_maintenance"))
-            elif event.callback_query is not None:
+            elif getattr(event, "callback_query", None) is not None:
                 await event.callback_query.answer(
                     text=_("bot_under_maintenance_alert"), show_alert=True
                 )
