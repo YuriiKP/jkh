@@ -9,6 +9,7 @@ from loader import db_manage, subscription_service, yookassa_client
 from models.yookassa import YooKassaPayment, YooKassaWebhook
 from pydantic import ValidationError
 from tariffs import get_tariff
+from utils.admin_notify import notify_admin_about_purchase
 from utils.marzban_api import MarzbanAPIError
 from utils.subscription import SubscriptionError
 
@@ -236,6 +237,14 @@ async def _process_successful_payment(payment: YooKassaPayment, bot: Bot) -> boo
             logger.info(f"Success notification sent to user {user_id}")
         except Exception as e:
             logger.error(f"Failed to send notification to user {user_id}: {e}")
+
+        # Уведомляем главного админа о покупке
+        await notify_admin_about_purchase(
+            user_id=user_id,
+            product=f"«{tariff.title}»",
+            first_name=user_tg[2] if user_tg else None,
+            username=user_tg[1] if user_tg else None,
+        )
 
         return True
 

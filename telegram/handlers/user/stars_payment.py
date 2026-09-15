@@ -5,6 +5,7 @@ from aiogram.types import Message
 from loader import db_manage, dp, subscription_service
 from locales import get_text as _
 from tariffs import get_tariff
+from utils.admin_notify import notify_admin_about_purchase
 from utils.marzban_api import MarzbanAPIError
 from utils.subscription import SubscriptionError
 
@@ -60,3 +61,11 @@ async def stars_payment_handler(message: Message):
     )
 
     await message.answer(_("payment_success_stars", days=tariff.days))
+
+    # Уведомляем главного админа о покупке
+    await notify_admin_about_purchase(
+        user_id=user_id,
+        product=f"«{tariff.title}»",
+        first_name=message.from_user.first_name,
+        username=message.from_user.username,
+    )
