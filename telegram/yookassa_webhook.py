@@ -6,9 +6,7 @@ from typing import Optional
 
 from aiogram import Bot
 from aiohttp import web
-from loader import db_manage, locale, subscription_service, yookassa_client
-from locales import get_text as _
-from locales import setup_context
+from loader import db_manage, subscription_service, yookassa_client
 from models.yookassa import YooKassaPayment, YooKassaWebhook
 from pydantic import ValidationError
 from tariffs import get_tariff
@@ -17,9 +15,6 @@ from utils.marzban_api import MarzbanAPIError
 from utils.subscription import SubscriptionError
 
 logger = logging.getLogger(__name__)
-
-# Языки, для которых есть переводы (см. locales/*.yaml)
-SUPPORTED_LANGS = ("ru", "en", "fa")
 
 # Сериализует обработку успешных платежей: две копии одного и того же
 # вебхука не должны выдавать подписку дважды.
@@ -208,37 +203,6 @@ def _extract_user_id(payment: YooKassaPayment) -> int | None:
         return None
 
 
-async def _notify_payment_canceled(payment: YooKassaPayment, bot: Bot) -> None:
-    """
-    Сообщает пользователю, что платёж отменён.
-
-    Без этого пользователь остаётся на экране «Проверить статус оплаты»
-    и не понимает, что платёж не будет оплачен (отменён по таймауту
-    или вручную в личном кабинете ЮKassa).
-    """
-    user_id = _extract_user_id(payment)
-    if user_id is None:
-        return
-
-    try:
-        user = await db_manage.get_user_by_id(user_id)
-        lang = str(user[6]) if user and str(user[6]) in SUPPORTED_LANGS else "ru"
-
-        # Вебхук обрабатывается вне мидлвари, поэтому контекст локализации
-        # выставляем вручную.
-        setup_context(locale, lang)
-
-        await bot.send_message(chat_id=user_id, text=_("yookassa_payment_canceled"))
-        logger.info(
-            f"Cancel notification sent to user {user_id} for payment {payment.id}"
-        )
-    except Exception as e:
-        logger.warning(
-            f"Failed to send cancel notification to user {user_id}: "
-            f"{type(e).__name__}: {e}"
-        )
-
-
 async def _payment_already_processed(user_id: int, payment_id: str) -> bool:
     """
     Проверяет, обрабатывался ли этот платёж ЮKassa ранее.
@@ -423,12 +387,10 @@ def register_yookassa_webhook_route(
             # Валидируем данные
             webhook_data = YooKassaWebhook.model_validate(payload)
 
-            # Отмена платежа: сообщаем пользователю, чтобы он не ждал оплату
+            # Отмена платежа: просто подтверждаем получение (200), чтобы ЮKassa
+            # не ретраила вебхук. Пользователя не уведомляем.
             if webhook_data.event == "payment.canceled":
-                logger.info(
-                    f"Payment {webhook_data.object.id} canceled, notifying user"
-                )
-                await _notify_payment_canceled(webhook_data.object, bot)
+                logger.info(f"Payment {webhook_data.object.id} canceled")
                 return web.json_response({"ok": True, "canceled": True})
 
             # Обрабатываем только события успешной оплаты
