@@ -68,7 +68,9 @@
     "queryStrategy": "UseIP",
     "servers": [
       "localhost",
-      { "address": "https://dns.google/dns-query" },
+      {
+        "address": "https://dns.google/dns-query"
+      },
       {
         "address": "https://77.88.8.8/dns-query",
         "domains": [
@@ -86,10 +88,6 @@
     "domainMatcher": "hybrid",
     "domainStrategy": "IPIfNonMatch",
     "rules": [
-      {
-        "outboundTag": "block",
-        "protocol": ["bittorrent"]
-      },
       {
         "outboundTag": "block",
         "domain": [
@@ -132,6 +130,7 @@
       {
         "outboundTag": "direct",
         "domain": [
+          "domain:ozonusercontent.com",
           "geosite:category-ru",
           "geosite:category-gov-ru",
           "regexp:^(.+\\.)?yandex\\.(aero|az|by|cloud|co\\.il|com(\\.am|\\.ge|\\.ru|\\.tr|\\.ua)?|de|ee|eu|fi|fr|jobs|kg|kz|lt|lv|md|net|org|pl|ru|st|sx|tj|tm|tr|ua|uz)$",

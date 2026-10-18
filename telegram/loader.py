@@ -3,6 +3,7 @@ import os
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
+from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.enums import ParseMode
 from aiogram.types import BufferedInputFile
 from dotenv import load_dotenv
@@ -51,7 +52,14 @@ DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 PASARGUARD_NOTIFY_PATH = (os.getenv("PASARGUARD_NOTIFY_PATH") or "").strip()
 PASARGUARD_NOTIFY_SECRET = os.getenv("PASARGUARD_NOTIFY_SECRET")
 
-bot = Bot(TG_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+# Таймаут запросов к Telegram API — 30 с вместо 60 с по умолчанию.
+# Обработчик апдейта обязан укладываться в лимит вебхука Telegram (60 с),
+# иначе апдейт приходит повторно и обрабатывается дважды.
+bot = Bot(
+    TG_TOKEN,
+    session=AiohttpSession(timeout=30),
+    default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+)
 dp = Dispatcher()
 
 # Инициализация базы данных

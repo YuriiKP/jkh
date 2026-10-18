@@ -1,11 +1,14 @@
 import asyncio
+import ipaddress
 import json
 import logging
 from typing import Optional
 
 from aiogram import Bot
 from aiohttp import web
-from loader import db_manage, subscription_service, yookassa_client
+from loader import db_manage, locale, subscription_service, yookassa_client
+from locales import get_text as _
+from locales import setup_context
 from models.yookassa import YooKassaPayment, YooKassaWebhook
 from pydantic import ValidationError
 from tariffs import get_tariff
@@ -14,6 +17,13 @@ from utils.marzban_api import MarzbanAPIError
 from utils.subscription import SubscriptionError
 
 logger = logging.getLogger(__name__)
+
+# Языки, для которых есть переводы (см. locales/*.yaml)
+SUPPORTED_LANGS = ("ru", "en", "fa")
+
+# Сериализует обработку успешных платежей: две копии одного и того же
+# вебхука не должны выдавать подписку дважды.
+_payment_processing_lock = asyncio.Lock()
 
 # Известные IP-адреса ЮKassa для вебхуков (могут меняться, актуальные см. в документации)
 # https://yookassa.ru/developers/using-api/webhooks#ip
@@ -26,6 +36,45 @@ KNOWN_YOOKASSA_IPS = {
     "77.75.154.128/25",
     "2a02:5180::/32",
 }
+
+# Те же адреса, разобранные в сети: сравнение строк вида "185.71.76.5"
+# с "185.71.76.0/27" не работает, нужна проверка на вхождение в подсеть.
+KNOWN_YOOKASSA_NETWORKS = tuple(
+    ipaddress.ip_network(ip, strict=False) for ip in KNOWN_YOOKASSA_IPS
+)
+
+
+def _get_client_ip(request: web.Request) -> str | None:
+    """
+    Возвращает реальный IP клиента.
+
+    Если бот работает за обратным прокси (в логах такие запросы приходят
+    с адреса вида 172.18.0.3), настоящий адрес отправителя приходит
+    в заголовке X-Forwarded-For — берём из него первый адрес.
+    """
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        first = forwarded.split(",")[0].strip()
+        if first:
+            return first
+
+    peer_name = (
+        request.transport.get_extra_info("peername") if request.transport else None
+    )
+    if peer_name:
+        return peer_name[0]
+
+    return request.remote
+
+
+def _is_known_yookassa_ip(ip: str) -> bool:
+    """Проверяет, принадлежит ли адрес сетям ЮKassa (с поддержкой CIDR)."""
+    try:
+        address = ipaddress.ip_address(ip)
+    except ValueError:
+        return False
+
+    return any(address in network for network in KNOWN_YOOKASSA_NETWORKS)
 
 
 def _verify_signature(request: web.Request, secret_key: str | None) -> bool:
@@ -50,21 +99,25 @@ def _verify_signature(request: web.Request, secret_key: str | None) -> bool:
         )
         return True
 
-    # Проверяем IP-адрес отправителя
-    peer_name = (
-        request.transport.get_extra_info("peername") if request.transport else None
-    )
-    if peer_name:
-        peer_ip = peer_name[0]
-        # Простая проверка на соответствие известным IP
-        # В production рекомендуется использовать полноценную CIDR-проверку
-        if peer_ip in KNOWN_YOOKASSA_IPS:
-            return True
+    # Проверяем IP-адрес отправителя (с учётом обратного прокси)
+    client_ip = _get_client_ip(request)
+
+    if client_ip is None:
         logger.warning(
-            f"YooKassa webhook from unknown IP: {peer_ip}. "
-            f"Proceeding anyway — payment will be verified via API."
+            "YooKassa webhook: не удалось определить IP отправителя. "
+            "Proceeding anyway — payment will be verified via API."
         )
-        # Не блокируем по IP, а пропускаем для верификации через API
+        return True
+
+    if _is_known_yookassa_ip(client_ip):
+        logger.debug(f"YooKassa webhook from known IP: {client_ip}")
+        return True
+
+    logger.warning(
+        f"YooKassa webhook from unknown IP: {client_ip}. "
+        f"Proceeding anyway — payment will be verified via API."
+    )
+    # Не блокируем по IP, а пропускаем для верификации через API
 
     return True
 
@@ -127,6 +180,91 @@ async def _verify_payment_via_api(payment_id: str) -> bool:
         return False
 
 
+def _extract_user_id(payment: YooKassaPayment) -> int | None:
+    """
+    Извлекает user_id из metadata платежа.
+
+    Возвращает None, если metadata отсутствует или user_id некорректен.
+    """
+    if not payment.metadata:
+        logger.error(f"Missing metadata in payment: {payment.id}")
+        return None
+
+    metadata_dict = payment.metadata
+    user_id_str = (
+        metadata_dict.get("user_id")
+        if isinstance(metadata_dict, dict)
+        else getattr(metadata_dict, "user_id", None)
+    )
+
+    if not user_id_str:
+        logger.error(f"Missing user_id in payment metadata: {payment.id}")
+        return None
+
+    try:
+        return int(user_id_str)
+    except (ValueError, TypeError):
+        logger.error(f"Invalid user_id in metadata: {user_id_str}")
+        return None
+
+
+async def _notify_payment_canceled(payment: YooKassaPayment, bot: Bot) -> None:
+    """
+    Сообщает пользователю, что платёж отменён.
+
+    Без этого пользователь остаётся на экране «Проверить статус оплаты»
+    и не понимает, что платёж не будет оплачен (отменён по таймауту
+    или вручную в личном кабинете ЮKassa).
+    """
+    user_id = _extract_user_id(payment)
+    if user_id is None:
+        return
+
+    try:
+        user = await db_manage.get_user_by_id(user_id)
+        lang = str(user[6]) if user and str(user[6]) in SUPPORTED_LANGS else "ru"
+
+        # Вебхук обрабатывается вне мидлвари, поэтому контекст локализации
+        # выставляем вручную.
+        setup_context(locale, lang)
+
+        await bot.send_message(chat_id=user_id, text=_("yookassa_payment_canceled"))
+        logger.info(
+            f"Cancel notification sent to user {user_id} for payment {payment.id}"
+        )
+    except Exception as e:
+        logger.warning(
+            f"Failed to send cancel notification to user {user_id}: "
+            f"{type(e).__name__}: {e}"
+        )
+
+
+async def _payment_already_processed(user_id: int, payment_id: str) -> bool:
+    """
+    Проверяет, обрабатывался ли этот платёж ЮKassa ранее.
+
+    Проверка идёт по таблице платежей (provider_payment_charge_id), поэтому
+    не требует изменения схемы БД. Нужна, чтобы повторный вебхук с тем же
+    payment.id не продлил подписку второй раз.
+    """
+    if not payment_id:
+        return False
+
+    try:
+        payments = await db_manage.get_payments_by_user(user_id)
+    except Exception as e:
+        # Ошибка чтения БД не должна блокировать выдачу уже оплаченного доступа
+        logger.error(
+            f"Не удалось проверить дубли платежей для {user_id}: "
+            f"{type(e).__name__}: {e}"
+        )
+        return False
+
+    return any(
+        payment.get("provider_payment_charge_id") == payment_id for payment in payments
+    )
+
+
 async def _process_successful_payment(payment: YooKassaPayment, bot: Bot) -> bool:
     """
     Обрабатывает успешный платеж.
@@ -140,26 +278,18 @@ async def _process_successful_payment(payment: YooKassaPayment, bot: Bot) -> boo
     """
     try:
         # Извлекаем user_id из metadata
-        if not payment.metadata:
-            logger.error(f"Missing metadata in payment: {payment.id}")
+        user_id = _extract_user_id(payment)
+        if user_id is None:
             return False
 
         metadata_dict = payment.metadata
-        user_id_str = (
-            metadata_dict.get("user_id")
-            if isinstance(metadata_dict, dict)
-            else getattr(metadata_dict, "user_id", None)
-        )
 
-        if not user_id_str:
-            logger.error(f"Missing user_id in payment metadata: {payment.id}")
-            return False
-
-        try:
-            user_id = int(user_id_str)
-        except (ValueError, TypeError):
-            logger.error(f"Invalid user_id in metadata: {user_id_str}")
-            return False
+        # Идемпотентность: один и тот же платёж может прийти повторно
+        # (ЮKassa ретраит вебхук, если не получила 200). Подписку второй раз
+        # не выдаём, иначе пользователь получит двойной срок.
+        if await _payment_already_processed(user_id, payment.id):
+            logger.info(f"Payment {payment.id} already processed — skipping")
+            return True
 
         # Проверяем, что платеж действительно успешный и оплачен
         if payment.status != "succeeded":
@@ -293,6 +423,14 @@ def register_yookassa_webhook_route(
             # Валидируем данные
             webhook_data = YooKassaWebhook.model_validate(payload)
 
+            # Отмена платежа: сообщаем пользователю, чтобы он не ждал оплату
+            if webhook_data.event == "payment.canceled":
+                logger.info(
+                    f"Payment {webhook_data.object.id} canceled, notifying user"
+                )
+                await _notify_payment_canceled(webhook_data.object, bot)
+                return web.json_response({"ok": True, "canceled": True})
+
             # Обрабатываем только события успешной оплаты
             if webhook_data.event != "payment.succeeded":
                 logger.info(f"Ignoring unsupported event: {webhook_data.event}")
@@ -318,8 +456,10 @@ def register_yookassa_webhook_route(
 
             logger.info(f"Payment {payment_id} verified successfully, processing...")
 
-            # Обрабатываем платеж
-            success = await _process_successful_payment(webhook_data.object, bot)
+            # Обрабатываем платеж под локом: две копии одного вебхука
+            # не должны выдать подписку дважды
+            async with _payment_processing_lock:
+                success = await _process_successful_payment(webhook_data.object, bot)
 
             if success:
                 return web.json_response({"ok": True, "processed": True})
