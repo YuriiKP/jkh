@@ -2,5 +2,8 @@
     reverse_proxy {$WEBHOOK_PATH}* telegram:8080
     reverse_proxy {$PASARGUARD_NOTIFY_PATH}* telegram:8080
     reverse_proxy {$YOO_KASSA_WEBHOOK_PATH}* telegram:8080
-    reverse_proxy unix//var/lib/pasarguard/pasarguard.socket
+    reverse_proxy unix//var/lib/pasarguard/pasarguard.socket {
+        lb_try_duration 15s
+        lb_try_interval 500ms
+    }
 }
