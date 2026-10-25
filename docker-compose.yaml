@@ -37,7 +37,10 @@ services:
         ]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 30
+      # Первый старт (инициализация InnoDB + init.sql) занимает десятки секунд,
+      # без start_period контейнер успевает стать unhealthy и валит depends_on.
+      start_period: 90s
 
   pasarguard:
     build: .
