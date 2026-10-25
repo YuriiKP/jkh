@@ -4,9 +4,8 @@ import json
 import random
 import secrets
 from collections import defaultdict
-from datetime import UTC, datetime as dt, timedelta
-
-from jdatetime import date as jd
+from datetime import UTC, timedelta
+from datetime import datetime as dt
 
 from app.core.hosts import host_manager
 from app.db.crud.wireguard import pick_peer_ip_for_inbound
@@ -15,8 +14,19 @@ from app.models.status_emojis import STATUS_EMOJIS
 from app.models.subscription import SubscriptionInboundData
 from app.models.user import UsersResponseWithInbounds
 from app.settings import subscription_settings
-from app.subscription.client_templates import subscription_client_templates, subscription_xray_templates
+from app.subscription.client_templates import (
+    subscription_client_templates,
+    subscription_xray_templates,
+)
+from app.subscription.config_cache import (
+    get_or_create_sub_config,
+    get_sub_config,
+    make_sub_config_key,
+    put_sub_config,
+)
+from app.utils.helpers import has_markup_unsafe_chars, has_oversized_format_spec
 from app.utils.system import readable_size
+from jdatetime import date as jd
 
 from . import (
     ClashConfiguration,
@@ -34,6 +44,9 @@ AUTO_BALANCER_TAG = "AutoSelect"
 AUTO_REMARKS = "🇪🇺⚡ Автовыбор"
 AUTO_OUTBOUND_PREFIX = "bypass"
 
+# Transports only the Xray JSON format can express.
+XRAY_ONLY_NETWORKS = frozenset({"xdrive"})
+
 
 def _build_subscription_config(
     config_format: str,
@@ -50,7 +63,9 @@ def _build_subscription_config(
 ):
     common_kwargs = {
         "user_agent_template_content": client_templates["USER_AGENT_TEMPLATE"],
-        "grpc_user_agent_template_content": client_templates["GRPC_USER_AGENT_TEMPLATE"],
+        "grpc_user_agent_template_content": client_templates[
+            "GRPC_USER_AGENT_TEMPLATE"
+        ],
     }
 
     if config_format == "links":
@@ -88,30 +103,66 @@ async def generate_subscription(
     as_base64: bool,
     randomize_order: bool = False,
 ) -> str | bytes:
-    client_templates = await subscription_client_templates()
-    xray_template_overrides = await subscription_xray_templates() if config_format == "xray" else None
-    conf = _build_subscription_config(config_format, client_templates)
-    if conf is None:
-        raise ValueError(f'Unsupported format "{config_format}"')
+    cache_key = make_sub_config_key(user, config_format, as_base64, randomize_order)
 
-    sub_settings = await subscription_settings()
-    custom_variables = get_effective_custom_variables(user, sub_settings.custom_variables)
-    format_variables = setup_format_variables(user, sub_settings.custom_variables)
+    async def render() -> str | bytes:
+        client_templates = await subscription_client_templates()
+        xray_template_overrides = (
+            await subscription_xray_templates() if config_format == "xray" else None
+        )
+        conf = _build_subscription_config(config_format, client_templates)
+        if conf is None:
+            raise ValueError(f'Unsupported format "{config_format}"')
 
-    config = await process_inbounds_and_tags(
-        user,
-        format_variables,
-        conf,
-        client_templates,
-        xray_template_overrides=xray_template_overrides,
-        randomize_order=randomize_order,
-        custom_variables=custom_variables,
-    )
+        sub_settings = await subscription_settings()
+        custom_variables = get_effective_custom_variables(
+            user, sub_settings.custom_variables
+        )
+        format_variables = setup_format_variables(user, sub_settings.custom_variables)
+        config = await process_inbounds_and_tags(
+            user,
+            format_variables,
+            conf,
+            client_templates,
+            xray_template_overrides=xray_template_overrides,
+            randomize_order=randomize_order,
+            custom_variables=custom_variables,
+        )
+        if as_base64 and not isinstance(config, bytes):
+            config = base64.b64encode(config.encode()).decode()
+        return config
 
-    if as_base64 and not isinstance(config, bytes):
-        config = base64.b64encode(config.encode()).decode()
+    if config_format != "wireguard":
+        cached = get_sub_config(cache_key)
+        if cached is not None:
+            return cached
+        config = await render()
+        put_sub_config(cache_key, config)
+        return config
 
-    return config
+    return await get_or_create_sub_config(cache_key, render)
+
+
+def inject_body_placement(
+    conf: str | bytes, lines: list[str], placement: str, as_base64: bool
+) -> str | bytes:
+    if isinstance(conf, bytes) or not lines:
+        return conf
+
+    block = "\n".join(lines)
+    if as_base64:
+        try:
+            decoded = base64.b64decode(conf).decode()
+        except (ValueError, UnicodeDecodeError):
+            return conf
+        merged = (
+            f"{block}\n{decoded}"
+            if placement == "body_start"
+            else f"{decoded}\n{block}"
+        )
+        return base64.b64encode(merged.encode()).decode()
+
+    return f"{block}\n{conf}" if placement == "body_start" else f"{conf}\n{block}"
 
 
 def format_time_left(seconds_left: int) -> str:
@@ -149,19 +200,33 @@ def get_effective_custom_variables(
     user: UsersResponseWithInbounds, custom_variables: list | tuple | None = None
 ) -> list:
     variables = list(custom_variables or [])
-    admin_variables = getattr(getattr(user, "admin", None), "custom_variables", None) or []
+    admin_variables = (
+        getattr(getattr(user, "admin", None), "custom_variables", None) or []
+    )
     variables.extend(admin_variables)
     return variables
 
 
-def apply_custom_format_variables(format_variables: dict, custom_variables: list | tuple | None = None) -> dict:
+def apply_custom_format_variables(
+    format_variables: dict, custom_variables: list | tuple | None = None
+) -> dict:
     if not custom_variables:
         return format_variables
 
-    custom_keys = {key for key, _ in (_custom_variable_parts(variable) for variable in custom_variables) if key}
+    custom_keys = {
+        key
+        for key, _ in (
+            _custom_variable_parts(variable) for variable in custom_variables
+        )
+        if key
+    }
     base_variables = defaultdict(
         lambda: "<missing>",
-        {key: value for key, value in format_variables.items() if key not in custom_keys},
+        {
+            key: value
+            for key, value in format_variables.items()
+            if key not in custom_keys
+        },
     )
 
     for variable in custom_variables:
@@ -178,18 +243,27 @@ def apply_custom_format_variables(format_variables: dict, custom_variables: list
 
 def _format_dynamic_value(value, format_variables: dict):
     if isinstance(value, str):
+        if has_oversized_format_spec(value):
+            # Formatting would build the padded result first; a value saved before the size check stays raw text
+            return value
         try:
             return value.format_map(format_variables)
-        except ValueError, KeyError:
+        except ValueError, KeyError, AttributeError, IndexError, TypeError:
+            # A value the variables cannot fill (stray brace, {0}, {X.y}) is kept as it is
             return value
     if isinstance(value, list):
         return [_format_dynamic_value(item, format_variables) for item in value]
     if isinstance(value, dict):
-        return {key: _format_dynamic_value(item, format_variables) for key, item in value.items()}
+        return {
+            key: _format_dynamic_value(item, format_variables)
+            for key, item in value.items()
+        }
     return value
 
 
-def setup_format_variables(user: UsersResponseWithInbounds, custom_variables: list | tuple | None = None) -> dict:
+def setup_format_variables(
+    user: UsersResponseWithInbounds, custom_variables: list | tuple | None = None
+) -> dict:
     custom_variables = get_effective_custom_variables(user, custom_variables)
     user_status = user.status
     expire = user.expire
@@ -206,7 +280,9 @@ def setup_format_variables(user: UsersResponseWithInbounds, custom_variables: li
             expire_date_obj = expire.date()
             expire_date = expire_date_obj.strftime("%Y-%m-%d")
             jalali_expire_date = jd.fromgregorian(
-                year=expire_date_obj.year, month=expire_date_obj.month, day=expire_date_obj.day
+                year=expire_date_obj.year,
+                month=expire_date_obj.month,
+                day=expire_date_obj.day,
             ).strftime("%Y-%m-%d")
             if now < expire:
                 days_left = (expire - now).days + 1
@@ -268,7 +344,9 @@ def setup_format_variables(user: UsersResponseWithInbounds, custom_variables: li
     return apply_custom_format_variables(format_variables, custom_variables)
 
 
-async def filter_hosts(hosts: list[SubscriptionInboundData], user_status: UserStatus) -> list[SubscriptionInboundData]:
+async def filter_hosts(
+    hosts: list[SubscriptionInboundData], user_status: UserStatus
+) -> list[SubscriptionInboundData]:
     return [host for host in hosts if not host.status or user_status in host.status]
 
 
@@ -301,7 +379,9 @@ async def process_host(
 
     # Each WG interface only gets the user's peer IP from its own subnet.
     if inbound.protocol == "wireguard":
-        settings["peer_ips"] = pick_peer_ip_for_inbound(inbound.wireguard_local_address, settings.get("peer_ips") or [])
+        settings["peer_ips"] = pick_peer_ip_for_inbound(
+            inbound.wireguard_local_address, settings.get("peer_ips") or []
+        )
 
     # Update format variables
     format_variables.update({"PROTOCOL": inbound.protocol})
@@ -314,13 +394,14 @@ async def process_host(
     if isinstance(inbound.tls_config.sni, list) and inbound.tls_config.sni:
         sni = random.choice(inbound.tls_config.sni)
     sni = sni.replace("*", salt)
+    sni = _format_dynamic_value(sni, format_variables) if sni else ""
 
     req_host = ""
     host_list = inbound.transport_config.host
     if isinstance(host_list, list) and host_list:
         req_host = random.choice(host_list)
     req_host = req_host.replace("*", salt)
-    req_host = req_host.format_map(format_variables) if req_host else ""
+    req_host = _format_dynamic_value(req_host, format_variables) if req_host else ""
 
     address = ""
     if inbound.address:
@@ -336,42 +417,40 @@ async def process_host(
         reality_sid = inbound.tls_config.reality_short_id
 
     # Format path with variables
-    path = inbound.transport_config.path.format_map(format_variables) if inbound.transport_config.path else ""
+    path = (
+        _format_dynamic_value(inbound.transport_config.path, format_variables)
+        if inbound.transport_config.path
+        else ""
+    )
 
     # Apply use_sni_as_host override
     if inbound.use_sni_as_host and sni:
         req_host = sni
 
-    # Create a copy of the inbound data with selected random values
-    # Deep copy tls_config and transport_config to avoid mutating cached host data
+    # Copy only the nested models we mutate so cached host objects stay intact.
+    transport_update: dict = {"host": req_host, "path": path}
+    if getattr(inbound.transport_config, "request", None):
+        transport_update["request"] = _format_dynamic_value(
+            inbound.transport_config.request,
+            format_variables,
+        )
+    if getattr(inbound.transport_config, "response", None):
+        transport_update["response"] = _format_dynamic_value(
+            inbound.transport_config.response,
+            format_variables,
+        )
     inbound_copy = inbound.model_copy(
         update={
-            "tls_config": inbound.tls_config.model_copy(deep=True),
-            "transport_config": inbound.transport_config.model_copy(deep=True),
+            "tls_config": inbound.tls_config.model_copy(
+                update={"sni": sni, "reality_short_id": reality_sid},
+            ),
+            "transport_config": inbound.transport_config.model_copy(
+                update=transport_update
+            ),
+            "address": address,
+            "port": port,
         }
     )
-
-    # Update TLS config with selected values
-    inbound_copy.tls_config.sni = sni
-    inbound_copy.tls_config.reality_short_id = reality_sid
-
-    # Update transport config with selected host
-    inbound_copy.transport_config.host = req_host
-    inbound_copy.transport_config.path = path
-    if getattr(inbound_copy.transport_config, "request", None):
-        inbound_copy.transport_config.request = _format_dynamic_value(
-            inbound_copy.transport_config.request,
-            format_variables,
-        )
-    if getattr(inbound_copy.transport_config, "response", None):
-        inbound_copy.transport_config.response = _format_dynamic_value(
-            inbound_copy.transport_config.response,
-            format_variables,
-        )
-
-    # Update address and port with selected values
-    inbound_copy.address = address
-    inbound_copy.port = port
 
     return inbound_copy, settings
 
@@ -391,7 +470,9 @@ async def _prepare_download_settings(
     | OutlineConfiguration
     | WireGuardConfiguration,
 ) -> SubscriptionInboundData | dict | None:
-    result = await process_host(download_data, format_variables, inbounds, proxies, custom_variables)
+    result = await process_host(
+        download_data, format_variables, inbounds, proxies, custom_variables
+    )
 
     if not result:
         return
@@ -399,13 +480,17 @@ async def _prepare_download_settings(
     download_copy, _ = result
 
     if isinstance(download_copy.address, str):
-        download_copy.address = download_copy.address.format_map(format_variables)
+        download_copy.address = _format_dynamic_value(
+            download_copy.address, format_variables
+        )
 
     if isinstance(conf, StandardLinks):
         xc = XrayConfiguration(
             xray_template_content=client_templates["XRAY_SUBSCRIPTION_TEMPLATE"],
             user_agent_template_content=client_templates["USER_AGENT_TEMPLATE"],
-            grpc_user_agent_template_content=client_templates["GRPC_USER_AGENT_TEMPLATE"],
+            grpc_user_agent_template_content=client_templates[
+                "GRPC_USER_AGENT_TEMPLATE"
+            ],
         )
         return xc._download_config(download_copy, link_format=True)
 
@@ -429,11 +514,15 @@ async def process_inbounds_and_tags(
 ) -> str | bytes:
     proxy_settings = user.proxy_settings.dict()
     proxy_settings["_user_id"] = user.id
-    hosts = await filter_hosts(list((await host_manager.get_hosts()).values()), user.status)
+    hosts = await filter_hosts(
+        list((await host_manager.get_hosts()).values()), user.status
+    )
     if randomize_order and len(hosts) > 1:
         random.shuffle(hosts)
 
-    def _resolve_host_xray_template_content(inbound: SubscriptionInboundData) -> str | None:
+    def _resolve_host_xray_template_content(
+        inbound: SubscriptionInboundData,
+    ) -> str | None:
         if xray_template_overrides is None:
             return None
         if not isinstance(inbound.subscription_templates, dict):
@@ -444,7 +533,14 @@ async def process_inbounds_and_tags(
         return xray_template_overrides.get(template_id)
 
     for host_data in hosts:
-        result = await process_host(host_data, format_variables, user.inbounds, proxy_settings, custom_variables)
+        if host_data.network in XRAY_ONLY_NETWORKS and not isinstance(
+            conf, XrayConfiguration
+        ):
+            # Links, sing-box, Clash and Outline cannot carry these transports.
+            continue
+        result = await process_host(
+            host_data, format_variables, user.inbounds, proxy_settings, custom_variables
+        )
         if not result:
             continue
 
@@ -452,10 +548,18 @@ async def process_inbounds_and_tags(
         inbound_copy, settings = result
 
         # Format remark and address with user variables
-        remark = inbound_copy.remark.format_map(format_variables)
-        formatted_address = inbound_copy.address.format_map(format_variables)
+        remark = _format_dynamic_value(inbound_copy.remark, format_variables)
+        formatted_address = _format_dynamic_value(
+            inbound_copy.address, format_variables
+        )
+        if has_markup_unsafe_chars(formatted_address):
+            # Never valid, and links print the address unencoded; covers hosts saved before
+            # address validation existed and values that came in through a format variable.
+            continue
 
-        download_settings = getattr(inbound_copy.transport_config, "download_settings", None)
+        download_settings = getattr(
+            inbound_copy.transport_config, "download_settings", None
+        )
         if download_settings:
             if isinstance(download_settings, SubscriptionInboundData):
                 processed_download_settings = await _prepare_download_settings(
@@ -470,7 +574,9 @@ async def process_inbounds_and_tags(
             else:
                 processed_download_settings = download_settings
             if hasattr(inbound_copy.transport_config, "download_settings"):
-                inbound_copy.transport_config.download_settings = processed_download_settings
+                inbound_copy.transport_config.download_settings = (
+                    processed_download_settings
+                )
 
         if isinstance(conf, XrayConfiguration):
             template_content = _resolve_host_xray_template_content(inbound_copy)
@@ -512,7 +618,9 @@ def _render_auto_balancer_config(conf: XrayConfiguration) -> str:
 
     merged = copy.deepcopy(conf.config[0])
 
-    template_tags = {outbound.get("tag") for outbound in conf.template.get("outbounds", [])}
+    template_tags = {
+        outbound.get("tag") for outbound in conf.template.get("outbounds", [])
+    }
 
     host_outbounds: list[dict] = []
     counter = 1
@@ -520,7 +628,11 @@ def _render_auto_balancer_config(conf: XrayConfiguration) -> str:
         for outbound in entry.get("outbounds", []):
             if outbound.get("tag") in template_tags:
                 continue
-            outbound["tag"] = AUTO_OUTBOUND_PREFIX if counter == 1 else f"{AUTO_OUTBOUND_PREFIX}-{counter}"
+            outbound["tag"] = (
+                AUTO_OUTBOUND_PREFIX
+                if counter == 1
+                else f"{AUTO_OUTBOUND_PREFIX}-{counter}"
+            )
             counter += 1
             host_outbounds.append(outbound)
 
