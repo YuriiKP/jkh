@@ -1,0 +1,62 @@
+# Нода Pasarguard + Caddy (реверс-прокси подписки) на одном сервере.
+#
+# Схема:
+#   caddy  — 80/443, выпускает сертификаты Let's Encrypt,
+#            проксирует только /sub/* на панель за рубежом (см. Caddyfile);
+#   node   — нода Pasarguard, network_mode: host (как в node/docker-compose.yaml).
+#
+# Запуск:
+#   docker compose up -d
+#
+# ВАЖНО:
+# 1. caddy занимает 80/443, поэтому inbound'ы Xray на этой ноде не должны
+#    слушать 443 — используйте другой порт (например, 8443).
+# 2. Нода берёт сертификат из /etc/letsencrypt/live/<домен>/ —
+#    подставьте свой домен (или скопируйте файлы из тома caddy_data).
+
+services:
+  caddy:
+    image: caddy
+    container_name: caddy
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+      - 8443:8443
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+
+  node:
+    image: pasarguard/node:latest # image: ghcr.io/pasarguard/node:latest
+    pull_policy: always
+    container_name: node
+    restart: always
+    network_mode: host
+
+    environment:
+      SERVICE_PORT: 62050
+      SERVICE_PROTOCOL: "grpc"
+
+      SSL_CERT_FILE: "/etc/letsencrypt/live/ses.belbita.online-0001/fullchain.pem"
+      SSL_KEY_FILE: "/etc/letsencrypt/live/ses.belbita.online-0001/privkey.pem"
+      # api key must be a valid uuid (you can use any version you want)
+      API_KEY: "6af921e8-bd0d-4b91-ae3b-0cd44e5e80de"
+
+      GENERATED_CONFIG_PATH: "/var/lib/pg-node/generated"
+
+      # Xray Paths (defaults usually work)
+      XRAY_EXECUTABLE_PATH: "/home/xray_core/xray"
+      XRAY_ASSETS_PATH: "/home/xray_core"
+
+    volumes:
+      - /var/lib/pg-node:/var/lib/pg-node
+      - /etc/letsencrypt/live/ses.belbita.online-0001/fullchain.pem:/etc/letsencrypt/live/ses.belbita.online-0001/fullchain.pem
+      - /etc/letsencrypt/live/ses.belbita.online-0001/privkey.pem:/etc/letsencrypt/live/ses.belbita.online-0001/privkey.pem
+      - /home/xray_core/xray:/home/xray_core/xray
+      - /home/xray_core:/home/xray_core
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -89,6 +89,10 @@
     "domainStrategy": "IPIfNonMatch",
     "rules": [
       {
+        "domain": ["domain:animeme.ru"],
+        "outboundTag": "proxy"
+      },
+      {
         "outboundTag": "block",
         "domain": [
           "domain:2ip.ru",

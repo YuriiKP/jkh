@@ -1,0 +1,21 @@
+sub.tvoy-ru-domen.ru {
+	# Проксируем ТОЛЬКО запросы за подпиской.
+	# Если в PasarGuard путь другой (например, /api/sub/), измените route.
+	route /sub/* {
+		reverse_proxy https://panel.tvoia-zarubezhka.com:8000 {
+			# Подменяем Host, чтобы зарубежный сервер принял запрос
+			header_up Host panel.tvoia-zarubezhka.com
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+
+			# Если на зарубежном сервере самоподписанный сертификат, раскомментируйте блок ниже:
+			# transport http {
+			# 	tls
+			# 	tls_insecure_skip_verify
+			# }
+		}
+	}
+
+	# Безопасность: отбиваем все остальные запросы
+	respond /* "404 Not Found" 404
+}
