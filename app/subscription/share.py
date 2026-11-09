@@ -44,6 +44,11 @@ AUTO_BALANCER_TAG = "AutoSelect"
 AUTO_REMARKS = "🇪🇺⚡ Автовыбор"
 AUTO_OUTBOUND_PREFIX = "bypass"
 
+# Инбаунды с этими тэгами не попадают в автовыбор (AutoSelect),
+# но остаются в подписке как отдельные серверы.
+# Пример: AUTO_EXCLUDE_INBOUND_TAGS = {"netherlands-vless", "germany-trojan"}
+AUTO_EXCLUDE_INBOUND_TAGS: set[str] = set()
+
 # Transports only the Xray JSON format can express.
 XRAY_ONLY_NETWORKS = frozenset({"xdrive"})
 
@@ -532,6 +537,9 @@ async def process_inbounds_and_tags(
             return None
         return xray_template_overrides.get(template_id)
 
+    # Индексы записей conf.config, которые не должны попасть в автовыбор.
+    auto_excluded_indexes: list[int] = []
+
     for host_data in hosts:
         if host_data.network in XRAY_ONLY_NETWORKS and not isinstance(
             conf, XrayConfiguration
@@ -580,6 +588,9 @@ async def process_inbounds_and_tags(
 
         if isinstance(conf, XrayConfiguration):
             template_content = _resolve_host_xray_template_content(inbound_copy)
+            if inbound_copy.inbound_tag in AUTO_EXCLUDE_INBOUND_TAGS:
+                # conf.add добавит запись в конец conf.config — запоминаем её индекс.
+                auto_excluded_indexes.append(len(conf.config))
             conf.add(
                 remark=remark,
                 address=formatted_address,
@@ -596,25 +607,34 @@ async def process_inbounds_and_tags(
             )
 
     if isinstance(conf, XrayConfiguration):
-        return _render_xray_with_auto(conf)
+        return _render_xray_with_auto(conf, auto_excluded_indexes)
 
     return conf.render()
 
 
-def _render_xray_with_auto(conf: XrayConfiguration) -> str:
+def _render_xray_with_auto(
+    conf: XrayConfiguration,
+    auto_excluded_indexes: list[int] | None = None,
+) -> str:
     """Prepend an auto server selection config to the per-server xray configs."""
     per_server_configs = json.loads(conf.render())
     if not per_server_configs:
         return conf.render()
 
-    auto_config = json.loads(_render_auto_balancer_config(conf))
-    return json.dumps([auto_config] + per_server_configs, indent=4)
+    auto_config = _render_auto_balancer_config(conf, auto_excluded_indexes)
+    if not auto_config:
+        return json.dumps(per_server_configs, indent=4)
+
+    return json.dumps([json.loads(auto_config)] + per_server_configs, indent=4)
 
 
-def _render_auto_balancer_config(conf: XrayConfiguration) -> str:
+def _render_auto_balancer_config(
+    conf: XrayConfiguration,
+    auto_excluded_indexes: list[int] | None = None,
+) -> str | None:
     """Merge per-host xray configs into a single config with an auto server balancer."""
     if not conf.config:
-        return conf.render()
+        return None
 
     merged = copy.deepcopy(conf.config[0])
 
@@ -622,11 +642,17 @@ def _render_auto_balancer_config(conf: XrayConfiguration) -> str:
         outbound.get("tag") for outbound in conf.template.get("outbounds", [])
     }
 
+    excluded_indexes = set(auto_excluded_indexes or ())
+
     host_outbounds: list[dict] = []
     counter = 1
-    for entry in conf.config:
+    for index, entry in enumerate(conf.config):
+        # Хосты, исключённые по тэгу инбаунда, в автовыбор не попадают.
+        skip_host = index in excluded_indexes
         for outbound in entry.get("outbounds", []):
             if outbound.get("tag") in template_tags:
+                continue
+            if skip_host:
                 continue
             outbound["tag"] = (
                 AUTO_OUTBOUND_PREFIX
@@ -635,6 +661,10 @@ def _render_auto_balancer_config(conf: XrayConfiguration) -> str:
             )
             counter += 1
             host_outbounds.append(outbound)
+
+    if not host_outbounds:
+        # Все хосты исключены — автовыбор не нужен.
+        return None
 
     merged["outbounds"] = host_outbounds + list(conf.template.get("outbounds", []))
     merged["remarks"] = AUTO_REMARKS
