@@ -49,6 +49,20 @@ AUTO_OUTBOUND_PREFIX = "bypass"
 # Пример: AUTO_EXCLUDE_INBOUND_TAGS = {"netherlands-vless", "germany-trojan"}
 AUTO_EXCLUDE_INBOUND_TAGS: set[str] = set()
 
+# Второй автовыбор — только для торрентов.
+TORRENT_BALANCER_TAG = "AutoSelectTorrent"
+TORRENT_REMARKS = "♻️ Торрент"
+TORRENT_OUTBOUND_PREFIX = "torrent"
+
+# Белый список: в автовыбор торрентов (♻️) попадают ТОЛЬКО инбаунды с этими тэгами.
+# Остальные в него не попадают (но остаются в обычном автовыборе и в подписке
+# как отдельные серверы). Пустой список = торрентного автовыбора нет совсем.
+# Пример: TORRENT_INCLUDE_INBOUND_TAGS = {"netherlands-vless", "germany-vless"}
+TORRENT_INCLUDE_INBOUND_TAGS: set[str] = {
+    "Молдова VLESS HTTPUPGRADE TLS",
+    "Молдова HYSTERIA HYSTERIA TLS",
+}
+
 # Transports only the Xray JSON format can express.
 XRAY_ONLY_NETWORKS = frozenset({"xdrive"})
 
@@ -539,6 +553,8 @@ async def process_inbounds_and_tags(
 
     # Индексы записей conf.config, которые не должны попасть в автовыбор.
     auto_excluded_indexes: list[int] = []
+    # Индексы записей conf.config, которые должны попасть в автовыбор торрентов.
+    torrent_included_indexes: list[int] = []
 
     for host_data in hosts:
         if host_data.network in XRAY_ONLY_NETWORKS and not isinstance(
@@ -588,9 +604,12 @@ async def process_inbounds_and_tags(
 
         if isinstance(conf, XrayConfiguration):
             template_content = _resolve_host_xray_template_content(inbound_copy)
+            # conf.add добавит запись в конец conf.config — запоминаем её индекс.
+            next_index = len(conf.config)
             if inbound_copy.inbound_tag in AUTO_EXCLUDE_INBOUND_TAGS:
-                # conf.add добавит запись в конец conf.config — запоминаем её индекс.
-                auto_excluded_indexes.append(len(conf.config))
+                auto_excluded_indexes.append(next_index)
+            if inbound_copy.inbound_tag in TORRENT_INCLUDE_INBOUND_TAGS:
+                torrent_included_indexes.append(next_index)
             conf.add(
                 remark=remark,
                 address=formatted_address,
@@ -607,7 +626,9 @@ async def process_inbounds_and_tags(
             )
 
     if isinstance(conf, XrayConfiguration):
-        return _render_xray_with_auto(conf, auto_excluded_indexes)
+        return _render_xray_with_auto(
+            conf, auto_excluded_indexes, torrent_included_indexes
+        )
 
     return conf.render()
 
@@ -615,22 +636,54 @@ async def process_inbounds_and_tags(
 def _render_xray_with_auto(
     conf: XrayConfiguration,
     auto_excluded_indexes: list[int] | None = None,
+    torrent_included_indexes: list[int] | None = None,
 ) -> str:
-    """Prepend an auto server selection config to the per-server xray configs."""
+    """Prepend auto server selection configs to the per-server xray configs."""
     per_server_configs = json.loads(conf.render())
     if not per_server_configs:
         return conf.render()
 
+    auto_configs: list[dict] = []
+
     auto_config = _render_auto_balancer_config(conf, auto_excluded_indexes)
-    if not auto_config:
+    if auto_config:
+        auto_configs.append(json.loads(auto_config))
+
+    # Отдельный автовыбор (профиль) для торрентов — только из белого списка тэгов.
+    torrent_config = _render_auto_balancer_config(
+        conf,
+        included_indexes=torrent_included_indexes,
+        remarks=TORRENT_REMARKS,
+        outbound_prefix=TORRENT_OUTBOUND_PREFIX,
+        balancer_tag=TORRENT_BALANCER_TAG,
+        # В шаблонах встречается правило "bittorrent -> direct/block" в самом начале
+        # routing.rules, поэтому торрентный профиль обязан сработать раньше него.
+        prepend_rules=[
+            {
+                "type": "field",
+                "protocol": ["bittorrent"],
+                "balancerTag": TORRENT_BALANCER_TAG,
+                "ruleTag": TORRENT_BALANCER_TAG,
+            }
+        ],
+    )
+    if torrent_config:
+        auto_configs.append(json.loads(torrent_config))
+
+    if not auto_configs:
         return json.dumps(per_server_configs, indent=4)
 
-    return json.dumps([json.loads(auto_config)] + per_server_configs, indent=4)
+    return json.dumps(auto_configs + per_server_configs, indent=4)
 
 
 def _render_auto_balancer_config(
     conf: XrayConfiguration,
-    auto_excluded_indexes: list[int] | None = None,
+    excluded_indexes: list[int] | None = None,
+    included_indexes: list[int] | None = None,
+    remarks: str = AUTO_REMARKS,
+    outbound_prefix: str = AUTO_OUTBOUND_PREFIX,
+    balancer_tag: str = AUTO_BALANCER_TAG,
+    prepend_rules: list[dict] | None = None,
 ) -> str | None:
     """Merge per-host xray configs into a single config with an auto server balancer."""
     if not conf.config:
@@ -642,41 +695,43 @@ def _render_auto_balancer_config(
         outbound.get("tag") for outbound in conf.template.get("outbounds", [])
     }
 
-    excluded_indexes = set(auto_excluded_indexes or ())
+    excluded = set(excluded_indexes or ())
+    # Если задан белый список — в автовыбор попадают только эти записи conf.config.
+    included = None if included_indexes is None else set(included_indexes)
 
     host_outbounds: list[dict] = []
     counter = 1
     for index, entry in enumerate(conf.config):
-        # Хосты, исключённые по тэгу инбаунда, в автовыбор не попадают.
-        skip_host = index in excluded_indexes
+        # Хосты, отфильтрованные по тэгу инбаунда, в автовыбор не попадают.
+        skip_host = index in excluded or (
+            included is not None and index not in included
+        )
         for outbound in entry.get("outbounds", []):
             if outbound.get("tag") in template_tags:
                 continue
             if skip_host:
                 continue
             outbound["tag"] = (
-                AUTO_OUTBOUND_PREFIX
-                if counter == 1
-                else f"{AUTO_OUTBOUND_PREFIX}-{counter}"
+                outbound_prefix if counter == 1 else f"{outbound_prefix}-{counter}"
             )
             counter += 1
             host_outbounds.append(outbound)
 
     if not host_outbounds:
-        # Все хосты исключены — автовыбор не нужен.
+        # Список пуст или все хосты отфильтрованы — этот автовыбор не нужен.
         return None
 
     merged["outbounds"] = host_outbounds + list(conf.template.get("outbounds", []))
-    merged["remarks"] = AUTO_REMARKS
+    merged["remarks"] = remarks
 
     # Fallback to the 4th server (as in the reference config), or the last one when fewer hosts.
     host_count = counter - 1
     if host_count >= 4:
-        fallback_tag = f"{AUTO_OUTBOUND_PREFIX}-4"
+        fallback_tag = f"{outbound_prefix}-4"
     elif host_count > 1:
-        fallback_tag = f"{AUTO_OUTBOUND_PREFIX}-{host_count}"
+        fallback_tag = f"{outbound_prefix}-{host_count}"
     elif host_count == 1:
-        fallback_tag = AUTO_OUTBOUND_PREFIX
+        fallback_tag = outbound_prefix
     else:
         fallback_tag = ""
 
@@ -690,14 +745,14 @@ def _render_auto_balancer_config(
             "sampling": 6,
             "timeout": "3s",
         },
-        "subjectSelector": [AUTO_OUTBOUND_PREFIX],
+        "subjectSelector": [outbound_prefix],
     }
 
     routing = merged.setdefault("routing", {})
     routing.setdefault("balancers", []).append(
         {
-            "tag": AUTO_BALANCER_TAG,
-            "selector": [AUTO_OUTBOUND_PREFIX],
+            "tag": balancer_tag,
+            "selector": [outbound_prefix],
             "strategy": {
                 "type": "leastLoad",
                 "settings": {
@@ -710,14 +765,17 @@ def _render_auto_balancer_config(
             "fallbackTag": fallback_tag,
         }
     )
-    routing.setdefault("rules", []).append(
+    # prepend_rules идут до правил шаблона, чтобы перебить их при необходимости.
+    rules = list(prepend_rules or []) + list(routing.get("rules", []))
+    rules.append(
         {
-            "balancerTag": AUTO_BALANCER_TAG,
+            "balancerTag": balancer_tag,
             "network": "tcp,udp",
-            "ruleTag": AUTO_BALANCER_TAG,
+            "ruleTag": balancer_tag,
             "type": "field",
         }
     )
+    routing["rules"] = rules
 
     return json.dumps(merged, indent=4)
 

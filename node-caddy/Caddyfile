@@ -8,7 +8,12 @@ sub.tvoy-ru-domen.ru {
 			header_up X-Real-IP {remote_host}
 			header_up X-Forwarded-For {remote_host}
 
-			# Если на зарубежном сервере самоподписанный сертификат, раскомментируйте блок ниже:
+            transport http {
+			    dial_timeout 5s
+			    response_header_timeout 10s
+	    	}
+
+			# Если на сервере самоподписанный сертификат:
 			# transport http {
 			# 	tls
 			# 	tls_insecure_skip_verify
