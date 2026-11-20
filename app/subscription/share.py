@@ -66,6 +66,11 @@ TORRENT_INCLUDE_INBOUND_TAGS: set[str] = {
 # Transports only the Xray JSON format can express.
 XRAY_ONLY_NETWORKS = frozenset({"xdrive"})
 
+# Тэг, которым в конфиге одного хоста помечен прокси-сервер (см. app/subscription/xray.py).
+# В автовыборе такого outbound'а нет — вместо него работает балансер, поэтому правила
+# шаблона, ведущие в этот тэг, надо перенаправлять на балансер.
+PROXY_OUTBOUND_TAG = "proxy"
+
 
 def _build_subscription_config(
     config_format: str,
@@ -724,16 +729,10 @@ def _render_auto_balancer_config(
     merged["outbounds"] = host_outbounds + list(conf.template.get("outbounds", []))
     merged["remarks"] = remarks
 
-    # Fallback to the 4th server (as in the reference config), or the last one when fewer hosts.
+    # Fallback — первый (приоритетный) сервер: фиксированный номер хоста может
+    # оказаться мёртвым (например, hysteria по UDP), и тогда умирает весь автовыбор.
     host_count = counter - 1
-    if host_count >= 4:
-        fallback_tag = f"{outbound_prefix}-4"
-    elif host_count > 1:
-        fallback_tag = f"{outbound_prefix}-{host_count}"
-    elif host_count == 1:
-        fallback_tag = outbound_prefix
-    else:
-        fallback_tag = ""
+    fallback_tag = outbound_prefix if host_count else ""
 
     # Switch the auto-select from observatory/leastPing to burstObservatory/leastLoad.
     merged.pop("observatory", None)
@@ -776,6 +775,13 @@ def _render_auto_balancer_config(
         }
     )
     routing["rules"] = rules
+
+    # Правила шаблона ведут в outbound "proxy", но в автовыборе его нет: там вместо
+    # него балансер. Без подмены xray не находит outbound и рвёт такое соединение.
+    for rule in routing["rules"]:
+        if rule.get("outboundTag") == PROXY_OUTBOUND_TAG:
+            del rule["outboundTag"]
+            rule["balancerTag"] = balancer_tag
 
     return json.dumps(merged, indent=4)
 

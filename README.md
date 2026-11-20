@@ -31,7 +31,10 @@ jkh/
 │   ├── keyboards/     # Клавиатуры интерфейса
 │   ├── models/        # Модели данных
 │   └── utils/         # Вспомогательные функции
-├── templates/         # HTML шаблоны
+├── templates/         # Шаблоны панели (CUSTOM_TEMPLATES_DIRECTORY)
+│   ├── xray/          # Клиентский шаблон подписки Xray
+│   ├── singbox/       # Клиентский шаблон подписки Sing-box
+│   └── subscription/  # HTML-страница подписки
 ├── docker-compose.yaml # Конфигурация всех сервисов
 ├── Dockerfile         # Сборка Pasarguard
 ├── Caddyfile          # Конфигурация веб-сервера

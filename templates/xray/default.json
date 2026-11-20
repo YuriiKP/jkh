@@ -65,23 +65,44 @@
     }
   ],
   "dns": {
-    "queryStrategy": "UseIP",
+    "queryStrategy": "UseIPv4",
+    "hosts": {
+      "geosite:category-ads": "0.0.0.0",
+      "geosite:win-spy": "0.0.0.0"
+    },
     "servers": [
-      "localhost",
       {
-        "address": "https://dns.google/dns-query"
+        "address": "https://8.8.8.8/dns-query"
+      },
+      {
+        "address": "https://1.1.1.1/dns-query",
+        "domains": [
+          "geosite:google-play",
+          "geosite:github",
+          "geosite:youtube",
+          "geosite:telegram"
+        ]
       },
       {
         "address": "https://77.88.8.8/dns-query",
         "domains": [
           "geosite:category-ru",
-          "geosite:yandex",
-          "geosite:vk",
-          "geosite:category-gov-ru"
+          "geosite:microsoft",
+          "geosite:apple",
+          "geosite:epicgames",
+          "geosite:riot",
+          "geosite:escapefromtarkov",
+          "geosite:steam",
+          "geosite:twitch",
+          "geosite:pinterest",
+          "geosite:faceit",
+          "domain:nalog.ru"
         ]
       },
-      "8.8.8.8",
-      "8.8.4.4"
+      {
+        "address": "localhost",
+        "domains": ["geosite:private"]
+      }
     ]
   },
   "routing": {
@@ -89,15 +110,22 @@
     "domainStrategy": "IPIfNonMatch",
     "rules": [
       {
-        "domain": ["domain:animeme.ru"],
-        "outboundTag": "proxy"
+        "outboundTag": "proxy",
+        "domain": [
+          "geosite:google-play",
+          "geosite:github",
+          "geosite:youtube",
+          "geosite:telegram"
+        ]
       },
       {
         "outboundTag": "block",
         "domain": [
           "domain:2ip.ru",
           "domain:ipinfo.io",
-          "domain:whatismyipaddress.com"
+          "domain:whatismyipaddress.com",
+          "geosite:win-spy",
+          "geosite:category-ads"
         ]
       },
       {
@@ -107,8 +135,17 @@
       {
         "outboundTag": "direct",
         "domain": [
+          "geosite:microsoft",
+          "geosite:epicgames",
+          "geosite:riot",
+          "geosite:escapefromtarkov",
+          "geosite:steam",
+          "geosite:twitch",
+          "geosite:pinterest",
+          "geosite:faceit",
           "geosite:private",
           "domain:mtalk.google.com",
+          "geosite:apple",
           "domain:push.apple.com",
           "domain:identity.apple.com",
           "domain:appattest.apple.com",
@@ -141,7 +178,6 @@
           "regexp:^(.+\\.)?vk\\.(com|ru)$",
           "regexp:^(.+\\.)?mail\\.ru$",
           "regexp:^(.+\\.)?ok\\.ru$",
-          "regexp:^(.+\\.)?2gis\\.(ae|am|az|by|com(\\.cy)?|cz|ge|kg|kz|ru|tj|ua|uz)$",
           "regexp:^(.+\\.)?vtb\\.ru$",
           "regexp:^(.+\\.)?rzd\\.ru$",
           "regexp:^(.+\\.)?gosuslugi\\.ru$",
@@ -334,6 +370,11 @@
           "domain:beta.gosuslugi.ru",
           "domain:epgu.gosuslugi.ru",
           "domain:lk.gosuslugi.ru",
+          "domain:reviews.2gis.com",
+          "domain:d-assets.2gis.ru",
+          "domain:ams2-cdn.2gis.com",
+          "keyword:2gis",
+          "regexp:^(.+\\.)?2gis\\.(ae|am|az|by|com(\\.cy)?|cz|ge|kg|kz|ru|tj|ua|uz)$",
           "domain:2gis.ae",
           "domain:2gis.am",
           "domain:2gis.az",
@@ -406,7 +447,6 @@
           "domain:aeroflot.ru",
           "domain:alformacap.com",
           "domain:alformacapital.com",
-          "domain:ams2-cdn.2gis.com",
           "domain:auth-nsdi.ru",
           "domain:auto.ru",
           "domain:av.ru",
@@ -436,7 +476,6 @@
           "domain:credistory.ru",
           "domain:csat.ru",
           "domain:cscampus.ru",
-          "domain:d-assets.2gis.ru",
           "domain:d5de4k0ri8jba7ucdbt6.apigw.yandexcloud.net",
           "domain:dbo-dengi.online",
           "domain:dellin.ru",
@@ -477,7 +516,6 @@
           "domain:rambler-co.ru",
           "domain:rbc.ru",
           "domain:reg.ru",
-          "domain:reviews.2gis.com",
           "domain:rg.ru",
           "domain:ria.ru",
           "domain:ruwiki.ru",
