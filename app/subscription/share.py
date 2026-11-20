@@ -668,7 +668,8 @@ def _render_xray_with_auto(
                 "type": "field",
                 "protocol": ["bittorrent"],
                 "balancerTag": TORRENT_BALANCER_TAG,
-                "ruleTag": TORRENT_BALANCER_TAG,
+                # Без ruleTag: catch-all в конце получает тэг балансера, а два правила
+                # с одинаковым ruleTag роняют ядро (app/router: duplicate ruleTag).
             }
         ],
     )
