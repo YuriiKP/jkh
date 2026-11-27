@@ -106,12 +106,17 @@ certbot certonly --standalone -d example.com
 Я использую этот костыль:) 
 Либо альтернативный вариант, просто скопировать сертификаты, которые делает Caddy или попробовать указать путь до них в docker compose в сервисе node в переменных SSL_CERT_FILE и SSL_KEY_FILE
 
-Копируем сертификаты caddy. Они находятся в volumes докера по пути 
-/var/lib/docker/volumes/caddy_data/_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/ВАШ_ДОМЕН
+Копируем сертификаты caddy. Они находятся в томе `<каталог_проекта>_caddy_data` (например `jkh_caddy_data`) по пути
+`/var/lib/docker/volumes/jkh_caddy_data/_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/ВАШ_ДОМЕН`
+и называются `<домен>.crt` и `<домен>.key` — в `.crt` лежит вся цепочка, поэтому он идёт как `fullchain.pem`:
 ```bash
-    cp /var/lib/docker/volumes/caddy_data/_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/ВАШ_ДОМЕН/fullchain.pem /var/lib/pg-node/certs/fullchain.pem && \ 
-    cp /var/lib/docker/volumes/caddy_data/_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/ВАШ_ДОМЕН/privkey.pem /var/lib/pg-node/certs/privkey.pem
+    CERT_DIR=/var/lib/docker/volumes/jkh_caddy_data/_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/example.com
+    install -d -m 700 /var/lib/pg-node/certs
+    install -m 644 "$CERT_DIR/example.com.crt" /var/lib/pg-node/certs/fullchain.pem
+    install -m 600 "$CERT_DIR/example.com.key" /var/lib/pg-node/certs/privkey.pem
 ```
+
+Вручную это делать не обязательно: при переносе на другой сервер сертификаты копирует `restore.sh` (см. раздел про перенос).
 
 ---
 ## Режимы работы Telegram бота

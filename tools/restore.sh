@@ -32,7 +32,8 @@ cd "$PROJECT_DIR"
 [ -f .env ] || die "нет .env в $PROJECT_DIR — скопируйте со старого сервера и поправьте домен/пароли"
 
 if [ "$ASSUME_YES" != "--yes" ]; then
-  echo "⚠️  Базы MySQL в $PROJECT_DIR и $CERTS_DIR будут перезаписаны данными из $ARCHIVE."
+  echo "⚠️  Базы MySQL в $PROJECT_DIR будут перезаписаны данными из $ARCHIVE."
+  echo "    В $CERTS_DIR лягут сертификаты, выпущенные Caddy на этом сервере (старые будут заменены)."
   answer=""
   read -r -p "Продолжить? [y/N] " answer || true
   case "$answer" in y|Y|yes) ;; *) echo "Отменено."; exit 1 ;; esac
@@ -76,14 +77,17 @@ DOMAIN=$(sed -n 's/^PASARGUARD_BASE_URL[[:space:]]*=[[:space:]]*//p' .env | head
 
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
+# Caddy хранит <домен>.crt/<домен>.key, fullchain.pem/privkey.pem — на случай certbot-подобной раскладки
+cert_file() { local f; for f in "$1/$DOMAIN.crt" "$1/fullchain.pem" "$1"/*.crt; do [ -s "$f" ] && { echo "$f"; return 0; }; done; return 1; }
+key_file() { local f; for f in "$1/$DOMAIN.key" "$1/privkey.pem" "$1"/*.key; do [ -s "$f" ] && { echo "$f"; return 0; }; done; return 1; }
 # Сертификаты берём из того, что Caddy уже выпустил; docker cp работает и с остановленным контейнером
 certs_from_caddy() {
   rm -rf "$TMP/certificates"
   docker cp "$CADDY_CONTAINER:/data/caddy/certificates" "$TMP/" >/dev/null 2>&1 || return 1
   local d
   d=$(find "$TMP/certificates" -maxdepth 2 -type d -name "$DOMAIN" 2>/dev/null | head -n1)
-  [ -n "$d" ] || d=$(dirname "$(find "$TMP/certificates" -maxdepth 3 -name fullchain.pem 2>/dev/null | head -n1)")
-  [ -s "$d/fullchain.pem" ] && [ -s "$d/privkey.pem" ] || return 1
+  [ -n "$d" ] || d=$(dirname "$(find "$TMP/certificates" -maxdepth 3 -name '*.crt' 2>/dev/null | head -n1)")
+  [ -n "$d" ] && cert_file "$d" >/dev/null && key_file "$d" >/dev/null || return 1
   echo "$d"
 }
 
@@ -99,13 +103,15 @@ if [ -z "$SRC" ]; then
 fi
 
 if [ -n "$SRC" ]; then
+  CRT=$(cert_file "$SRC")
   install -d -m 700 "$CERTS_DIR"
-  install -m 644 "$SRC/fullchain.pem" "$CERTS_DIR/fullchain.pem"
-  install -m 600 "$SRC/privkey.pem" "$CERTS_DIR/privkey.pem"
-  echo "🔐 Сертификаты $DOMAIN скопированы в $CERTS_DIR"
+  install -m 644 "$CRT" "$CERTS_DIR/fullchain.pem"
+  install -m 600 "$(key_file "$SRC")" "$CERTS_DIR/privkey.pem"
+  echo "🔐 Сертификаты $(basename "$(dirname "$CRT")") скопированы в $CERTS_DIR"
 else
-  echo "⚠️  Сертификат для $DOMAIN не найден. База уже восстановлена: поднимите стек один раз,"
-  echo "    дождитесь выдачи сертификата и запустите restore.sh снова (повторный импорт безопасен)."
+  echo "⚠️  Не нашёл сертификат $DOMAIN в $CADDY_CONTAINER:/data/caddy/certificates"
+  echo "    (ждал $DOMAIN.crt/.key или fullchain.pem/privkey.pem). База уже восстановлена."
+  echo "    Проверьте домен в .env, поднимите стек один раз и запустите restore.sh снова."
 fi
 
 echo "🚀 Запуск стека..."
