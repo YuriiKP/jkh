@@ -64,6 +64,9 @@ services:
         condition: service_healthy
     volumes:
       - /var/lib/pasarguard:/var/lib/pasarguard
+      # CUSTOM_TEMPLATES_DIRECTORY: шаблоны из репозитория. Родительский bind-mount
+      # /var/lib/pasarguard перекрывает копию из образа, поэтому монтируем отдельно.
+      - ./templates:/var/lib/pasarguard/templates
     network_mode: host
     healthcheck:
       test:

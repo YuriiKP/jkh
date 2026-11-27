@@ -215,3 +215,6 @@ api.json
 ruff.toml
 pyrightconfig.json
 in *
+
+# Бэкапы БД (содержат секреты)
+jkh-backup-*.sql.gz

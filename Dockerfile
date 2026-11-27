@@ -2,7 +2,9 @@ FROM pasarguard/panel:latest
 
 WORKDIR /code
 
-# Копируем папку с шаблонами
+# Копируем папку с шаблонами.
+# В docker-compose.yaml ./templates ещё и монтируется в /var/lib/pasarguard/templates:
+# bind-mount /var/lib/pasarguard перекрывает этот слой, так что на сервере работают файлы из репозитория.
 COPY templates/ /var/lib/pasarguard/templates/
 
 # Перезаписываем оригинальный share.py нашим патчем

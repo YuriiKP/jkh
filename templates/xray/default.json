@@ -87,7 +87,6 @@
         "address": "https://77.88.8.8/dns-query",
         "domains": [
           "geosite:category-ru",
-          "geosite:microsoft",
           "geosite:apple",
           "geosite:epicgames",
           "geosite:riot",
@@ -135,7 +134,6 @@
       {
         "outboundTag": "direct",
         "domain": [
-          "geosite:microsoft",
           "geosite:epicgames",
           "geosite:riot",
           "geosite:escapefromtarkov",
